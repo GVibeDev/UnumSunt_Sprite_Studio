@@ -16,6 +16,7 @@ from app.alignment_engine import (
 )
 from app.export_service import save_rgba_image
 from app.output_geometry import analyze_canvas_geometry
+from app.version import APP_VERSION
 from app.models import (
     AlignmentSettings,
     ChromaKeySettings,
@@ -169,7 +170,7 @@ def _export_variant(
 
     manifest = {
         'schema': 'unum-sunt-sprite-studio-animation-v4',
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'exported_at_utc': datetime.now(timezone.utc).isoformat(),
         'source_video': {
             'path': str(video_metadata.path),

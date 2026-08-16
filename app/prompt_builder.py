@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from app.profile_store import ProfilesStore
+from app.version import APP_VERSION
 
 
 PROMPT_PROFILE_SCHEMA = 'unum-sunt-prompt-profile-v1'
@@ -264,7 +265,7 @@ def build_prompt_profile(
     now = _now()
     return {
         'schema': PROMPT_PROFILE_SCHEMA,
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'name': str(name).strip() or 'Prompt profile',
         'description': str(description).strip(),
         'builder_state': state,
@@ -283,7 +284,7 @@ def normalize_prompt_profile(value: dict[str, Any] | None) -> dict[str, Any]:
     state = normalize_builder_state(value.get('builder_state') if isinstance(value.get('builder_state'), dict) else {})
     return {
         'schema': PROMPT_PROFILE_SCHEMA,
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'name': str(value.get('name') or 'Prompt profile'),
         'description': str(value.get('description') or ''),
         'builder_state': state,

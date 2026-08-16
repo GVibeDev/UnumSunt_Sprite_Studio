@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shutil
+import stat
 import subprocess
 import tempfile
 import urllib.error
@@ -19,6 +20,7 @@ from app.generation.image_provider import LocalWanGPImageConfig
 from app.runtime_paths import local_data_root
 from app.runtime_preflight import RuntimePreflightConfig, STATUS_BLOCKED, run_runtime_preflight
 from app.runtime_gpu_compat import probe_torch_runtime_gpu
+from app.version import APP_VERSION
 
 MANIFEST_RELATIVE_PATH = Path("assets") / "runtime" / "runtime_components.json"
 WAN_ANIMATE_TEMPLATE_RELATIVE_PATH = Path("assets") / "runtime" / "wan_animate_settings_template.json"
@@ -187,8 +189,12 @@ def resolve_krea2_settings_template_for_checkpoint(checkpoint: str | Path | None
 
     checkpoint_path = Path(checkpoint).expanduser() if checkpoint else None
     if checkpoint_path is not None and checkpoint_path.name == "Krea2Turbo_bf16.safetensors":
+        try:
+            revision = load_runtime_components_manifest().models["krea2_turbo"].revision
+        except Exception:
+            revision = "main"
         payload["model_filename"] = (
-            "https://huggingface.co/DeepBeepMeep/krea-2/resolve/main/"
+            f"https://huggingface.co/DeepBeepMeep/krea-2/resolve/{revision}/"
             "Krea2Turbo_bf16.safetensors"
         )
         target = local_data_root() / "runtime_templates" / "krea2_turbo_settings.json"
@@ -366,7 +372,7 @@ class RuntimeInstaller:
                 return target
         part = target.with_suffix(target.suffix + ".part")
         existing = part.stat().st_size if part.exists() else 0
-        headers = {"User-Agent": "UnumSuntSpriteStudio-R5c6a"}
+        headers = {"User-Agent": f"UnumSuntSpriteStudio-{APP_VERSION}"}
         if existing:
             headers["Range"] = f"bytes={existing}-"
         request = urllib.request.Request(url, headers=headers)
@@ -431,7 +437,7 @@ class RuntimeInstaller:
         self._verify_windows_signature(installer, self.manifest.miniconda_publisher_hint)
         self.miniconda_root.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
-            raise RuntimeInstallError("L'installazione Miniconda R5c6a è supportata solo su Windows.")
+            raise RuntimeInstallError(f"L'installazione Miniconda {APP_VERSION} è supportata solo su Windows.")
         args = [
             str(installer),
             "/InstallationType=JustMe",
@@ -463,13 +469,53 @@ class RuntimeInstaller:
             raise RuntimeInstallError("Ambiente WanGP creato senza python.exe")
         return python
 
+    @staticmethod
+    def _safe_extract_zip(archive: Path, destination: Path) -> None:
+        """Extract a ZIP only when every member resolves inside destination.
+
+        Rejects absolute/drive paths, parent traversal and symlink entries before
+        writing any file. This protects the managed runtime bootstrap from ZIP
+        path traversal even if an upstream archive is replaced or malformed.
+        """
+        destination = destination.resolve()
+        destination.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(archive, "r") as zf:
+            members = zf.infolist()
+            validated: list[tuple[zipfile.ZipInfo, Path]] = []
+            for info in members:
+                raw_name = info.filename
+                if not raw_name or "\x00" in raw_name:
+                    raise RuntimeInstallError("Archivio ZIP WanGP contiene un nome file non valido.")
+                normalized = raw_name.replace("\\", "/")
+                pure = PurePosixPath(normalized)
+                first = pure.parts[0] if pure.parts else ""
+                if pure.is_absolute() or first.endswith(":") or any(part == ".." for part in pure.parts):
+                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: percorso vietato {raw_name!r}")
+                unix_mode = (info.external_attr >> 16) & 0o170000
+                if unix_mode == stat.S_IFLNK:
+                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: symlink vietato {raw_name!r}")
+                target = (destination.joinpath(*pure.parts)).resolve()
+                try:
+                    target.relative_to(destination)
+                except ValueError as exc:
+                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: path traversal {raw_name!r}") from exc
+                validated.append((info, target))
+
+            for info, target in validated:
+                if info.is_dir() or info.filename.endswith("/"):
+                    target.mkdir(parents=True, exist_ok=True)
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(info, "r") as source, target.open("wb") as sink:
+                    shutil.copyfileobj(source, sink)
+
     def _ensure_wangp_source(self, *, repair: bool) -> None:
         marker = self.wangp_root / "wgp.py"
         settings_marker = self.wangp_root / "models" / "_settings.json"
         if marker.is_file() and settings_marker.is_file() and not repair:
             self._emit("wangp.source", 1.0, "Sorgenti WanGP già presenti")
             return
-        archive_target = self.download_root / "Wan2GP-main.zip"
+        archive_target = self.download_root / f"Wan2GP-{self.manifest.wangp_revision}.zip"
         if repair and archive_target.exists():
             archive_target.unlink()
         archive = self._download(self.manifest.wangp_archive_url, archive_target, phase="wangp.download")
@@ -477,8 +523,7 @@ class RuntimeInstaller:
         if staging.exists():
             shutil.rmtree(staging)
         staging.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(archive, "r") as zf:
-            zf.extractall(staging)
+        self._safe_extract_zip(archive, staging)
         source = staging / self.manifest.wangp_archive_root
         if not source.is_dir():
             raise RuntimeInstallError(f"Root archivio WanGP non trovata: {source}")
@@ -554,7 +599,7 @@ class RuntimeInstaller:
 
         WanGP's current default ``krea2_turbo`` points at the DeepBeepMeep
         converted checkpoints, not the official monolithic ``turbo.safetensors``.
-        R5c6a therefore installs the Quanto BF16 INT8 checkpoint used by WanGP
+        R5c7 installs the pinned Quanto BF16 INT8 checkpoint used by WanGP
         directly.  Krea's Community License/AUP acceptance remains mandatory.
         The optional HF token is passed only to the child process and is never
         persisted. ``hf_hub_download(local_dir=...)`` keeps resumable metadata.

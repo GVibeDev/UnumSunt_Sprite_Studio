@@ -86,7 +86,7 @@ class R5c6aKrea2Tests(unittest.TestCase):
 
     def test_setup_declares_krea_selected_function_and_external_runtime_warning(self):
         root = Path(__file__).resolve().parents[1]
-        text = (root / 'installer' / 'UnumSuntSpriteStudio_R5c6a.iss').read_text(encoding='utf-8')
+        text = (root / 'installer' / 'UnumSuntSpriteStudio_R5c7.iss').read_text(encoding='utf-8')
         self.assertIn('function KreaSelected: Boolean;', text)
         self.assertIn("WizardIsComponentSelected('ai\\krea2')", text)
         self.assertIn('Adopted and KreaSelected', text)
@@ -152,7 +152,7 @@ class R5c6aKrea2Tests(unittest.TestCase):
 
     def test_windows_setup_exposes_krea_component_without_cli_token(self):
         root = Path(__file__).resolve().parents[1]
-        text = (root / 'installer' / 'UnumSuntSpriteStudio_R5c6a.iss').read_text(encoding='utf-8')
+        text = (root / 'installer' / 'UnumSuntSpriteStudio_R5c7.iss').read_text(encoding='utf-8')
         self.assertIn('ai\\krea2', text)
         self.assertIn('--accept-krea-license', text)
         self.assertIn('--skip-krea2', text)

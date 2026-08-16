@@ -1,0 +1,254 @@
+{
+  "schema": "unum-sunt-repo-patch-v1",
+  "from": "R5c6b",
+  "to": "R5c7-test-candidate",
+  "status": "TEST_CANDIDATE",
+  "purpose": "Windows Release Candidate release-hardening patch",
+  "automatic_tests": {
+    "count": 301,
+    "status": "passed"
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 574,
+      "sha256": "e65b40d82098ca7338c14d533cc0751a59ac485358dda09d63e2ee3921421c84",
+      "kind": "modified"
+    },
+    {
+      "path": "APPLY_PATCH_R5C7.bat",
+      "bytes": 1155,
+      "sha256": "ca7d636160c2cb845bbeb1deb6be254ab03b5524d552bf969c20a5cdcb63b56d",
+      "kind": "new"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 19080,
+      "sha256": "ac8ecd8d0b3d1f72a61d7691e37eb9b057264bac343b64096fc977bf2d08ee3a",
+      "kind": "modified"
+    },
+    {
+      "path": "R5C6B_VALIDATION.md",
+      "bytes": 651,
+      "sha256": "8237635961d894e9030495b2b8b69426a0cc75d716aa66554d5277013e7f1384",
+      "kind": "new"
+    },
+    {
+      "path": "R5C7_RELEASE_HARDENING.md",
+      "bytes": 1660,
+      "sha256": "05fe94258f39bb47b08906510cc88b45ecbf170d1445cd1ffb891a4da1a14f07",
+      "kind": "new"
+    },
+    {
+      "path": "README.md",
+      "bytes": 21335,
+      "sha256": "55f334bab8a38a675ed14aee551c07d92dd0cb65c3278d4b6972a2cc274915ef",
+      "kind": "modified"
+    },
+    {
+      "path": "SOURCE_MANIFEST.json",
+      "bytes": 34477,
+      "sha256": "e0c0fb9e47d39eae61b171e76e80cdab0d2d2871325a604978c0ec0445c3372d",
+      "kind": "modified"
+    },
+    {
+      "path": "app/__init__.py",
+      "bytes": 36,
+      "sha256": "86a4f67f48d7d92bdc75f63e1b7d489cd2e71399b55372079059d65fefdb79cf",
+      "kind": "modified"
+    },
+    {
+      "path": "app/alignment_export.py",
+      "bytes": 12407,
+      "sha256": "80591e52e1f5331b1313181c7a5b9a3c3bf441d594e7be6aec7f074148bd2e8c",
+      "kind": "modified"
+    },
+    {
+      "path": "app/calibration.py",
+      "bytes": 13765,
+      "sha256": "720f368cbbb0c97daa4ad843669bbe413da099b5d5d5f1b4804adbbe4d14ac43",
+      "kind": "modified"
+    },
+    {
+      "path": "app/export_service.py",
+      "bytes": 9649,
+      "sha256": "f68aef158c1f328ac02a54a68486a89bc5d55d7cb3c749e91b535ec77ea2140c",
+      "kind": "modified"
+    },
+    {
+      "path": "app/generation/__init__.py",
+      "bytes": 88,
+      "sha256": "fa365282409fc3f52cd803032871b5bbf9069631eb33513acb0e4ddc56908aad",
+      "kind": "modified"
+    },
+    {
+      "path": "app/generation/image_provider.py",
+      "bytes": 23332,
+      "sha256": "9e00daf213b3cc22d7ad36042ad8c214589da31487212a38839c1b1e736881f2",
+      "kind": "modified"
+    },
+    {
+      "path": "app/main_window.py",
+      "bytes": 101758,
+      "sha256": "919becea116f683563ed666da14dbdd5c958c5e7d465f6919a5e369295bb9ba3",
+      "kind": "modified"
+    },
+    {
+      "path": "app/production_presets.py",
+      "bytes": 12269,
+      "sha256": "0b9d9f9c6b3ef99bb294adb56d2d5a70169a6c944d813b81d27a53f928aa1b66",
+      "kind": "modified"
+    },
+    {
+      "path": "app/prompt_builder.py",
+      "bytes": 14164,
+      "sha256": "caa6dbac27149e8eb7b35ed1f30b18b7d8affe2e2a5fbbf30dd6f58c8f3f93cb",
+      "kind": "modified"
+    },
+    {
+      "path": "app/runtime_installer.py",
+      "bytes": 46028,
+      "sha256": "7af3f8eb39545254a8ee63da3d330f872410f0b0cc8d5debf34a5d3e4abd60cc",
+      "kind": "modified"
+    },
+    {
+      "path": "app/runtime_manager_dialog.py",
+      "bytes": 22847,
+      "sha256": "db69c3718eb4e6fe68acb565a498e432d38ee4c4937edf82d57dff1bf098f9db",
+      "kind": "modified"
+    },
+    {
+      "path": "app/runtime_preflight.py",
+      "bytes": 27943,
+      "sha256": "cd5463b3b23a972972fa4fbc17a1a63f67389c9e02206176c993e3a6176fd0f2",
+      "kind": "modified"
+    },
+    {
+      "path": "app/runtime_preflight_dialog.py",
+      "bytes": 7345,
+      "sha256": "c94a48f69c471b416933299601f7fd30a9e58025e769fccdf9abc8e4eb85bc4c",
+      "kind": "modified"
+    },
+    {
+      "path": "app/standalone_selfcheck.py",
+      "bytes": 3745,
+      "sha256": "c58097efe982d35aed5786de78192eae6fa9099e9dd2cbd5c5c293608bb2af65",
+      "kind": "modified"
+    },
+    {
+      "path": "app/version.py",
+      "bytes": 461,
+      "sha256": "2b7ebacc30dba9830b7a5710afdc828346266baad442d126ee687d40793f053d",
+      "kind": "modified"
+    },
+    {
+      "path": "assets/runtime/krea2_turbo_settings_template.json",
+      "bytes": 671,
+      "sha256": "a9a04fa255c66eb7aca0de0cbed7d9924fbf6cf9c595c7711591b32601bcc057",
+      "kind": "modified"
+    },
+    {
+      "path": "assets/runtime/runtime_components.json",
+      "bytes": 2233,
+      "sha256": "306e75330c33ec43553c79a1e159a08b1ba53801bfec2f3692925f90e84ea3de",
+      "kind": "modified"
+    },
+    {
+      "path": "assets/runtime/runtime_install_plan.json",
+      "bytes": 2586,
+      "sha256": "304ef0105f32d21e7ca48e425288ffd2ce90f5070243b3b85ead131e256b6325",
+      "kind": "modified"
+    },
+    {
+      "path": "build/windows_version_info.txt",
+      "bytes": 809,
+      "sha256": "1e295126b92a2f67628ab6d54ef7da107b3dc4adfb175d0b4967b738c232f3cc",
+      "kind": "modified"
+    },
+    {
+      "path": "build_setup_windows.bat",
+      "bytes": 246,
+      "sha256": "609b0421709fa60946a1a618d20a43dc785974db9ea3092268829548725520b8",
+      "kind": "modified"
+    },
+    {
+      "path": "build_setup_windows.ps1",
+      "bytes": 9801,
+      "sha256": "1f845e0e63436151f1fcc40ae412ee269e7b914dfa30098b5b2912fb5821060d",
+      "kind": "modified"
+    },
+    {
+      "path": "build_windows_standalone.bat",
+      "bytes": 256,
+      "sha256": "a2e1f1784cc9fa4be2d0d3d98334a07541ecbe169edd40376da39605881b67f8",
+      "kind": "modified"
+    },
+    {
+      "path": "build_windows_standalone.ps1",
+      "bytes": 10765,
+      "sha256": "f5ffce5dc7b27b0a3c90a5486d8c41264095a46a7fcdda3788c4a5b2304dd169",
+      "kind": "modified"
+    },
+    {
+      "path": "installer/UnumSuntSpriteStudio_R5c7.iss",
+      "bytes": 12963,
+      "sha256": "932fe17c6407f77d37081cb0852851d1496ace48e79393ba47ab48818e191ad0",
+      "kind": "new"
+    },
+    {
+      "path": "tests/test_maintenance_r5c6.py",
+      "bytes": 8993,
+      "sha256": "3e2c064a51ce844a969cb582fd1b54f63dbfb9cf9f5af08013aae52e5ef98179",
+      "kind": "modified"
+    },
+    {
+      "path": "tests/test_r5c1_standalone.py",
+      "bytes": 2273,
+      "sha256": "bfffbafad38879ed4f42a9eb619ca58963019f609a84dc93bb5e65df4f91286f",
+      "kind": "modified"
+    },
+    {
+      "path": "tests/test_r5c4_setup.py",
+      "bytes": 3205,
+      "sha256": "0e75e60f36eccca11655c770e651e1ea6727a9345d86aa6a15fb325999551adb",
+      "kind": "modified"
+    },
+    {
+      "path": "tests/test_r5c6a_krea2.py",
+      "bytes": 8695,
+      "sha256": "92dbaa7468388b06a3b6567cb4afe40b287558813094e8e1a67f6b71e32e745d",
+      "kind": "modified"
+    },
+    {
+      "path": "tests/test_r5c7_release_hardening.py",
+      "bytes": 4415,
+      "sha256": "4955eeb6810b38944c1e44981bc941343622a1e04a936c5e1db7354e326fe27f",
+      "kind": "new"
+    },
+    {
+      "path": "tests/test_setup_bootstrap_r5c4a.py",
+      "bytes": 1528,
+      "sha256": "830c09fb53eb89a277030b0b058fa6ce637a7530bf1ceac364ef98e6a7a0b93d",
+      "kind": "modified"
+    }
+  ],
+  "delete_on_apply": [
+    "installer/UnumSuntSpriteStudio_R5c6.iss",
+    "installer/UnumSuntSpriteStudio_R5c6a.iss",
+    "APPLY_PATCH_R5C6A.bat",
+    "PATCH_MANIFEST_R5C6A.json",
+    "PATCH_MANIFEST_R5C6A_IMAGE_MEMORY_HOTFIX.json",
+    "PATCH_MANIFEST_R5C6A_CUMULATIVE_HOTFIX_TEST_2.json",
+    "R5C6A_IMAGE_MEMORY_HOTFIX_TEST.md",
+    "TEST_REPORT_R5C6A_IMAGE_MEMORY_HOTFIX.txt",
+    "R5C6A_CUMULATIVE_HOTFIX_TEST_2.md"
+  ],
+  "open_release_gates": [
+    "core_license",
+    "third_party_notices",
+    "krea2_safeguards",
+    "windows_manual_matrix",
+    "core_pip_check",
+    "wangp_pip_check"
+  ]
+}

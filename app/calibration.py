@@ -11,6 +11,8 @@ import subprocess
 import uuid
 from typing import Any, Iterable
 
+from app.version import APP_VERSION
+
 
 CALIBRATION_SCHEMA = 'unum-sunt-calibration-lab-v1'
 CALIBRATION_RUN_SCHEMA = 'unum-sunt-calibration-run-v1'
@@ -34,7 +36,7 @@ def _now() -> str:
 def empty_calibration_state() -> dict[str, Any]:
     return {
         'schema': CALIBRATION_SCHEMA,
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'baseline_run_id': None,
         'runs': [],
         'updated_at': _now(),

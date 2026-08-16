@@ -1,3 +1,13 @@
+## R5c7 — Windows Release Candidate Hardening (candidate)
+
+- Promotes the validated R5c6b hotfix line into the Windows RC candidate branch.
+- Centralizes active application-version metadata on `APP_VERSION` to prevent stale R5c6a identifiers in manifests and persisted profiles.
+- Replaces deprecated Pillow `Image.fromarray(..., mode=...)` usage.
+- Hardens managed WanGP ZIP extraction against absolute paths, drive paths, `..` traversal and symlink entries.
+- Pins managed WanGP source to immutable commit `6e35b37e309ccebeed193ef53cdff66fb973b693` (WanGP 12.53 line) and Krea 2 managed downloads to Hugging Face revision `f7a3040b990b672af3c30b5ad1f0df8ffd244881`.
+- Expands `.gitignore` for credentials, build artifacts, AI runtimes and model weights.
+- Keeps Core license selection and Krea 2 application safeguards as explicit release gates; this candidate is not a public-release declaration.
+
 ## R5c6a — Krea 2 Managed Component Completion
 
 - Aligns Krea 2 Turbo with WanGP's current `krea2_turbo` contract and the Quanto BF16 INT8 checkpoint.

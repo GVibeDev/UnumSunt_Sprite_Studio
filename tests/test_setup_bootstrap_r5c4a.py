@@ -28,9 +28,9 @@ class SetupBootstrapR5c4aTests(unittest.TestCase):
         self.assertLess(self.script.index(marker), self.script.index("if ($wingetExit -ne 0)"))
 
     def test_r5c4a_installer_contract(self):
-        self.assertIn("UnumSuntSpriteStudio_R5c6a.iss", self.script)
-        self.assertIn("UnumSunt_Sprite_Studio_R5c6a_Setup_x64.exe", self.script)
-        self.assertTrue((self.root / "installer" / "UnumSuntSpriteStudio_R5c6a.iss").is_file())
+        self.assertIn("UnumSuntSpriteStudio_R5c7.iss", self.script)
+        self.assertIn("UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe", self.script)
+        self.assertTrue((self.root / "installer" / "UnumSuntSpriteStudio_R5c7.iss").is_file())
 
 
 if __name__ == "__main__":

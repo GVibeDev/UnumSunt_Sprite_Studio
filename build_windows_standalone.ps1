@@ -13,12 +13,12 @@ $BuildPythonMinor = 13
 $BuildPythonTag = '3.13'
 $BuildPythonLabel = 'Python 3.13 x64'
 
-Write-Host '=== Unum Sunt Sprite Studio R5c6a - Windows Standalone Core ==='
+Write-Host '=== Unum Sunt Sprite Studio R5c7 - Windows Standalone Core ==='
 Write-Host "Build runtime ufficiale: $BuildPythonLabel"
 Write-Host ''
 
 if (-not [Environment]::Is64BitOperatingSystem) {
-    throw 'R5c6a supporta esclusivamente Windows x64.'
+    throw 'R5c7 supporta esclusivamente Windows x64.'
 }
 
 function Test-BuildPython([string]$InterpreterPath) {
@@ -247,13 +247,13 @@ if (-not (Test-Path $selfCheck)) { throw 'Il self-check non ha prodotto il repor
 $check = Get-Content $selfCheck -Raw | ConvertFrom-Json
 if ($check.status -ne 'passed' -or -not $check.frozen) { throw 'Self-check non valido: il runtime congelato non risulta READY.' }
 
-& $python tools\write_release_manifest.py $distDir (Join-Path $distDir 'RELEASE_MANIFEST_R5c6a.json')
+& $python tools\write_release_manifest.py $distDir (Join-Path $distDir 'RELEASE_MANIFEST_R5c7.json')
 if ($LASTEXITCODE -ne 0) { throw 'Impossibile generare il release manifest.' }
 
 $releaseDir = Join-Path $PSScriptRoot 'release'
 New-Item -ItemType Directory -Force $releaseDir | Out-Null
-$zipPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c6a_Windows_x64_Standalone.zip'
-$hashPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c6a_Windows_x64_Standalone_SHA256.txt'
+$zipPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone.zip'
+$hashPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone_SHA256.txt'
 Remove-Item -Force $zipPath, $hashPath -ErrorAction SilentlyContinue
 
 Write-Host 'Creazione archivio release...'
@@ -267,4 +267,4 @@ Write-Host "Standalone: $distDir"
 Write-Host "Release ZIP: $zipPath"
 Write-Host "SHA-256: $hash"
 Write-Host 'Il PC destinatario NON richiede Python. Python 3.13 serve soltanto alla pipeline di build.'
-Write-Host 'Il runtime AI resta esterno al bundle Core ed è gestito dal Runtime Manager R5c6a.'
+Write-Host 'Il runtime AI resta esterno al bundle Core ed è gestito dal Runtime Manager R5c7.'

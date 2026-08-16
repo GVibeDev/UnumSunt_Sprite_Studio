@@ -31,11 +31,12 @@ from app.runtime_preflight import (
     run_runtime_preflight,
 )
 
+from app.version import APP_VERSION
 
 class RuntimePreflightDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Verifica runtime AI locale · R5c6a")
+        self.setWindowTitle(f"Verifica runtime AI locale · {APP_VERSION}")
         self.resize(980, 700)
         self._report: RuntimePreflightReport | None = None
         self.config = RuntimePreflightConfig.load()
@@ -47,7 +48,7 @@ class RuntimePreflightDialog(QDialog):
         root = QVBoxLayout(self)
         intro = QLabel(
             "Preflight non distruttivo: verifica CUDA/driver, spazio disco e percorsi prima dell'installazione AI. "
-            "R5c6a NON applica soglie minime a modello GPU, VRAM o RAM."
+            f"{APP_VERSION} NON applica soglie minime a modello GPU, VRAM o RAM."
         )
         intro.setWordWrap(True)
         root.addWidget(intro)
@@ -175,7 +176,7 @@ class RuntimePreflightDialog(QDialog):
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Salva report preflight",
-            str(Path.home() / "unum_sunt_runtime_preflight_R5c6a.json"),
+            str(Path.home() / f"unum_sunt_runtime_preflight_{APP_VERSION}.json"),
             "JSON (*.json)",
         )
         if not path:

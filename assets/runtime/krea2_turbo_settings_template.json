@@ -20,6 +20,6 @@
   "loras_multipliers": "",
   "type": "WanGP - Krea 2 Turbo",
   "settings_version": 2.73,
-  "model_filename": "https://huggingface.co/DeepBeepMeep/krea-2/resolve/main/Krea2Turbo_quanto_bf16_int8.safetensors",
+  "model_filename": "https://huggingface.co/DeepBeepMeep/krea-2/resolve/f7a3040b990b672af3c30b5ad1f0df8ffd244881/Krea2Turbo_quanto_bf16_int8.safetensors",
   "model_type": "krea2_turbo"
 }

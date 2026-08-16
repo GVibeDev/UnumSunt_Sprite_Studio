@@ -1,9 +1,47 @@
 .venv/
+.build-venv/
 __pycache__/
 *.py[cod]
-dist/
-build/
-*.spec
 .pytest_cache/
 .idea/
 .vscode/
+
+# Local secrets / environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Build / release artifacts
+dist/
+build/*
+!build/windows_version_info.txt
+release/
+*.spec
+*.exe
+*.msi
+*.apk
+*.aab
+
+# External AI runtimes and model weights
+ai_runtime/
+miniconda*/
+wangp_env/
+WanGP/
+models/
+ckpts/
+*.safetensors
+*.gguf
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Local application state / logs / generated jobs
+logs/
+generation_jobs/
+runtime_install_state.json
+local_wangp.json
+local_wangp_image.json
+runtime_preflight_config.json

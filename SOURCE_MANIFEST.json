@@ -1,55 +1,56 @@
 {
   "project": "Unum Sunt Sprite Studio",
-  "version": "R5c6a",
-  "status": "candidate",
-  "working_base": "UnumSunt_Sprite_Studio_R5c6",
-  "validated_baseline": "UnumSunt_Sprite_Studio_R5c6",
-  "milestone": "Krea 2 Managed Component Completion",
+  "version": "R5c7",
+  "status": "test_candidate",
+  "working_base": "UnumSunt_Sprite_Studio_R5c6b",
+  "validated_baseline": "UnumSunt_Sprite_Studio_R5c6b",
+  "milestone": "Windows Release Candidate Hardening",
   "automatic_tests": {
     "status": "passed",
-    "count": 287
+    "count": 301
   },
   "build_checks": {
     "compileall": "passed",
-    "version_cli_smoke": "passed",
+    "unittest_discovery": "301 passed",
+    "version_cli_smoke": "pending packaged Windows build",
     "runtime_json_parse": "passed",
-    "release_manifest_writer_smoke": "passed",
-    "maintenance_cli_smoke": "passed",
     "inno_compile": "requires Windows/Inno Setup",
-    "real_krea_inference": "requires Windows/GPU manual test"
+    "real_gpu_workflows": "requires Windows/GPU manual test",
+    "core_pip_check": "requires actual build venv",
+    "wangp_pip_check": "requires actual Python 3.11 runtime"
   },
-  "krea2": {
-    "model_type": "krea2_turbo",
-    "managed_repository": "DeepBeepMeep/krea-2",
-    "managed_checkpoint": "Krea2Turbo_quanto_bf16_int8.safetensors",
-    "managed_size_estimate_gb": 13.5,
-    "compatible_existing_checkpoints": [
-      "Krea2Turbo_quanto_bf16_int8.safetensors",
-      "Krea2Turbo_bf16.safetensors"
-    ],
-    "default_steps": 8,
-    "default_guidance": 0,
-    "license_acceptance_required": true,
-    "aup_acknowledgement_required": true,
-    "hf_token_persisted": false,
-    "reused_checkpoint_protected_from_delete": true,
-    "official_upstream": "krea/Krea-2-Turbo"
+  "runtime_pins": {
+    "wangp_revision": "6e35b37e309ccebeed193ef53cdff66fb973b693",
+    "wangp_version_hint": "12.53",
+    "krea2_revision": "f7a3040b990b672af3c30b5ad1f0df8ffd244881"
   },
   "setup": {
     "builder": "Inno Setup",
     "canonical_build": "build_setup_windows.bat",
-    "expected_output": "release/installer/UnumSunt_Sprite_Studio_R5c6a_Setup_x64.exe",
+    "expected_output": "release/installer/UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe",
     "app_id": "{5F2F2D9A-6C3C-4D0A-A0D4-2D9EF36D5D42}",
     "same_app_id_update": true,
-    "krea2_component": true,
     "external_runtime_non_destructive": true,
     "target_requires_python": false
   },
+  "release_gates_open": [
+    "core_license",
+    "third_party_notices",
+    "krea2_safeguards",
+    "windows_manual_matrix",
+    "core_pip_check",
+    "wangp_pip_check"
+  ],
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 81,
-      "sha256": "ff400f798364ca12433b75d7ffad51726f05b20d843a4b50d2e1b4c0c42a1cb4"
+      "bytes": 574,
+      "sha256": "e65b40d82098ca7338c14d533cc0751a59ac485358dda09d63e2ee3921421c84"
+    },
+    {
+      "path": "APPLY_PATCH_R5C7.bat",
+      "bytes": 1155,
+      "sha256": "ca7d636160c2cb845bbeb1deb6be254ab03b5524d552bf969c20a5cdcb63b56d"
     },
     {
       "path": "BUILD_RUNTIME_BOOTSTRAP_R5C1B.md",
@@ -58,8 +59,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 18177,
-      "sha256": "bd9621e60c8532261ec70746dbb46fa57263c715649a146f68cbd12b6684bd10"
+      "bytes": 19080,
+      "sha256": "ac8ecd8d0b3d1f72a61d7691e37eb9b057264bac343b64096fc977bf2d08ee3a"
     },
     {
       "path": "MIGRATION_R1_TO_R2.md",
@@ -337,14 +338,24 @@
       "sha256": "23baca1f43ef26c75a3edfab79df7d1f73b9f06901d788576dd6b9404ed3b54a"
     },
     {
+      "path": "R5C6B_VALIDATION.md",
+      "bytes": 651,
+      "sha256": "8237635961d894e9030495b2b8b69426a0cc75d716aa66554d5277013e7f1384"
+    },
+    {
       "path": "R5C6_MAINTENANCE_LIFECYCLE.md",
       "bytes": 2806,
       "sha256": "f636ab4fd8b66f46d175a7765b12f760a19549d15b37d43a061df562acf935ca"
     },
     {
+      "path": "R5C7_RELEASE_HARDENING.md",
+      "bytes": 1660,
+      "sha256": "05fe94258f39bb47b08906510cc88b45ecbf170d1445cd1ffb891a4da1a14f07"
+    },
+    {
       "path": "README.md",
-      "bytes": 20830,
-      "sha256": "fcb64d0023891c5a72f32be21ada5b8762ca5a6d68c8f99244601b1b8a29cf4c"
+      "bytes": 21335,
+      "sha256": "55f334bab8a38a675ed14aee551c07d92dd0cb65c3278d4b6972a2cc274915ef"
     },
     {
       "path": "RUNTIME_INSTALLER_R5C3.md",
@@ -378,8 +389,8 @@
     },
     {
       "path": "app/__init__.py",
-      "bytes": 37,
-      "sha256": "15cacd052a57b995777ed173d5d89403779b53b333d20b9a383feda64cff6c1d"
+      "bytes": 36,
+      "sha256": "86a4f67f48d7d92bdc75f63e1b7d489cd2e71399b55372079059d65fefdb79cf"
     },
     {
       "path": "app/alignment_canvas.py",
@@ -393,8 +404,8 @@
     },
     {
       "path": "app/alignment_export.py",
-      "bytes": 12367,
-      "sha256": "a87233342b1fc387fd0078771853ccf21603e802b5856c66fee6300d0ca2e61d"
+      "bytes": 12407,
+      "sha256": "80591e52e1f5331b1313181c7a5b9a3c3bf441d594e7be6aec7f074148bd2e8c"
     },
     {
       "path": "app/alignment_studio.py",
@@ -418,8 +429,8 @@
     },
     {
       "path": "app/calibration.py",
-      "bytes": 13724,
-      "sha256": "0fb682870c838a32e20c7f8604b94e7a56428f5bb5960ecd79b9efe33e90764f"
+      "bytes": 13765,
+      "sha256": "720f368cbbb0c97daa4ad843669bbe413da099b5d5d5f1b4804adbbe4d14ac43"
     },
     {
       "path": "app/calibration_workspace.py",
@@ -458,8 +469,8 @@
     },
     {
       "path": "app/export_service.py",
-      "bytes": 9622,
-      "sha256": "c088f3a57d20aba623e05517ef57ed25a02cfc421285b1cad2f65c9fe932bae6"
+      "bytes": 9649,
+      "sha256": "f68aef158c1f328ac02a54a68486a89bc5d55d7cb3c749e91b535ec77ea2140c"
     },
     {
       "path": "app/export_studio.py",
@@ -473,8 +484,8 @@
     },
     {
       "path": "app/generation/__init__.py",
-      "bytes": 89,
-      "sha256": "2daa39bd4f609646f417430fa7a18fc556ea2bf0a9825c15c6eccba8443bac3a"
+      "bytes": 88,
+      "sha256": "fa365282409fc3f52cd803032871b5bbf9069631eb33513acb0e4ddc56908aad"
     },
     {
       "path": "app/generation/base.py",
@@ -488,8 +499,8 @@
     },
     {
       "path": "app/generation/image_provider.py",
-      "bytes": 20734,
-      "sha256": "b61ab5b252b063464c847922dd6caec5f2c75f1d7907a2aaca8ffc6210d93ad5"
+      "bytes": 23332,
+      "sha256": "9e00daf213b3cc22d7ad36042ad8c214589da31487212a38839c1b1e736881f2"
     },
     {
       "path": "app/generation/local_wangp.py",
@@ -528,13 +539,13 @@
     },
     {
       "path": "app/image_generation_workspace.py",
-      "bytes": 22183,
-      "sha256": "7b78dc9c18f9d4e6812f665b0add1868d3e8224156d23ce2da4a536d424431df"
+      "bytes": 24499,
+      "sha256": "4fa8bf3591530bf7524911f3daa64b4c1315c565250d9a818fdac8e82da80a46"
     },
     {
       "path": "app/main_window.py",
-      "bytes": 101718,
-      "sha256": "02c78a8930e86a3352351dcfee1d747f35c2bd943e8a212f345eca80cf1ff4b1"
+      "bytes": 101758,
+      "sha256": "919becea116f683563ed666da14dbdd5c958c5e7d465f6919a5e369295bb9ba3"
     },
     {
       "path": "app/maintenance.py",
@@ -568,13 +579,13 @@
     },
     {
       "path": "app/production_presets.py",
-      "bytes": 12225,
-      "sha256": "e2e4db6087ef8bd2c4dd835140d5582b4f231744013b702f0f964b974be246df"
+      "bytes": 12269,
+      "sha256": "0b9d9f9c6b3ef99bb294adb56d2d5a70169a6c944d813b81d27a53f928aa1b66"
     },
     {
       "path": "app/production_presets_workspace.py",
-      "bytes": 12187,
-      "sha256": "22247276f3038af7cf09ee775276bb978f5cb6d1f71747d336a8c0e307b10749"
+      "bytes": 12410,
+      "sha256": "ee73771467053eb0ab5aca62b5d649651959eb4d30cedfa6c785793328db446e"
     },
     {
       "path": "app/profile_store.py",
@@ -593,8 +604,8 @@
     },
     {
       "path": "app/prompt_builder.py",
-      "bytes": 14120,
-      "sha256": "4990ff5cb6cce6338c2487bd453f8f75cb4e50318e7a2c84faf4ddc84b24586b"
+      "bytes": 14164,
+      "sha256": "caa6dbac27149e8eb7b35ed1f30b18b7d8affe2e2a5fbbf30dd6f58c8f3f93cb"
     },
     {
       "path": "app/prompt_builder_workspace.py",
@@ -618,13 +629,13 @@
     },
     {
       "path": "app/runtime_installer.py",
-      "bytes": 43546,
-      "sha256": "afcf8b507d7ca73bc5977acfb54c610ace3c24d42b8bf26711c333284131294c"
+      "bytes": 46028,
+      "sha256": "7af3f8eb39545254a8ee63da3d330f872410f0b0cc8d5debf34a5d3e4abd60cc"
     },
     {
       "path": "app/runtime_manager_dialog.py",
-      "bytes": 22784,
-      "sha256": "984a8646b15c699e9cbbbb8a0b199fd3c8d68ff11a5edf18d502317993a0335e"
+      "bytes": 22847,
+      "sha256": "db69c3718eb4e6fe68acb565a498e432d38ee4c4937edf82d57dff1bf098f9db"
     },
     {
       "path": "app/runtime_paths.py",
@@ -633,13 +644,13 @@
     },
     {
       "path": "app/runtime_preflight.py",
-      "bytes": 27873,
-      "sha256": "fb116a63230b2ebf68e5a4e0274dc4d90f4f31a1e9cc5cd33d8f2af36229e5e2"
+      "bytes": 27943,
+      "sha256": "cd5463b3b23a972972fa4fbc17a1a63f67389c9e02206176c993e3a6176fd0f2"
     },
     {
       "path": "app/runtime_preflight_dialog.py",
-      "bytes": 7282,
-      "sha256": "9b91b3e24aa894680b70f7e45f210682a2b6c9cd3a8195f6bade655fd1bae245"
+      "bytes": 7345,
+      "sha256": "c94a48f69c471b416933299601f7fd30a9e58025e769fccdf9abc8e4eb85bc4c"
     },
     {
       "path": "app/selected_frames_player.py",
@@ -664,7 +675,7 @@
     {
       "path": "app/standalone_selfcheck.py",
       "bytes": 3745,
-      "sha256": "678e22c976aced6509e4e804ff0e601918295e6883f5871e8c94047eb1a8cea0"
+      "sha256": "c58097efe982d35aed5786de78192eae6fa9099e9dd2cbd5c5c293608bb2af65"
     },
     {
       "path": "app/startup.py",
@@ -693,8 +704,8 @@
     },
     {
       "path": "app/version.py",
-      "bytes": 454,
-      "sha256": "b5ca3feb8739bc1a67f133229d37b7f2761ba8e738e979891bc8a6ddd3894367"
+      "bytes": 461,
+      "sha256": "2b7ebacc30dba9830b7a5710afdc828346266baad442d126ee687d40793f053d"
     },
     {
       "path": "app/video_source.py",
@@ -728,18 +739,18 @@
     },
     {
       "path": "assets/runtime/krea2_turbo_settings_template.json",
-      "bytes": 635,
-      "sha256": "ab23e6a02368bb4883e67651bcb80754233e65d692ef7ac380079b7550c5303b"
+      "bytes": 671,
+      "sha256": "a9a04fa255c66eb7aca0de0cbed7d9924fbf6cf9c595c7711591b32601bcc057"
     },
     {
       "path": "assets/runtime/runtime_components.json",
-      "bytes": 2043,
-      "sha256": "99591c62865a54e400957e313e9c27475359d941d80f1934346c48aea8423101"
+      "bytes": 2233,
+      "sha256": "306e75330c33ec43553c79a1e159a08b1ba53801bfec2f3692925f90e84ea3de"
     },
     {
       "path": "assets/runtime/runtime_install_plan.json",
-      "bytes": 2587,
-      "sha256": "72c3f31fdc64f6b820896c8e9393e1d5e2e66f354dcfea79412e5d804ba917b6"
+      "bytes": 2586,
+      "sha256": "304ef0105f32d21e7ca48e425288ffd2ce90f5070243b3b85ead131e256b6325"
     },
     {
       "path": "assets/runtime/wan_animate_settings_template.json",
@@ -748,8 +759,8 @@
     },
     {
       "path": "build/windows_version_info.txt",
-      "bytes": 811,
-      "sha256": "3808257419e0d99fe3681936a595bfa0d92ae0215a854e88e9d6d3746784eaba"
+      "bytes": 809,
+      "sha256": "1e295126b92a2f67628ab6d54ef7da107b3dc4adfb175d0b4967b738c232f3cc"
     },
     {
       "path": "build_exe_windows.bat",
@@ -758,28 +769,28 @@
     },
     {
       "path": "build_setup_windows.bat",
-      "bytes": 248,
-      "sha256": "abfd6b14b9858f301d0bfd096d7ca6cc26f0948be48a14d77d5811adfc779963"
+      "bytes": 246,
+      "sha256": "609b0421709fa60946a1a618d20a43dc785974db9ea3092268829548725520b8"
     },
     {
       "path": "build_setup_windows.ps1",
-      "bytes": 9809,
-      "sha256": "3e62f362b8943beb5a708fe27263c7889b0553d21ca2ac1a898dcbf208311e5d"
+      "bytes": 9801,
+      "sha256": "1f845e0e63436151f1fcc40ae412ee269e7b914dfa30098b5b2912fb5821060d"
     },
     {
       "path": "build_windows_standalone.bat",
-      "bytes": 258,
-      "sha256": "88d0a9dca6c15ac75c8c3164e22204fe446a973648876fad75da1103452814a2"
+      "bytes": 256,
+      "sha256": "a2e1f1784cc9fa4be2d0d3d98334a07541ecbe169edd40376da39605881b67f8"
     },
     {
       "path": "build_windows_standalone.ps1",
-      "bytes": 10771,
-      "sha256": "2dbcb792201980d29034a8eaeb535091de9e38379d8fa2c1cd3c0913938a61e9"
+      "bytes": 10765,
+      "sha256": "f5ffce5dc7b27b0a3c90a5486d8c41264095a46a7fcdda3788c4a5b2304dd169"
     },
     {
-      "path": "installer/UnumSuntSpriteStudio_R5c6a.iss",
-      "bytes": 12971,
-      "sha256": "be7518eb7bbf8d07aadee86f052d9083ba163b8f1190c62481452e3e3d382464"
+      "path": "installer/UnumSuntSpriteStudio_R5c7.iss",
+      "bytes": 12963,
+      "sha256": "932fe17c6407f77d37081cb0852851d1496ace48e79393ba47ab48818e191ad0"
     },
     {
       "path": "main.py",
@@ -888,8 +899,8 @@
     },
     {
       "path": "tests/test_maintenance_r5c6.py",
-      "bytes": 8997,
-      "sha256": "25d8fbc07f0248b3387d83116f532029396dc836fa77dc5397ee5850060c6b57"
+      "bytes": 8993,
+      "sha256": "3e2c064a51ce844a969cb582fd1b54f63dbfb9cf9f5af08013aae52e5ef98179"
     },
     {
       "path": "tests/test_output_geometry.py",
@@ -923,8 +934,8 @@
     },
     {
       "path": "tests/test_r5c1_standalone.py",
-      "bytes": 2274,
-      "sha256": "53ab556153051e2d6adb9354bb2a8a880978eb68d08f8edea825e291eb3926a0"
+      "bytes": 2273,
+      "sha256": "bfffbafad38879ed4f42a9eb619ca58963019f609a84dc93bb5e65df4f91286f"
     },
     {
       "path": "tests/test_r5c1c_stylesheet_regression.py",
@@ -943,13 +954,28 @@
     },
     {
       "path": "tests/test_r5c4_setup.py",
-      "bytes": 3207,
-      "sha256": "c8a8cb2bf24d97bb2c5621fd530cb564210045674b4844f74132061d16f9f6b8"
+      "bytes": 3205,
+      "sha256": "0e75e60f36eccca11655c770e651e1ea6727a9345d86aa6a15fb325999551adb"
+    },
+    {
+      "path": "tests/test_r5c6a_image_memory_hotfix.py",
+      "bytes": 2303,
+      "sha256": "6acb4696fb279994ae9c8c29f9b837ca8abacf4b968337e74a87cdab4f3c7331"
     },
     {
       "path": "tests/test_r5c6a_krea2.py",
-      "bytes": 8697,
-      "sha256": "6a5931c96691c0ae06883445fc30fea1d974db5622587e9284e4a230335c3a88"
+      "bytes": 8695,
+      "sha256": "92dbaa7468388b06a3b6567cb4afe40b287558813094e8e1a67f6b71e32e745d"
+    },
+    {
+      "path": "tests/test_r5c6a_production_preset_refresh_hotfix.py",
+      "bytes": 510,
+      "sha256": "1649272ef466618b69c0563ef3bbd9e7dd3b23a1f3651b6a52632548a3711152"
+    },
+    {
+      "path": "tests/test_r5c7_release_hardening.py",
+      "bytes": 4415,
+      "sha256": "4955eeb6810b38944c1e44981bc941343622a1e04a936c5e1db7354e326fe27f"
     },
     {
       "path": "tests/test_r5e13a_architecture.py",
@@ -983,8 +1009,8 @@
     },
     {
       "path": "tests/test_setup_bootstrap_r5c4a.py",
-      "bytes": 1531,
-      "sha256": "c6b1124d3dd419ebd8e0e085048a98aa645efca0d79b3533b7e7fd28125ef869"
+      "bytes": 1528,
+      "sha256": "830c09fb53eb89a277030b0b058fa6ce637a7530bf1ceac364ef98e6a7a0b93d"
     },
     {
       "path": "tests/test_source_runner.py",

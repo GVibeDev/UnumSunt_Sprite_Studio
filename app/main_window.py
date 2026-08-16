@@ -70,6 +70,7 @@ from app.workflows import WORKFLOW_DEFINITIONS, normalize_workflow_state
 from app.ui_commands import TAB_ROUTES, TAB_SHORT_LABELS, TAB_TOOLTIPS, toolbar_command_state
 from app.themed_tab_bar import ThemedTabBar
 from app.ui_theme import DEFAULT_TAB_THEME
+from app.version import APP_VERSION
 from app.theme_preferences_controller import ThemePreferencesController
 from app.runtime_preflight_dialog import RuntimePreflightDialog
 from app.runtime_bridge_controller import RuntimeBridgeController
@@ -1810,7 +1811,7 @@ class MainWindow(QMainWindow):
 
     def _capture_app_state(self) -> dict:
         return {
-            'version': 'R5c6a',
+            'version': APP_VERSION,
             'current_tab': int(self.workspace_tabs.currentIndex()),
             'current_project_path': self.project_workspace.current_project_path,
             'last_video_path': (str(self.video.metadata.path) if self.video.is_open and self.video.source_kind == 'video' else None),

@@ -495,3 +495,7 @@ R5c6 turns the validated Windows Setup line into a maintenance installer. Re-run
 ## Krea 2 managed component — R5c6a
 
 R5c6a completes local Krea 2 Turbo integration using WanGP's current `krea2_turbo` model contract. The managed default is `Krea2Turbo_quanto_bf16_int8.safetensors` (~13.5 GB) from `DeepBeepMeep/krea-2`, while compatible checkpoints already present are reused in place. The Image Gen bridge receives a dedicated managed template (`model_type=krea2_turbo`, 8 steps, guidance 0). Krea Community License/AUP acceptance is explicit; any Hugging Face token is optional for the configured public WanGP checkpoint and is never persisted. External/adopted runtimes remain non-destructive and are not modified by Setup. See `R5C6A_KREA2_MANAGED_COMPONENT.md`.
+## Windows Release Candidate hardening — R5c7
+
+R5c7 is the pre-release hardening line built on the validated R5c6b baseline. It does not add a new production feature set: it tightens version/manifest coherence, removes Pillow deprecations, protects managed ZIP extraction against path traversal, and pins managed WanGP/Krea 2 upstream revisions for reproducible installs. Public release still requires the remaining license/compliance gates and the real Windows install/update/repair/uninstall matrix.
+

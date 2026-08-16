@@ -22,6 +22,7 @@ from app.generation.errors import (
 )
 from app.generation.local_wangp import LocalWanGPConfig, LocalWanGPProvider
 from app.runtime_paths import local_data_root
+from app.version import APP_VERSION
 from app.generation.models import (
     GenerationProgress,
     GenerationRequest,
@@ -296,7 +297,7 @@ class MockImageProvider(ImageGeneratorProvider):
                 reference = Image.open(request.reference_image).convert('RGBA')
             except Exception:
                 reference = None
-        image = Image.fromarray(canvas, 'RGB').convert('RGBA')
+        image = Image.fromarray(canvas).convert('RGBA')
         if reference is not None:
             reference.thumbnail((int(request.width * 0.76), int(request.height * 0.76)), Image.Resampling.LANCZOS)
             left = (request.width - reference.width) // 2
@@ -346,7 +347,7 @@ class MockImageProvider(ImageGeneratorProvider):
     ) -> None:
         manifest = {
             'schema': 'unum-sunt-image-generation-manifest-v1',
-            'application_version': 'R5c6a',
+            'application_version': APP_VERSION,
             'job_id': request.job_id,
             'provider': request.provider,
             'model': request.model,

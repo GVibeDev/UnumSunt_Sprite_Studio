@@ -133,7 +133,7 @@ class MaintenanceR5c6aTests(unittest.TestCase):
 
     def test_setup_preserves_same_app_id_and_supports_cleanup_choices(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        script = (root / "installer" / "UnumSuntSpriteStudio_R5c6a.iss").read_text(encoding="utf-8")
+        script = (root / "installer" / "UnumSuntSpriteStudio_R5c7.iss").read_text(encoding="utf-8")
         self.assertIn("AppId={{5F2F2D9A-6C3C-4D0A-A0D4-2D9EF36D5D42}", script)
         self.assertIn("UsePreviousAppDir=yes", script)
         self.assertIn("--maintenance-cleanup", script)
@@ -144,7 +144,7 @@ class MaintenanceR5c6aTests(unittest.TestCase):
 
     def test_setup_persists_paths_but_not_legal_acceptance(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        script = (root / "installer" / "UnumSuntSpriteStudio_R5c6a.iss").read_text(encoding="utf-8")
+        script = (root / "installer" / "UnumSuntSpriteStudio_R5c7.iss").read_text(encoding="utf-8")
         self.assertIn("RegisterPreviousData", script)
         self.assertIn("SetPreviousData(PreviousDataKey, 'RuntimeRoot'", script)
         self.assertIn("SetPreviousData(PreviousDataKey, 'ModelRoot'", script)
@@ -165,8 +165,8 @@ class MaintenanceR5c6aTests(unittest.TestCase):
     def test_build_script_targets_r5c6_setup(self) -> None:
         root = Path(__file__).resolve().parents[1]
         text = (root / "build_setup_windows.ps1").read_text(encoding="utf-8")
-        self.assertIn("installer\\UnumSuntSpriteStudio_R5c6a.iss", text)
-        self.assertIn("UnumSunt_Sprite_Studio_R5c6a_Setup_x64.exe", text)
+        self.assertIn("installer\\UnumSuntSpriteStudio_R5c7.iss", text)
+        self.assertIn("UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe", text)
 
 
 if __name__ == "__main__":

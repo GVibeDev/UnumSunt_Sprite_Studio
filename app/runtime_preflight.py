@@ -14,6 +14,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from app.runtime_paths import local_data_root
 from app.runtime_gpu_compat import TorchRuntimeGpuProbe, probe_torch_runtime_gpu
+from app.version import APP_VERSION
 
 GIB = 1024 ** 3
 PLAN_RELATIVE_PATH = Path("assets") / "runtime" / "runtime_install_plan.json"
@@ -596,13 +597,13 @@ def run_runtime_preflight(
             metadata={"reported_cuda": nvidia_probe.cuda_version, "required_cuda": plan.minimum_reported_cuda},
         ))
 
-    # RAM and GPU model/VRAM are deliberately informational in R5c6a.
+    # RAM and GPU model/VRAM are deliberately informational in the R5c7 release-candidate line.
     if memory_bytes is not None:
         checks.append(PreflightCheck(
             "system.ram",
             "RAM fisica",
             STATUS_INFO,
-            f"{memory_bytes / GIB:.1f} GiB rilevati · nessuna soglia bloccante in R5c6a",
+            f"{memory_bytes / GIB:.1f} GiB rilevati · nessuna soglia bloccante in {APP_VERSION}",
             blocking=False,
         ))
     if nvidia_probe.gpus:

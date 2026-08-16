@@ -11,6 +11,7 @@ from PIL import Image
 from app.alignment_engine import create_spritesheet
 from app.chroma_key import apply_chroma_key, crop_rgba_to_subject
 from app.models import ChromaKeySettings, ExportSettings, VideoMetadata
+from app.version import APP_VERSION
 
 
 class ExportError(RuntimeError):
@@ -25,7 +26,7 @@ def save_rgba_image(
 ) -> Path:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    image = Image.fromarray(rgba, mode="RGBA")
+    image = Image.fromarray(rgba)
     fmt = output_format.lower()
 
     if fmt == "png":
@@ -140,7 +141,7 @@ def export_rgba_bundle(
 
     manifest = {
         'schema': 'unum-sunt-sprite-studio-production-v1',
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'exported_at_utc': datetime.now(timezone.utc).isoformat(),
         'source_kind': source_kind,
         'base_name': safe_name,

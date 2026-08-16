@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Iterable
 
 from app.profile_store import ProfilesStore
+from app.version import APP_VERSION
 
 
 PRESET_SCHEMA = 'unum-sunt-production-preset-v1'
@@ -154,7 +155,7 @@ def build_production_preset(
     timestamp = _now()
     return {
         'schema': PRESET_SCHEMA,
-        'application_version': 'R5c6a',
+        'application_version': APP_VERSION,
         'name': str(name).strip() or 'Production preset',
         'description': str(description).strip(),
         'sections': actual_sections,
@@ -222,7 +223,7 @@ def starter_presets() -> dict[str, dict[str, Any]]:
             sections.insert(0, 'alignment')
         preset = {
             'schema': PRESET_SCHEMA,
-            'application_version': 'R5c6a',
+            'application_version': APP_VERSION,
             'name': name,
             'description': description,
             'sections': sections,
