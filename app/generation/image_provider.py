@@ -18,6 +18,7 @@ from app.generation.errors import (
     InvalidGenerationRequestError,
     LocalRuntimeNotInstalledError,
     OutputNotFoundError,
+    ProcessCrashError,
 )
 from app.generation.local_wangp import LocalWanGPConfig, LocalWanGPProvider
 from app.runtime_paths import local_data_root
@@ -37,9 +38,11 @@ class LocalWanGPImageConfig:
     """Image-generation configuration isolated from the video preset.
 
     Runtime paths can be inherited from the validated Local WanGP bridge, while
-    the image settings template remains independent. This lets a user keep the
-    Animate/I2V preset untouched and bind a dedicated WanGP image model preset.
+    the image settings template remains independent. R5c6b additionally exposes
+    WanGP/mmgp memory controls without changing the external runtime itself.
     """
+
+    MANAGED_ARGUMENTS = ('--profile', '--perc-reserved-mem-max')
 
     python_executable: str = ''
     wangp_script: str = ''
@@ -50,6 +53,8 @@ class LocalWanGPImageConfig:
     require_template: bool = True
     process_timeout_seconds: int = 0
     extra_arguments: list[str] = field(default_factory=list)
+    memory_profile: str = ''
+    reserved_memory_max: float = 0.0
 
     @staticmethod
     def default_path() -> Path:
@@ -66,7 +71,44 @@ class LocalWanGPImageConfig:
             require_template=True,
             process_timeout_seconds=config.process_timeout_seconds,
             extra_arguments=list(config.extra_arguments),
+            memory_profile='',
+            reserved_memory_max=0.0,
         )
+
+    def _user_extra_arguments(self) -> list[str]:
+        """Return free-form args while removing memory args managed by the UI."""
+        result: list[str] = []
+        index = 0
+        values = [str(value) for value in self.extra_arguments]
+        while index < len(values):
+            token = values[index].strip()
+            if not token:
+                index += 1
+                continue
+            if token in self.MANAGED_ARGUMENTS:
+                index += 2
+                continue
+            if any(token.startswith(name + '=') for name in self.MANAGED_ARGUMENTS):
+                index += 1
+                continue
+            result.append(token)
+            index += 1
+        return result
+
+    def effective_extra_arguments(self) -> list[str]:
+        result = self._user_extra_arguments()
+        profile = str(self.memory_profile).strip()
+        if profile:
+            if profile not in {'1', '2', '3', '4', '5'}:
+                raise InvalidGenerationRequestError(
+                    f'Profilo memoria WanGP non valido: {profile}. Valori ammessi: Auto, 1, 2, 3, 4, 5.'
+                )
+            result.extend(['--profile', profile])
+        reserved = float(self.reserved_memory_max or 0.0)
+        if reserved > 0.0:
+            reserved = max(0.01, min(1.0, reserved))
+            result.extend(['--perc-reserved-mem-max', f'{reserved:.2f}'])
+        return result
 
     def to_video_config(self) -> LocalWanGPConfig:
         return LocalWanGPConfig(
@@ -78,7 +120,7 @@ class LocalWanGPImageConfig:
             strict_python_311=self.strict_python_311,
             require_template=self.require_template,
             process_timeout_seconds=self.process_timeout_seconds,
-            extra_arguments=list(self.extra_arguments),
+            extra_arguments=self.effective_extra_arguments(),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -86,6 +128,11 @@ class LocalWanGPImageConfig:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'LocalWanGPImageConfig':
+        try:
+            reserved = float(data.get('reserved_memory_max', data.get('perc_reserved_mem_max', 0.0)) or 0.0)
+        except (TypeError, ValueError):
+            reserved = 0.0
+        reserved = max(0.0, min(1.0, reserved))
         return cls(
             python_executable=str(data.get('python_executable', '')),
             wangp_script=str(data.get('wangp_script', '')),
@@ -96,6 +143,8 @@ class LocalWanGPImageConfig:
             require_template=bool(data.get('require_template', True)),
             process_timeout_seconds=max(0, int(data.get('process_timeout_seconds', 0))),
             extra_arguments=[str(value) for value in data.get('extra_arguments', [])],
+            memory_profile=str(data.get('memory_profile', '')).strip(),
+            reserved_memory_max=reserved,
         )
 
     @classmethod
@@ -398,7 +447,19 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
         context.progress_callback(GenerationProgress('starting', 0.05, 'Avvio WanGP image model'))
 
         runner = LocalWanGPProvider(self.config.to_video_config())
-        runner._run_process(settings_path=settings_path, context=context, dry_run=False)
+        try:
+            runner._run_process(settings_path=settings_path, context=context, dry_run=False)
+        except ProcessCrashError as exc:
+            detail = str(exc)
+            lower = detail.lower()
+            if 'out of memory' in lower or 'cudaerrormemoryallocation' in lower:
+                raise ProcessCrashError(
+                    detail
+                    + " | Sprite Studio: memoria esaurita durante Image Gen. "
+                      "Prova Memory profile 5 e, se supportato dal runtime WanGP installato, "
+                      "Reserved RAM max 0.20; poi prova profilo 4 per maggiore velocità."
+                ) from exc
+            raise
         if context.cancel_event.is_set():
             raise GenerationCancelledError('Generazione immagine annullata dall’utente.')
 

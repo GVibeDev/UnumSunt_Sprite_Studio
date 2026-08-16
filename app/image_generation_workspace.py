@@ -8,6 +8,7 @@ from PySide6.QtCore import QTimer, Qt, Signal, QUrl
 from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
+    QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QGroupBox,
@@ -126,6 +127,30 @@ class ImageGenerationWorkspace(QWidget):
         self.wangp_edit, wangp_row = self._path_row(self._choose_wangp)
         self.template_edit, template_row = self._path_row(self._choose_template)
         self.working_dir_edit, working_row = self._path_row(self._choose_working_dir, directory=True)
+
+        self.memory_profile_combo = QComboBox()
+        self.memory_profile_combo.addItem('Auto / default WanGP', '')
+        self.memory_profile_combo.addItem('1 — HighRAM / HighVRAM', '1')
+        self.memory_profile_combo.addItem('2 — HighRAM / LowVRAM', '2')
+        self.memory_profile_combo.addItem('3 — LowRAM / HighVRAM', '3')
+        self.memory_profile_combo.addItem('4 — LowRAM / LowVRAM', '4')
+        self.memory_profile_combo.addItem('5 — VeryLowRAM / LowVRAM', '5')
+        self.memory_profile_combo.setToolTip(
+            'Profilo memoria/offloading passato a WanGP come --profile. '
+            'In caso di CUDA OOM prova prima il profilo 5, poi il 4.'
+        )
+
+        self.reserved_ram_spin = QDoubleSpinBox()
+        self.reserved_ram_spin.setRange(0.0, 1.0)
+        self.reserved_ram_spin.setDecimals(2)
+        self.reserved_ram_spin.setSingleStep(0.05)
+        self.reserved_ram_spin.setValue(0.0)
+        self.reserved_ram_spin.setSpecialValueText('Auto')
+        self.reserved_ram_spin.setToolTip(
+            'Valore opzionale per --perc-reserved-mem-max. 0.00 = non forzare. '
+            'Per un test conservativo usare 0.20.'
+        )
+
         actions = QWidget()
         actions_layout = QHBoxLayout(actions); actions_layout.setContentsMargins(0, 0, 0, 0)
         save_button = QPushButton('Salva runtime'); save_button.clicked.connect(self._save_config)
@@ -137,6 +162,8 @@ class ImageGenerationWorkspace(QWidget):
         runtime_form.addRow('WanGP wgp.py', wangp_row)
         runtime_form.addRow('Image settings JSON', template_row)
         runtime_form.addRow('WanGP root', working_row)
+        runtime_form.addRow('Memory profile', self.memory_profile_combo)
+        runtime_form.addRow('Reserved RAM max', self.reserved_ram_spin)
         runtime_form.addRow('', actions)
         runtime_form.addRow('Report', self.health_report)
         left_layout.addWidget(self.runtime_group)
@@ -256,6 +283,8 @@ class ImageGenerationWorkspace(QWidget):
             require_template=True,
             process_timeout_seconds=self.local_config.process_timeout_seconds,
             extra_arguments=list(self.local_config.extra_arguments),
+            memory_profile=str(self.memory_profile_combo.currentData() or '').strip(),
+            reserved_memory_max=float(self.reserved_ram_spin.value()),
         )
 
     def _load_config(self) -> None:
@@ -263,6 +292,9 @@ class ImageGenerationWorkspace(QWidget):
         self.wangp_edit.setText(self.local_config.wangp_script)
         self.template_edit.setText(self.local_config.settings_template)
         self.working_dir_edit.setText(self.local_config.working_directory)
+        index = self.memory_profile_combo.findData(str(self.local_config.memory_profile or ''))
+        self.memory_profile_combo.setCurrentIndex(index if index >= 0 else 0)
+        self.reserved_ram_spin.setValue(float(self.local_config.reserved_memory_max or 0.0))
 
     def reload_local_runtime_config(self) -> None:
         self.local_config = LocalWanGPImageConfig.load()
@@ -278,8 +310,10 @@ class ImageGenerationWorkspace(QWidget):
 
     def _inherit_video_runtime(self) -> None:
         inherited = LocalWanGPImageConfig.from_video_config(LocalWanGPConfig.load())
-        # Never overwrite the image preset already selected.
+        # Never overwrite Image Gen-specific settings while inheriting runtime paths.
         inherited.settings_template = self.template_edit.text().strip()
+        inherited.memory_profile = str(self.memory_profile_combo.currentData() or '').strip()
+        inherited.reserved_memory_max = float(self.reserved_ram_spin.value())
         self.local_config = inherited
         self._load_config()
         self.local_provider.update_config(inherited)
@@ -288,7 +322,16 @@ class ImageGenerationWorkspace(QWidget):
     def _health_check(self) -> None:
         self.local_config = self._config_from_ui()
         self.local_provider.update_config(self.local_config)
-        self.health_report.setPlainText(self.local_provider.health_check().summary())
+        report = self.local_provider.health_check().summary()
+        profile = self.local_config.memory_profile or 'Auto'
+        reserved = (
+            f'{self.local_config.reserved_memory_max:.2f}'
+            if self.local_config.reserved_memory_max > 0
+            else 'Auto'
+        )
+        self.health_report.setPlainText(
+            report + f'\nImage memory profile: {profile} · Reserved RAM max: {reserved}'
+        )
 
     def _request(self) -> GenerationRequest:
         return GenerationRequest(

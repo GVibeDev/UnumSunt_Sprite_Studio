@@ -1,0 +1,38 @@
+{
+  "schema": "unum-sunt-repo-patch-v1",
+  "project": "Unum Sunt Sprite Studio",
+  "base": "UnumSunt_Sprite_Studio_R5c6a",
+  "target": "R5c6a Image Memory Profile Hotfix TEST candidate",
+  "status": "TEST_ONLY_NOT_VALIDATED_BASELINE",
+  "apply": "Extract into the R5c6a repository root and overwrite existing files.",
+  "purpose": "Expose WanGP/mmgp image-generation memory profile and reserved RAM controls; improve CUDA OOM diagnostics.",
+  "files": [
+    {
+      "path": "R5C6A_IMAGE_MEMORY_HOTFIX_TEST.md",
+      "sha256": "8041ba6abd7c3c1c93d60337b3c3b7e8b57318c2b070362af8ca898d713f721b",
+      "bytes": 1510
+    },
+    {
+      "path": "TEST_REPORT_R5C6A_IMAGE_MEMORY_HOTFIX.txt",
+      "sha256": "782222739c1ff5d270fd9d08107564022b24583e3f2bdfdb3c77a99bc1d343be",
+      "bytes": 526
+    },
+    {
+      "path": "app/generation/image_provider.py",
+      "sha256": "198caa0dbf58c4a899b058da047e9463e4a9f1924b2075c2159b6e0e0b7682fe",
+      "bytes": 23299
+    },
+    {
+      "path": "app/image_generation_workspace.py",
+      "sha256": "4fa8bf3591530bf7524911f3daa64b4c1315c565250d9a818fdac8e82da80a46",
+      "bytes": 24499
+    },
+    {
+      "path": "tests/test_r5c6a_image_memory_hotfix.py",
+      "sha256": "6acb4696fb279994ae9c8c29f9b837ca8abacf4b968337e74a87cdab4f3c7331",
+      "bytes": 2303
+    }
+  ],
+  "automatic_tests": 291,
+  "manual_validation_required": true
+}

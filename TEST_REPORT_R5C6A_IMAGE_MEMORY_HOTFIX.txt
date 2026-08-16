@@ -1,0 +1,20 @@
+Unum Sunt Sprite Studio R5c6a — Image Memory Profile Hotfix TEST
+Data: 2026-08-16
+
+Static compile:
+- app/generation/image_provider.py: OK
+- app/image_generation_workspace.py: OK
+
+Specific tests:
+- tests.test_r5c6a_image_memory_hotfix: 4/4 OK
+
+Krea 2 regression subset:
+- tests.test_r5c6a_krea2 + hotfix: 15/15 OK
+
+Full repository test suite:
+- 291 tests OK
+- runtime: 12.061 s
+
+Manual validation still required:
+- real Krea 2 Image Gen with Memory profile 5 / Reserved RAM max 0.20
+- fallback test with profile 4 if desired
