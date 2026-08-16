@@ -170,9 +170,11 @@ class ProductionPresetsWorkspace(QWidget):
         self.preset_list.clear()
         self.preset_list.addItems(names)
         if current in names:
-            matches = self.preset_list.findItems(current, 0)
-            if matches:
-                self.preset_list.setCurrentItem(matches[0])
+            # PySide6 requires Qt.MatchFlag for QListWidget.findItems(); passing
+            # the legacy integer 0 raises TypeError on current bindings. Since
+            # `names` is the exact source used to populate the list, selecting
+            # by row is simpler, exact and binding-independent.
+            self.preset_list.setCurrentRow(names.index(current))
         elif names:
             self.preset_list.setCurrentRow(0)
         self.refresh_context()
