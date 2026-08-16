@@ -1,0 +1,72 @@
+{
+  "schema": "unum-sunt-runtime-install-plan-v1",
+  "profile_id": "wangp-cuda13-windows",
+  "label": "WanGP local AI runtime · Windows CUDA 13",
+  "cuda": {
+    "minimum_reported_cuda": "13.0",
+    "recommended_toolkit": "13.1",
+    "python": "3.11.14",
+    "pytorch": "2.10.0",
+    "notes": "R5c3 usa il preflight R5c2 per la compatibilità CUDA del driver. Nessuna soglia minima di modello GPU, VRAM o RAM. Il CUDA Toolkit/nvcc viene segnalato nel Health Check come opzionale/non bloccante."
+  },
+  "components": [
+    {
+      "id": "miniconda",
+      "label": "Miniconda + bootstrap ambiente",
+      "destination": "runtime",
+      "installed_gib": 1.5,
+      "download_gib": 0.3,
+      "temporary_gib": 0.5,
+      "estimate": true
+    },
+    {
+      "id": "wangp_stack",
+      "label": "WanGP + Python 3.11 + PyTorch/CUDA + dipendenze",
+      "destination": "runtime",
+      "installed_gib": 20.0,
+      "download_gib": 10.0,
+      "temporary_gib": 4.0,
+      "estimate": true
+    },
+    {
+      "id": "wan_animate",
+      "label": "Wan 2.2 Animate 14B · checkpoint primario Quanto BF16 INT8",
+      "destination": "models",
+      "installed_gib": 16.7,
+      "download_gib": 16.7,
+      "temporary_gib": 1.0,
+      "estimate": false,
+      "notes": "Checkpoint primario congelato in R5c3: 17,933,520,197 byte. WanGP può acquisire asset condivisi aggiuntivi al primo utilizzo."
+    },
+    {
+      "id": "wangp_shared_model_reserve",
+      "label": "Riserva asset condivisi WanGP / encoder / VAE",
+      "destination": "models",
+      "installed_gib": 15.0,
+      "download_gib": 0.0,
+      "temporary_gib": 0.0,
+      "estimate": true,
+      "notes": "Riserva prudenziale: gli asset condivisi dipendono dai modelli/profili effettivamente usati e possono essere scaricati on demand da WanGP."
+    },
+    {
+      "id": "krea2_turbo",
+      "label": "Krea 2 Turbo checkpoint",
+      "destination": "models",
+      "installed_gib": 26.3,
+      "download_gib": 26.3,
+      "temporary_gib": 2.0,
+      "estimate": false,
+      "notes": "Checkpoint turbo.safetensors pubblicato come ~26.3 GB; il piano conserva 26.3 GiB come riserva prudenziale. Accesso gated e licenza/AUP obbligatori."
+    },
+    {
+      "id": "workspace_reserve",
+      "label": "Riserva workspace / output AI",
+      "destination": "models",
+      "installed_gib": 20.0,
+      "download_gib": 0.0,
+      "temporary_gib": 0.0,
+      "estimate": true
+    }
+  ],
+  "safety_margin_percent": 10.0
+}

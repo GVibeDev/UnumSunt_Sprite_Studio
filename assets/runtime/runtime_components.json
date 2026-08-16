@@ -1,0 +1,43 @@
+{
+  "schema": "unum-sunt-runtime-components-v1",
+  "profile_id": "wangp-cuda13-windows-r5c3",
+  "miniconda": {
+    "url": "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe",
+    "filename": "Miniconda3-latest-Windows-x86_64.exe",
+    "publisher_hint": "Anaconda"
+  },
+  "wangp": {
+    "archive_url": "https://github.com/deepbeepmeep/Wan2GP/archive/refs/heads/main.zip",
+    "archive_root": "Wan2GP-main",
+    "repository": "https://github.com/deepbeepmeep/Wan2GP",
+    "revision": "main"
+  },
+  "python": {
+    "version": "3.11.14"
+  },
+  "pytorch": {
+    "version": "2.10.0",
+    "torchvision": "0.25.0",
+    "torchaudio": "2.10.0",
+    "index_url": "https://download.pytorch.org/whl/cu130"
+  },
+  "models": {
+    "wan_animate": {
+      "label": "Wan 2.2 Animate 14B · Quanto BF16 INT8",
+      "url": "https://huggingface.co/DeepBeepMeep/Wan2.2/resolve/main/wan2.2_animate_14B_quanto_bf16_int8.safetensors",
+      "filename": "wan2.2_animate_14B_quanto_bf16_int8.safetensors",
+      "sha256": "c62c8eb97de825ceb66c0e9123b56b2becf5086eb44264ad020b0db6025c6218",
+      "size_bytes": 17933520197,
+      "gated": false
+    },
+    "krea2_turbo": {
+      "label": "Krea 2 Turbo",
+      "repo_id": "krea/Krea-2-Turbo",
+      "filename": "turbo.safetensors",
+      "size_bytes": 26300000000,
+      "gated": true,
+      "license_url": "https://huggingface.co/krea/Krea-2-Turbo/blob/main/LICENSE.pdf",
+      "access_url": "https://huggingface.co/krea/Krea-2-Turbo"
+    }
+  }
+}

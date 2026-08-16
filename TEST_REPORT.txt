@@ -1,0 +1,22 @@
+Unum Sunt Sprite Studio — R5c4a Candidate Test Report
+======================================================
+
+Milestone: R5c4a — Inno Setup Discovery & WinGet Bootstrap Hotfix
+Validated base: UnumSunt_Sprite_Studio_R5c3e
+Immediate parent candidate: R5c4
+
+Automated regression: PASSED
+Tests executed: 266
+Result: 266 passed, 0 failed, 0 errors
+
+Static checks:
+- py_compile / compileall: PASSED
+- R5c4 Setup orchestration tests: PASSED
+- R5c4a Inno discovery contract tests: PASSED
+- per-user LocalAppData discovery: PASSED
+- registry App Paths / InstallLocation discovery contract: PASSED
+- WinGet re-probe after non-zero status: PASSED
+
+Platform gate:
+- Inno Setup compilation cannot be executed in this Linux container.
+- Final Setup.exe must be compiled and smoke-tested on Windows using build_setup_windows.bat.
