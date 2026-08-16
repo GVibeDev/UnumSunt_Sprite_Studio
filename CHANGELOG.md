@@ -1,3 +1,14 @@
+## R5c7 — GPL & Compliance Finalization (test patch)
+
+- Licenses the project-owned Sprite Studio Core as **GPL-3.0-or-later** and adds the full GPLv3 text.
+- Adds `THIRD_PARTY_NOTICES.txt`, GPL distribution checklist and Krea safety/use documentation.
+- Keeps WanGP and Krea 2 explicitly outside the Core GPL scope; their own upstream terms remain applicable.
+- Adds an automated build-time collector for license/notice files from the exact Python 3.13 build environment and bundles the resulting inventory in the frozen Core.
+- Adds the GPL license page to the Inno Setup wizard.
+- Adds a Krea pre-generation policy attestation and a post-generation manual-review gate before a Krea image can enter the WAN reference pipeline.
+- Stores only a minimal local Krea review sidecar; prompt text, account tokens and user identity are not recorded.
+- Keeps the R5c7 runtime/model pins unchanged.
+
 ## R5c7 — Windows Release Candidate Hardening (candidate)
 
 - Promotes the validated R5c6b hotfix line into the Windows RC candidate branch.
@@ -6,7 +17,7 @@
 - Hardens managed WanGP ZIP extraction against absolute paths, drive paths, `..` traversal and symlink entries.
 - Pins managed WanGP source to immutable commit `6e35b37e309ccebeed193ef53cdff66fb973b693` (WanGP 12.53 line) and Krea 2 managed downloads to Hugging Face revision `f7a3040b990b672af3c30b5ad1f0df8ffd244881`.
 - Expands `.gitignore` for credentials, build artifacts, AI runtimes and model weights.
-- Keeps Core license selection and Krea 2 application safeguards as explicit release gates; this candidate is not a public-release declaration.
+- The later R5c7 GPL & Compliance Finalization patch resolves the Core-license and Krea-safeguard release gates without changing the validated runtime/model pins.
 
 ## R5c6a — Krea 2 Managed Component Completion
 

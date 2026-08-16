@@ -1,23 +1,30 @@
 {
   "project": "Unum Sunt Sprite Studio",
   "version": "R5c7",
-  "status": "test_candidate",
-  "working_base": "UnumSunt_Sprite_Studio_R5c6b",
-  "validated_baseline": "UnumSunt_Sprite_Studio_R5c6b",
-  "milestone": "Windows Release Candidate Hardening",
+  "status": "test_candidate_compliance",
+  "working_base": "UnumSunt_Sprite_Studio_R5c7",
+  "validated_baseline": "UnumSunt_Sprite_Studio_R5c7",
+  "milestone": "Windows Release Candidate — GPL & Compliance Finalization",
   "automatic_tests": {
     "status": "passed",
-    "count": 301
+    "count": 322
   },
   "build_checks": {
     "compileall": "passed",
-    "unittest_discovery": "301 passed",
-    "version_cli_smoke": "pending packaged Windows build",
-    "runtime_json_parse": "passed",
-    "inno_compile": "requires Windows/Inno Setup",
-    "real_gpu_workflows": "requires Windows/GPU manual test",
-    "core_pip_check": "requires actual build venv",
-    "wangp_pip_check": "requires actual Python 3.11 runtime"
+    "unittest_discovery": "322 passed",
+    "previous_windows_rc_validation": "22 PASS / 9 manual WARN / 0 FAIL before compliance patch",
+    "core_pip_check_previous_rc": "passed",
+    "wangp_pip_check_previous_rc": "passed",
+    "windows_rebuild_after_compliance_patch": "required",
+    "krea_compliance_ui_manual_smoke": "required"
+  },
+  "license": {
+    "core": "GPL-3.0-or-later",
+    "license_file": "LICENSE",
+    "third_party_notices": "THIRD_PARTY_NOTICES.txt",
+    "release_checklist": "GPL_DISTRIBUTION_CHECKLIST.txt",
+    "krea_safety": "KREA_SAFETY_AND_USE.txt",
+    "build_license_inventory": "tools/collect_release_licenses.py"
   },
   "runtime_pins": {
     "wangp_revision": "6e35b37e309ccebeed193ef53cdff66fb973b693",
@@ -31,15 +38,13 @@
     "app_id": "{5F2F2D9A-6C3C-4D0A-A0D4-2D9EF36D5D42}",
     "same_app_id_update": true,
     "external_runtime_non_destructive": true,
-    "target_requires_python": false
+    "target_requires_python": false,
+    "installer_license_page": "LICENSE"
   },
   "release_gates_open": [
-    "core_license",
-    "third_party_notices",
-    "krea2_safeguards",
-    "windows_manual_matrix",
-    "core_pip_check",
-    "wangp_pip_check"
+    "Rebuild standalone + Setup on Windows so GPL/legal payload is collected and bundled",
+    "Manual smoke-test of Krea pre-generation attestation and post-generation review gate",
+    "Publish/provide Corresponding Source for the exact released Core revision alongside binary release"
   ],
   "files": [
     {
@@ -59,8 +64,23 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 19080,
-      "sha256": "ac8ecd8d0b3d1f72a61d7691e37eb9b057264bac343b64096fc977bf2d08ee3a"
+      "bytes": 19992,
+      "sha256": "2b4197a5de64ee4c9b053b151918012c1bb9d5595f2ec79d55709ae3390d240a"
+    },
+    {
+      "path": "GPL_DISTRIBUTION_CHECKLIST.txt",
+      "bytes": 1151,
+      "sha256": "5507d2934af7909a9c9af379bc92940a179b8cbd2913c1f08ce3c261dea3d4bf"
+    },
+    {
+      "path": "KREA_SAFETY_AND_USE.txt",
+      "bytes": 1865,
+      "sha256": "4da0a282f0a310b9b2699561dcc6ef48d1ba1bda5fd76a099f33355d9bcacf02"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
     },
     {
       "path": "MIGRATION_R1_TO_R2.md",
@@ -273,6 +293,21 @@
       "sha256": "55eecb3719bf378f7bf070c827a528e59fcee991eed51c90655237921d1acfb7"
     },
     {
+      "path": "PATCH_MANIFEST_R5C7_CLEANUP_TRANSITION_HOTFIX_2.json",
+      "bytes": 1012,
+      "sha256": "df2ceb848f8c6be29f6eecf802eb2e238c23990551a74687baf8be83bb9aac2c"
+    },
+    {
+      "path": "PATCH_MANIFEST_R5C7_GPL_COMPLIANCE_FINALIZATION.json",
+      "bytes": 1341,
+      "sha256": "19d23d3f4fa9e8caec9554bb461383c41f2801146555440dd03a8b656ee0f8de"
+    },
+    {
+      "path": "PATCH_MANIFEST_R5C7_RC_HARDENING.json",
+      "bytes": 7751,
+      "sha256": "9871558cc35943835b14d01b4831541a50138ba89719a196d0a908ccd8a7c2ce"
+    },
+    {
       "path": "PERFORMANCE_OPTIMIZATION_R5E13B.md",
       "bytes": 1203,
       "sha256": "c84474e67de7fbabc1e278a1b2ad2daadb36859c5bbcb41ce241d9b7dca5ba44"
@@ -348,14 +383,34 @@
       "sha256": "f636ab4fd8b66f46d175a7765b12f760a19549d15b37d43a061df562acf935ca"
     },
     {
+      "path": "R5C7_BRANDING_INSTALLER_ICON_TEST.md",
+      "bytes": 889,
+      "sha256": "a3b5b9cba0015437ce7327bf29d6f58f4fd5d41a5e639fd22193fea39ede6ef1"
+    },
+    {
+      "path": "R5C7_CLEANUP_SOURCE_GUARD_HOTFIX.md",
+      "bytes": 818,
+      "sha256": "24b40a6bff521d105bde2ec1195633fa84f3838a8a662f88eb4d8b91595c52ad"
+    },
+    {
+      "path": "R5C7_CLEANUP_TRANSITION_HOTFIX_2.md",
+      "bytes": 1173,
+      "sha256": "5f6da40353f3a22eb7c85aa6292a518005bca33b9660db8b4e8cabcf63a286aa"
+    },
+    {
+      "path": "R5C7_GPL_COMPLIANCE_FINALIZATION.md",
+      "bytes": 2070,
+      "sha256": "1938c7a549d5f922e2c4036895401538e94a01c3e3fd023c513c97847ea55122"
+    },
+    {
       "path": "R5C7_RELEASE_HARDENING.md",
       "bytes": 1660,
       "sha256": "05fe94258f39bb47b08906510cc88b45ecbf170d1445cd1ffb891a4da1a14f07"
     },
     {
       "path": "README.md",
-      "bytes": 21335,
-      "sha256": "55f334bab8a38a675ed14aee551c07d92dd0cb65c3278d4b6972a2cc274915ef"
+      "bytes": 22911,
+      "sha256": "06453e9a95f3cbe310f14dc96e8c4a9162d7dab3c729f94865ab3b16868ba176"
     },
     {
       "path": "RUNTIME_INSTALLER_R5C3.md",
@@ -373,9 +428,14 @@
       "sha256": "cf3bb6db353aaac88379696c9b1a740aa2c81bd44422e6fb9e854a9a6d364257"
     },
     {
+      "path": "THIRD_PARTY_NOTICES.txt",
+      "bytes": 5950,
+      "sha256": "62a62fa647283de335cc68e32e5935de2bd9ab1dc8fb29ed22c16f8821a49dc6"
+    },
+    {
       "path": "UnumSuntSpriteStudio.spec",
-      "bytes": 1240,
-      "sha256": "3fed7b3112f29eac7a7069b4f9172ba353a51e6b87282b89efc1414b470463c8"
+      "bytes": 1448,
+      "sha256": "bb586232b6b87cd1b9fa94ab3e14967151b2661896edd79db286a3c8e06493ed"
     },
     {
       "path": "WINDOWS_SETUP_R5C4.md",
@@ -424,8 +484,8 @@
     },
     {
       "path": "app/branding.py",
-      "bytes": 3333,
-      "sha256": "d386e62c5f4882906dfb5ba818e67476e44caf8636b16cd986ff4ac224846a8a"
+      "bytes": 3573,
+      "sha256": "a9dc237e2390b8cfef1467ef0bef95f422f58bc31f536c3d1690be8c25df666f"
     },
     {
       "path": "app/calibration.py",
@@ -464,8 +524,8 @@
     },
     {
       "path": "app/cleanup_studio.py",
-      "bytes": 28422,
-      "sha256": "a0ed4074b564a6d0a21e2291475d7babc045c91a45e0675a2e3c8df34df6cf69"
+      "bytes": 31367,
+      "sha256": "c22c40b0e1c03b37fd4a02eee7f3cb2ca71f6d9ef3950a9e5b961c8cc82bfb8b"
     },
     {
       "path": "app/export_service.py",
@@ -539,13 +599,18 @@
     },
     {
       "path": "app/image_generation_workspace.py",
-      "bytes": 24499,
-      "sha256": "4fa8bf3591530bf7524911f3daa64b4c1315c565250d9a818fdac8e82da80a46"
+      "bytes": 31995,
+      "sha256": "d2a16fa965fcbe6330230d09c7a588aaf8e9c726dfa658fc3b9e45a24c94791f"
+    },
+    {
+      "path": "app/krea_compliance.py",
+      "bytes": 2703,
+      "sha256": "c453e0cfbc4005edcc30b288f491beda76e3abfabac83334114a793feeaa2b9f"
     },
     {
       "path": "app/main_window.py",
-      "bytes": 101758,
-      "sha256": "919becea116f683563ed666da14dbdd5c958c5e7d465f6919a5e369295bb9ba3"
+      "bytes": 101966,
+      "sha256": "6c5531aa4dc7f431eac619042cb2a9c3d0d88bb1fe444e04e84f27439d2663d7"
     },
     {
       "path": "app/maintenance.py",
@@ -704,8 +769,8 @@
     },
     {
       "path": "app/version.py",
-      "bytes": 461,
-      "sha256": "2b7ebacc30dba9830b7a5710afdc828346266baad442d126ee687d40793f053d"
+      "bytes": 527,
+      "sha256": "cec3f568a368e43809e5dfbf732246fcece331235fac5494689ba0a775265a09"
     },
     {
       "path": "app/video_source.py",
@@ -733,6 +798,16 @@
       "sha256": "470db02cba75ebfeb144cd2ed56f50e6991db6b02c48b3672963bf09f8810730"
     },
     {
+      "path": "assets/branding/installer_wizard.bmp",
+      "bytes": 154542,
+      "sha256": "b15c71593fb8603a4cf0b942a6302615d901dadf5818f5d906d43ed69f131e93"
+    },
+    {
+      "path": "assets/branding/installer_wizard_small.bmp",
+      "bytes": 9294,
+      "sha256": "b8711b25349d84b6d2284e1949ace4155738f4b6bdb9b10b976dc6f97e96b72e"
+    },
+    {
       "path": "assets/branding/splash_screen.png",
       "bytes": 2616442,
       "sha256": "33ca69a85fe3e18489d3684e44999129a056ff1e95144a58a6c5a47ccbbb4c03"
@@ -744,8 +819,8 @@
     },
     {
       "path": "assets/runtime/runtime_components.json",
-      "bytes": 2233,
-      "sha256": "306e75330c33ec43553c79a1e159a08b1ba53801bfec2f3692925f90e84ea3de"
+      "bytes": 2288,
+      "sha256": "6776e910b84f791b3aa2a49d6c6a01f3e8f77d132ae3a1e4d1b6efa8b0e707de"
     },
     {
       "path": "assets/runtime/runtime_install_plan.json",
@@ -756,11 +831,6 @@
       "path": "assets/runtime/wan_animate_settings_template.json",
       "bytes": 1998,
       "sha256": "727b9012e70a7ad536ca08201a8744d18e86ded6674a446172beffa7f64d4b74"
-    },
-    {
-      "path": "build/windows_version_info.txt",
-      "bytes": 809,
-      "sha256": "1e295126b92a2f67628ab6d54ef7da107b3dc4adfb175d0b4967b738c232f3cc"
     },
     {
       "path": "build_exe_windows.bat",
@@ -784,18 +854,18 @@
     },
     {
       "path": "build_windows_standalone.ps1",
-      "bytes": 10765,
-      "sha256": "f5ffce5dc7b27b0a3c90a5486d8c41264095a46a7fcdda3788c4a5b2304dd169"
+      "bytes": 10968,
+      "sha256": "9150ee710de2c731d6beaf4db471df63b7d8ea7dc4818e24ae3466f9e555651c"
     },
     {
       "path": "installer/UnumSuntSpriteStudio_R5c7.iss",
-      "bytes": 12963,
-      "sha256": "932fe17c6407f77d37081cb0852851d1496ace48e79393ba47ab48818e191ad0"
+      "bytes": 13109,
+      "sha256": "b8fd148f8ba1057889e0eea0d59e6ee2eb163752edc1ab86508d83af00dac032"
     },
     {
       "path": "main.py",
-      "bytes": 9811,
-      "sha256": "9ec31c139c1a2d107da12447193315b9b3e81667ab7f168b4eae545d57773336"
+      "bytes": 10157,
+      "sha256": "a4df36f175ebb62e44434b80fe8a88094fff635dd0be9d53c565271a4e4a34cb"
     },
     {
       "path": "requirements-build.txt",
@@ -844,8 +914,8 @@
     },
     {
       "path": "tests/test_branding_integration.py",
-      "bytes": 1901,
-      "sha256": "a1daf3f37dd423696af41d57313cd3ee7085257e07ccc4c8c320c8cc8f79d508"
+      "bytes": 2937,
+      "sha256": "097c3c989a09c3ebcb61cd6deec4f19aabf1209fba6177faee67dcd5307af557"
     },
     {
       "path": "tests/test_build_runtime_bootstrap.py",
@@ -973,6 +1043,21 @@
       "sha256": "1649272ef466618b69c0563ef3bbd9e7dd3b23a1f3651b6a52632548a3711152"
     },
     {
+      "path": "tests/test_r5c7_cleanup_source_guard.py",
+      "bytes": 1176,
+      "sha256": "f2dda3b3d3e398d176df6382b6df5c8314de7527a2ba248450241f6ab1e92726"
+    },
+    {
+      "path": "tests/test_r5c7_cleanup_source_transition.py",
+      "bytes": 2468,
+      "sha256": "d2c3db99e30737a85d87f91c3d153fea648eff601472ab8a398ed57c33e1b019"
+    },
+    {
+      "path": "tests/test_r5c7_release_compliance.py",
+      "bytes": 5032,
+      "sha256": "99221ce02e7850dfb0558a1696f1e93e0daef845fa6ec67a0e681a6e68acf1c1"
+    },
+    {
       "path": "tests/test_r5c7_release_hardening.py",
       "bytes": 4415,
       "sha256": "4955eeb6810b38944c1e44981bc941343622a1e04a936c5e1db7354e326fe27f"
@@ -1051,6 +1136,11 @@
       "path": "tests/test_workflows.py",
       "bytes": 5778,
       "sha256": "f0c6a0cbf6a7f752ac59a1e3d1a749a8557d44d83cff7f72154a42b67d24fac7"
+    },
+    {
+      "path": "tools/collect_release_licenses.py",
+      "bytes": 5449,
+      "sha256": "0a5e553afdac8f71e4c3a4a190e63ea5a9c7e0d5c843c5b6b6beb7845f7b53dd"
     },
     {
       "path": "tools/mock_wangp_cli.py",

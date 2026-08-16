@@ -1,0 +1,20 @@
+UNUM SUNT SPRITE STUDIO — GPL-3.0-OR-LATER RELEASE CHECKLIST
+
+For every public Core binary release:
+
+[ ] The source tree for the exact released Core revision is publicly available.
+[ ] The source includes build scripts, PyInstaller spec, installer source, requirements,
+    assets needed to rebuild the Core, LICENSE, and third-party notices.
+[ ] The binary release contains LICENSE and THIRD_PARTY_NOTICES.txt.
+[ ] The official build has generated licenses/THIRD_PARTY_LICENSES and INVENTORY.json.
+[ ] Any source archive/repository offered for the release corresponds to the same tag
+    and version as the published executable/installer.
+[ ] No WanGP code or Krea model weights are described as GPL-covered.
+[ ] WanGP remains a separately licensed external process/runtime.
+[ ] Krea remains a separately licensed model component and its license/AUP acceptance
+    and review safeguard remain enabled.
+[ ] If monetization, SaaS, paid API, paid embedding, OEM distribution, or model bundling
+    changes, WanGP and Krea terms are reviewed again before publishing.
+
+Project license identifier: GPL-3.0-or-later
+Copyright: Copyright (C) 2026 GVibeDev

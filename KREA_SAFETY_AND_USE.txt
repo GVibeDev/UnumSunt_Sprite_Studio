@@ -1,0 +1,41 @@
+UNUM SUNT SPRITE STUDIO — KREA 2 SAFETY AND USE CONTROLS
+Release line: R5c7
+
+Krea 2 Turbo is an optional, separately licensed model component. It is not part of
+the GPL-covered Sprite Studio Core and its own Community License Agreement and
+Acceptable Use Policy remain applicable.
+
+R5c7 uses a local manual-review safeguard appropriate to a single-user desktop
+creative workflow:
+
+1. Managed installation gate
+   The Runtime Manager requires explicit confirmation of the Krea 2 Community License
+   and Acceptable Use Policy before managed installation/use of Krea 2.
+
+2. Pre-generation attestation
+   When the active Image Gen template is a Krea 2 template, the user must explicitly
+   confirm that the prompt and intended use comply with the Krea license and AUP before
+   a generation request is submitted.
+
+3. Output review gate
+   A newly generated Krea image is previewed locally but is not automatically promoted
+   into the WAN reference pipeline. The user must review the output and mark it as
+   compliant before the "Use as WAN reference" action is enabled.
+
+4. Review record
+   A small local sidecar record is written in the image-generation job directory when
+   an output is approved. It records the review time, output path, and policy references;
+   it contains no prompt text, account token, or personal identifier.
+
+5. Policy links
+   Current Krea Community License:
+   https://www.krea.ai/krea-2-licensing
+
+   Current Krea Acceptable Use Policy:
+   https://www.krea.ai/krea-2-use-policy
+
+The app does not attempt to replace Krea's policy with a home-grown keyword blacklist.
+The safeguard is intentionally based on explicit user attestation plus human review,
+which is one of the review approaches recognized by the Krea license for downstream
+deployments. Users remain responsible for complying with applicable law and the current
+Krea terms.

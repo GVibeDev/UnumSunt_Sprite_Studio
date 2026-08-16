@@ -22,6 +22,7 @@ OutputBaseFilename=UnumSunt_Sprite_Studio_R5c7_Setup_x64
 SetupIconFile=..\assets\branding\app_icon.ico
 WizardImageFile=..\assets\branding\installer_wizard.bmp
 WizardSmallImageFile=..\assets\branding\installer_wizard_small.bmp
+LicenseFile=..\LICENSE
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/max
 SolidCompression=yes

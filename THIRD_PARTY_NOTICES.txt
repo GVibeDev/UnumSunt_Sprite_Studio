@@ -1,0 +1,126 @@
+UNUM SUNT SPRITE STUDIO — THIRD-PARTY NOTICES
+Release line: R5c7
+Prepared: 2026-08-17
+
+1. PROJECT LICENSE SCOPE
+
+The Unum Sunt Sprite Studio Core, meaning the original source code and project-owned
+assets in this repository, is distributed under GNU General Public License version 3
+or any later version (GPL-3.0-or-later). See LICENSE.
+
+The GPL does not replace or override licenses that apply to third-party software,
+models, weights, libraries, data, or other materials. Those components remain under
+their own terms.
+
+The Windows Core intentionally keeps WanGP, Miniconda, PyTorch and AI model weights
+outside the Core executable. WanGP is invoked as a separate external program through
+its command-line/process interface. This separation is part of the project's release
+and licensing architecture.
+
+2. CORE / WINDOWS DISTRIBUTION COMPONENTS
+
+PySide6 / Qt for Python
+  Upstream: The Qt Company / Qt Project
+  License options upstream: LGPL-3.0 / GPL-3.0 / commercial Qt terms, depending on
+  the component and distribution. This project is itself GPL-3.0-or-later and uses
+  the Community Edition. Preserve the license files shipped with the installed Qt
+  for Python packages.
+
+OpenCV / opencv-python
+  Required version range: OpenCV 4.10+ in the current Core requirements.
+  Upstream OpenCV 4.5.0 and later: Apache License 2.0.
+
+NumPy
+  License: BSD-3-Clause, with additional notices for software bundled in NumPy
+  binary distributions. Preserve NumPy's installed license metadata.
+
+Pillow
+  License: open-source MIT-CMU style license used by Pillow/PIL. Preserve the
+  installed Pillow license text and copyright notices.
+
+CPython
+  The frozen Windows build includes Python runtime components.
+  License: Python Software Foundation License and other notices supplied with the
+  relevant Python distribution.
+
+PyInstaller
+  Build system used for the frozen executable.
+  PyInstaller is GPL-2.0-or-later with its Bootloader Exception for the bootloader
+  and related files; run-time hooks can have separate permissive terms. Preserve
+  PyInstaller's supplied licensing notices relevant to the binary build.
+
+The release build runs tools/collect_release_licenses.py against the actual build
+virtual environment and places discovered license/notice files in the installed
+Core under licenses/THIRD_PARTY_LICENSES. This generated inventory is the preferred
+record of the exact package versions used for a specific binary release.
+
+3. EXTERNAL / MANAGED AI RUNTIME
+
+The following components are not relicensed under the Sprite Studio GPL.
+
+WanGP / Wan2GP
+  Upstream project: deepbeepmeep/Wan2GP
+  Managed R5c7 revision: 6e35b37e309ccebeed193ef53cdff66fb973b693
+  Managed version hint: 12.53
+  License at that revision: WanGP Community License 2.0.
+
+  Important: this is not an OSI/GPL license and contains its own commercial-use
+  restrictions. In particular, the pinned license permits free/non-monetized
+  wrappers and integrations under its conditions, while monetized access, paid
+  embedding, paid APIs/SaaS/OEM and similar Restricted Commercialization require
+  separate permission or a commercial license from the WanGP licensor.
+
+  Sprite Studio does not claim WanGP is GPL-covered. Managed installation downloads
+  WanGP as a separate runtime and preserves its upstream license/notices.
+
+Wan 2.2 Animate 14B
+  Upstream model: Wan-AI/Wan2.2-Animate-14B
+  Upstream license: Apache License 2.0, subject also to the model's stated usage
+  responsibilities and any licenses of separately packaged dependencies.
+
+Krea 2 Turbo
+  Upstream model: krea/Krea-2-Turbo
+  Upstream agreement: Krea 2 Community License Agreement v.1 (2026-06-22)
+  Upstream Acceptable Use Policy: Krea Acceptable Use Policy.
+  Managed WanGP checkpoint revision: f7a3040b990b672af3c30b5ad1f0df8ffd244881
+  Managed checkpoint label: Krea2Turbo_quanto_bf16_int8.safetensors
+
+  Krea 2 is NOT GPL software. Krea's current Community License permits commercial use
+  only within its stated revenue threshold and requires a separate enterprise license
+  when that threshold is reached. It also requires reasonable and appropriate content
+  filtering or equivalent review measures and compliance with the Krea Acceptable Use
+  Policy. Krea model terms remain applicable regardless of the GPL license of the
+  Sprite Studio Core.
+
+  Sprite Studio therefore requires explicit Krea license/AUP acceptance before managed
+  Krea installation and applies a local pre-generation attestation plus manual output
+  review gate before a generated Krea image can be promoted into the WAN pipeline.
+
+Miniconda / Anaconda
+  Managed installation is optional and external to the Core. Applicable Anaconda /
+  Miniconda terms remain separate. The Runtime Manager requires explicit acceptance
+  before an automatic managed installation where required by the workflow.
+
+PyTorch / torchvision / torchaudio
+  Installed into the separate Python 3.11 WanGP environment. They retain their own
+  upstream open-source licenses and dependency notices. Their exact license files are
+  kept in that external environment and are not relicensed by Sprite Studio.
+
+4. NO IMPLIED ENDORSEMENT
+
+Names and trademarks of third parties are used only to identify compatible or managed
+components. No sponsorship, endorsement, or affiliation is implied.
+
+5. RELEASE RULE
+
+Before every public binary release:
+  - build from a tagged public source revision;
+  - ship LICENSE and this notice with the Core;
+  - run the automatic third-party license collector in the official build environment;
+  - publish/provide the Corresponding Source for the GPL-covered Core;
+  - preserve all separate WanGP, Krea, model and dependency licenses/notices;
+  - re-check upstream terms before changing how the AI runtime is bundled or monetized.
+
+This notice is a technical compliance record, not legal advice. If the distribution
+or monetization model changes materially, the third-party terms should be reviewed
+again before release.

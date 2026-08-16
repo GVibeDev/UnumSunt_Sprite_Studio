@@ -222,6 +222,10 @@ if (-not $SkipTests) {
     if ($LASTEXITCODE -ne 0) { throw 'Test automatici falliti. Build interrotta.' }
 }
 
+Write-Host 'Raccolta licenze/notice dal build environment...'
+& $python tools\collect_release_licenses.py --output build\legal
+if ($LASTEXITCODE -ne 0) { throw 'Raccolta licenze third-party fallita.' }
+
 Remove-Item -Recurse -Force build\pyinstaller -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force dist\UnumSuntSpriteStudio -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force build\pyinstaller | Out-Null

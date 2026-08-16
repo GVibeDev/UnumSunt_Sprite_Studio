@@ -7,6 +7,7 @@ import uuid
 from PySide6.QtCore import QTimer, Qt, Signal, QUrl
 from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
@@ -34,6 +35,13 @@ from app.generation.local_wangp import LocalWanGPConfig
 from app.generation.manager import GenerationJobManager
 from app.generation.models import GenerationRequest
 from app.generation.registry import ProviderRegistry
+from app.krea_compliance import (
+    KREA_AUP_URL,
+    KREA_LICENSE_URL,
+    has_valid_review_record,
+    krea_policy_applies,
+    write_review_record,
+)
 
 
 class ImageGenerationWorkspace(QWidget):
@@ -49,8 +57,10 @@ class ImageGenerationWorkspace(QWidget):
         self.registry = ProviderRegistry([MockImageProvider(), self.local_provider])
         self.manager = GenerationJobManager(self.registry)
         self.current_job_id: str | None = None
+        self.current_job_requires_krea_review = False
         self.last_image_path: str | None = None
         self.last_manifest_path: str | None = None
+        self.last_image_requires_krea_review = False
         self.poll_timer = QTimer(self)
         self.poll_timer.setInterval(150)
         self.poll_timer.timeout.connect(self._poll_job)
@@ -168,6 +178,37 @@ class ImageGenerationWorkspace(QWidget):
         runtime_form.addRow('Report', self.health_report)
         left_layout.addWidget(self.runtime_group)
 
+        self.krea_compliance_group = QGroupBox('Krea 2 · licenza e revisione manuale')
+        krea_layout = QVBoxLayout(self.krea_compliance_group)
+        krea_notice = QLabel(
+            'Krea 2 resta un componente separatamente licenziato. Per il provider Krea, '
+            'la generazione richiede conferma preventiva e l’output deve essere revisionato '
+            'prima di essere promosso come reference WAN.'
+        )
+        krea_notice.setWordWrap(True)
+        self.krea_prompt_attestation = QCheckBox(
+            'Confermo che prompt e uso previsto rispettano Krea 2 Community License e AUP.'
+        )
+        self.krea_output_review = QCheckBox(
+            'Ho revisionato l’output generato e lo considero conforme prima dell’uso nella pipeline.'
+        )
+        self.krea_output_review.setEnabled(False)
+        self.krea_output_review.toggled.connect(self._on_krea_review_toggled)
+        krea_links = QHBoxLayout()
+        krea_license_button = QPushButton('Apri licenza Krea 2')
+        krea_license_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(KREA_LICENSE_URL)))
+        krea_aup_button = QPushButton('Apri AUP Krea 2')
+        krea_aup_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(KREA_AUP_URL)))
+        krea_links.addWidget(krea_license_button)
+        krea_links.addWidget(krea_aup_button)
+        krea_links.addStretch(1)
+        krea_layout.addWidget(krea_notice)
+        krea_layout.addWidget(self.krea_prompt_attestation)
+        krea_layout.addWidget(self.krea_output_review)
+        krea_layout.addLayout(krea_links)
+        left_layout.addWidget(self.krea_compliance_group)
+        self.template_edit.textChanged.connect(self._refresh_krea_compliance_ui)
+
         generate_row = QHBoxLayout()
         self.validate_button = QPushButton('Valida')
         self.validate_button.clicked.connect(self._validate)
@@ -223,6 +264,7 @@ class ImageGenerationWorkspace(QWidget):
         splitter.setStretchFactor(1, 1)
         root.addWidget(splitter, 1)
         self._refresh_task()
+        self._refresh_krea_compliance_ui()
 
     @staticmethod
     def _path_row(callback, *, directory: bool = False) -> tuple[QLineEdit, QWidget]:
@@ -268,6 +310,63 @@ class ImageGenerationWorkspace(QWidget):
             f"seed {'✓' if caps.fixed_seed else '—'} · cancel {'✓' if caps.cancellation else '—'}"
         )
         self.runtime_group.setVisible(provider.provider_id == 'local_wangp_image')
+        self._refresh_krea_compliance_ui()
+
+    def _krea_policy_applies(self) -> bool:
+        if str(self.provider_combo.currentData()) != 'local_wangp_image':
+            return False
+        return krea_policy_applies(self.template_edit.text().strip())
+
+    def _set_krea_review_checked(self, checked: bool) -> None:
+        previous = self.krea_output_review.blockSignals(True)
+        try:
+            self.krea_output_review.setChecked(bool(checked))
+        finally:
+            self.krea_output_review.blockSignals(previous)
+
+    def _refresh_krea_compliance_ui(self, *_args) -> None:
+        active_krea = self._krea_policy_applies()
+        review_needed = bool(self.last_image_requires_krea_review and self.last_image_path)
+        self.krea_compliance_group.setVisible(active_krea or review_needed)
+        self.krea_prompt_attestation.setEnabled(active_krea and not self.current_job_id)
+        self.krea_output_review.setEnabled(review_needed and not self.current_job_id)
+        if not review_needed:
+            self._set_krea_review_checked(False)
+        if self.last_image_path:
+            if review_needed:
+                self.use_reference_button.setEnabled(self.krea_output_review.isChecked())
+            else:
+                self.use_reference_button.setEnabled(True)
+
+    def _on_krea_review_toggled(self, checked: bool) -> None:
+        if not self.last_image_requires_krea_review or not self.last_image_path:
+            self.use_reference_button.setEnabled(bool(self.last_image_path))
+            return
+        if not checked:
+            self.use_reference_button.setEnabled(False)
+            return
+        try:
+            record = write_review_record(
+                manifest_path=self.last_manifest_path,
+                image_path=self.last_image_path,
+            )
+        except OSError as exc:
+            record = None
+            error = str(exc)
+        else:
+            error = ''
+        if record is None:
+            self._set_krea_review_checked(False)
+            self.use_reference_button.setEnabled(False)
+            QMessageBox.warning(
+                self,
+                'Revisione Krea 2',
+                'Impossibile registrare la revisione manuale; l’output non viene promosso nella pipeline.'
+                + (f'\n\n{error}' if error else ''),
+            )
+            return
+        self.use_reference_button.setEnabled(True)
+        self.status_message.emit(f'Revisione Krea registrata: {record.name}')
 
     def _refresh_task(self, *_args) -> None:
         self.reference_edit.setEnabled(str(self.task_combo.currentData()) == 'image_to_image')
@@ -349,7 +448,13 @@ class ImageGenerationWorkspace(QWidget):
             frames=1,
             fps=1.0,
             steps=int(self.steps_spin.value()),
-            metadata={'media_kind': 'image', 'r5e9': True},
+            metadata={
+                'media_kind': 'image',
+                'r5e9': True,
+                'krea_policy_applies': self._krea_policy_applies(),
+                'krea_prompt_attested': bool(self.krea_prompt_attestation.isChecked()) if self._krea_policy_applies() else False,
+                'krea_manual_review_required': self._krea_policy_applies(),
+            },
         )
 
     def _validate(self) -> None:
@@ -367,6 +472,15 @@ class ImageGenerationWorkspace(QWidget):
     def _generate(self) -> None:
         if self.current_job_id:
             return
+        requires_krea_review = self._krea_policy_applies()
+        if requires_krea_review and not self.krea_prompt_attestation.isChecked():
+            QMessageBox.warning(
+                self,
+                'Krea 2 · conferma richiesta',
+                'Prima della generazione Krea conferma che prompt e uso previsto rispettano '
+                'la Krea 2 Community License e la relativa Acceptable Use Policy.',
+            )
+            return
         if str(self.provider_combo.currentData()) == 'local_wangp_image':
             self.local_config = self._config_from_ui()
             self.local_provider.update_config(self.local_config)
@@ -377,6 +491,11 @@ class ImageGenerationWorkspace(QWidget):
             QMessageBox.critical(self, 'Generazione immagine', str(exc))
             return
         self.current_job_id = job_id
+        self.current_job_requires_krea_review = requires_krea_review
+        self.last_image_requires_krea_review = False
+        self._set_krea_review_checked(False)
+        self.krea_output_review.setEnabled(False)
+        self.use_reference_button.setEnabled(False)
         self.job_label.setText(job_id)
         self.state_label.setText('queued')
         self.message_label.setText('Job immagine in coda')
@@ -408,17 +527,27 @@ class ImageGenerationWorkspace(QWidget):
             self.last_manifest_path = str(manifest_path.resolve()) if manifest_path.is_file() else None
             self.output_label.setText(self.last_image_path)
             self._show_preview(self.last_image_path)
-            self.use_reference_button.setEnabled(True)
+            self.last_image_requires_krea_review = bool(self.current_job_requires_krea_review)
             self.open_folder_button.setEnabled(True)
-            self.status_message.emit(f'Immagine generata: {Path(self.last_image_path).name}')
-            # R5e9 acceptance contract: a successful local image becomes
-            # immediately available as the WAN reference through the host app.
-            self.image_ready.emit(self.last_image_path)
+            if self.last_image_requires_krea_review:
+                self.use_reference_button.setEnabled(False)
+                self.krea_output_review.setEnabled(True)
+                self._set_krea_review_checked(False)
+                self.status_message.emit(
+                    f'Immagine Krea generata: {Path(self.last_image_path).name}. Revisione manuale richiesta prima della reference WAN.'
+                )
+            else:
+                self.use_reference_button.setEnabled(True)
+                self.status_message.emit(f'Immagine generata: {Path(self.last_image_path).name}')
+                # Non-Krea providers retain the original R5e9 immediate hand-off contract.
+                self.image_ready.emit(self.last_image_path)
         elif result is not None and result.error_message:
             self.output_label.setText(result.error_message)
         self.current_job_id = None
+        self.current_job_requires_krea_review = False
         self.generate_button.setEnabled(True)
         self.cancel_button.setEnabled(False)
+        self._refresh_krea_compliance_ui()
 
     def _show_preview(self, path: str) -> None:
         pixmap = QPixmap(path)
@@ -432,8 +561,16 @@ class ImageGenerationWorkspace(QWidget):
             self.message_label.setText('Annullamento richiesto…')
 
     def _emit_image_ready(self) -> None:
-        if self.last_image_path and Path(self.last_image_path).is_file():
-            self.image_ready.emit(self.last_image_path)
+        if not self.last_image_path or not Path(self.last_image_path).is_file():
+            return
+        if self.last_image_requires_krea_review and not self.krea_output_review.isChecked():
+            QMessageBox.warning(
+                self,
+                'Revisione Krea 2 richiesta',
+                'Revisiona l’output Krea e conferma la relativa casella prima di usarlo come reference WAN.',
+            )
+            return
+        self.image_ready.emit(self.last_image_path)
 
     def _open_folder(self) -> None:
         if not self.last_image_path:
@@ -448,6 +585,10 @@ class ImageGenerationWorkspace(QWidget):
         default['reference_image'] = ''
         self.last_image_path = None
         self.last_manifest_path = None
+        self.last_image_requires_krea_review = False
+        self.krea_prompt_attestation.setChecked(False)
+        self._set_krea_review_checked(False)
+        self.krea_output_review.setEnabled(False)
         self.output_label.setText('—')
         self.preview.setPixmap(QPixmap())
         self.preview.setText('Nessuna immagine generata')
@@ -469,6 +610,7 @@ class ImageGenerationWorkspace(QWidget):
             'steps': int(self.steps_spin.value()),
             'last_image_path': self.last_image_path,
             'last_manifest_path': self.last_manifest_path,
+            'last_image_requires_krea_review': bool(self.last_image_requires_krea_review),
         }
 
     def apply_state(self, state: dict) -> None:
@@ -494,10 +636,24 @@ class ImageGenerationWorkspace(QWidget):
         manifest = state.get('last_manifest_path')
         self.last_image_path = str(last) if last and Path(str(last)).is_file() else None
         self.last_manifest_path = str(manifest) if manifest and Path(str(manifest)).is_file() else None
+        self.last_image_requires_krea_review = bool(
+            state.get('last_image_requires_krea_review', self._krea_policy_applies())
+        ) if self.last_image_path else False
+        self.krea_prompt_attestation.setChecked(False)
         if self.last_image_path:
             self.output_label.setText(self.last_image_path)
             self._show_preview(self.last_image_path)
-            self.use_reference_button.setEnabled(True)
             self.open_folder_button.setEnabled(True)
+            reviewed = (
+                has_valid_review_record(
+                    manifest_path=self.last_manifest_path,
+                    image_path=self.last_image_path,
+                )
+                if self.last_image_requires_krea_review
+                else False
+            )
+            self._set_krea_review_checked(reviewed)
+            self.use_reference_button.setEnabled(reviewed if self.last_image_requires_krea_review else True)
         self._refresh_provider()
         self._refresh_task()
+        self._refresh_krea_compliance_ui()

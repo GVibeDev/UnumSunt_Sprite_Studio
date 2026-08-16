@@ -40,12 +40,12 @@
       "estimated_size_bytes": 13500000000,
       "gated": false,
       "license_required": true,
-      "license_url": "https://huggingface.co/krea/Krea-2-Turbo/blob/main/LICENSE.pdf",
+      "license_url": "https://www.krea.ai/krea-2-licensing",
       "access_url": "https://huggingface.co/krea/Krea-2-Turbo",
       "aup_url": "https://www.krea.ai/krea-2-use-policy",
       "upstream_model_url": "https://huggingface.co/krea/Krea-2-Turbo",
       "wan_default_url": "https://huggingface.co/DeepBeepMeep/krea-2/resolve/f7a3040b990b672af3c30b5ad1f0df8ffd244881/Krea2Turbo_quanto_bf16_int8.safetensors",
-      "notes": "Checkpoint WanGP Krea 2 Turbo pinned to an immutable Hugging Face revision; Krea 2 Community License and AUP remain applicable."
+      "notes": "Checkpoint WanGP Krea 2 Turbo pinned to an immutable Hugging Face revision; Krea 2 Community License v.1 (2026-06-22), AUP, revenue threshold and reasonable content-filter/review safeguards remain applicable."
     }
   }
 }

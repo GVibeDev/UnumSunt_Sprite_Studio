@@ -9,5 +9,5 @@ APP_WINDOWS_APP_ID = "GVibeDev.UnumSuntSpriteStudio"
 
 APP_BUILD_LABEL = "Windows Release Candidate Hardening"
 APP_AUTHOR = "GVibeDev"
-APP_LICENSE = "TBD"
+APP_LICENSE = "GPL-3.0-or-later"
 APP_DEPENDENCIES = ("PySide6", "OpenCV", "NumPy", "Pillow", "WanGP", "Miniconda", "PyTorch", "Krea 2")
