@@ -6,6 +6,12 @@ import json
 from pathlib import Path
 import sys
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.version import APP_BUILD_LABEL, APP_NAME, APP_VERSION
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -29,9 +35,9 @@ def main() -> int:
             'sha256': sha256(path),
         })
     payload = {
-        'application': 'Unum Sunt Sprite Studio',
-        'version': 'R5c1',
-        'milestone': 'Windows Standalone Core',
+        'application': APP_NAME,
+        'version': APP_VERSION,
+        'milestone': APP_BUILD_LABEL,
         'created_at_utc': datetime.now(timezone.utc).isoformat(),
         'distribution_mode': 'PyInstaller onedir x64',
         'python_required_on_target': False,

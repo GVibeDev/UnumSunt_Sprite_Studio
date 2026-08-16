@@ -75,7 +75,7 @@ class RuntimeManagerDialog(QDialog):
     runtime_config_changed = Signal()
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Gestione runtime AI locale · R5c6")
+        self.setWindowTitle("Gestione runtime AI locale · R5c6a")
         self.resize(1040, 820)
         self.config = RuntimePreflightConfig.load()
         self.manifest = load_runtime_components_manifest()
@@ -88,7 +88,7 @@ class RuntimeManagerDialog(QDialog):
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         intro = QLabel(
-            "Installa e gestisce il runtime AI privato di Sprite Studio. Il preflight R5c6 resta vincolante: "
+            "Installa e gestisce il runtime AI privato di Sprite Studio. Il preflight R5c6a resta vincolante: "
             "CUDA/driver, spazio e percorsi devono essere validi; modello GPU, VRAM e RAM restano diagnostici."
         )
         intro.setWordWrap(True)
@@ -139,7 +139,7 @@ class RuntimeManagerDialog(QDialog):
         self.runtime_check.setChecked(True)
         self.animate_check = QCheckBox("Wan 2.2 Animate 14B · checkpoint Quanto BF16 INT8 (~17.9 GB)")
         self.animate_check.setChecked(True)
-        self.krea_check = QCheckBox("Krea 2 Turbo · checkpoint ufficiale gated (~26.3 GB)")
+        self.krea_check = QCheckBox("Krea 2 Turbo · WanGP Quanto BF16 INT8 (~13.5 GB)")
         self.krea_check.setChecked(True)
         comp_layout.addWidget(self.runtime_check)
         comp_layout.addWidget(self.animate_check)
@@ -150,12 +150,12 @@ class RuntimeManagerDialog(QDialog):
         license_layout = QFormLayout(licenses)
         self.anaconda_tos = QCheckBox("Ho letto e accetto i termini applicabili di Anaconda/Miniconda per questa installazione")
         license_layout.addRow(self.anaconda_tos)
-        self.krea_license = QCheckBox("Ho ottenuto accesso a Krea 2 su Hugging Face e accetto Krea 2 Community License + AUP")
+        self.krea_license = QCheckBox("Ho letto e accetto Krea 2 Community License + AUP per l'uso del componente")
         license_layout.addRow(self.krea_license)
         self.hf_token_edit = QLineEdit()
         self.hf_token_edit.setEchoMode(QLineEdit.Password)
-        self.hf_token_edit.setPlaceholderText("hf_… · usato solo per il download corrente; non viene salvato")
-        license_layout.addRow("HF token Krea 2:", self.hf_token_edit)
+        self.hf_token_edit.setPlaceholderText("hf_… · facoltativo; usato solo nel processo corrente e mai salvato")
+        license_layout.addRow("HF token (facoltativo):", self.hf_token_edit)
         links = QHBoxLayout()
         krea_access = QPushButton("Apri pagina accesso Krea 2")
         krea_access.clicked.connect(lambda: webbrowser.open(self.manifest.models["krea2_turbo"].access_url))
@@ -163,6 +163,9 @@ class RuntimeManagerDialog(QDialog):
         krea_license = QPushButton("Apri licenza Krea 2")
         krea_license.clicked.connect(lambda: webbrowser.open(self.manifest.models["krea2_turbo"].license_url))
         links.addWidget(krea_license)
+        krea_aup = QPushButton("Apri AUP Krea 2")
+        krea_aup.clicked.connect(lambda: webbrowser.open(self.manifest.models["krea2_turbo"].aup_url))
+        links.addWidget(krea_aup)
         links.addStretch(1)
         license_layout.addRow(links)
         root.addWidget(licenses)
@@ -422,12 +425,12 @@ class RuntimeManagerDialog(QDialog):
         if options.install_runtime and not options.accept_anaconda_tos:
             QMessageBox.warning(self, "Termini Miniconda", "Confermare l'accettazione dei termini applicabili Anaconda/Miniconda.")
             return
-        if options.install_krea2 and (not options.accept_krea_license or not options.hf_token):
-            QMessageBox.warning(self, "Accesso Krea 2", "Krea 2 è gated: confermare licenza/AUP e inserire un token Hugging Face autorizzato.")
+        if options.install_krea2 and not options.accept_krea_license:
+            QMessageBox.warning(self, "Licenza Krea 2", "Per installare/usare Krea 2 bisogna confermare Krea 2 Community License e AUP.")
             return
         self._set_busy(True)
         self.progress.setValue(0)
-        self.log.appendPlainText("=== Avvio installazione R5c6 ===")
+        self.log.appendPlainText("=== Avvio installazione R5c6a ===")
         thread = QThread(self)
         worker = RuntimeInstallWorker(config, options)
         worker.moveToThread(thread)

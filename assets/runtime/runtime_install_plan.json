@@ -7,7 +7,7 @@
     "recommended_toolkit": "13.1",
     "python": "3.11.14",
     "pytorch": "2.10.0",
-    "notes": "R5c3 usa il preflight R5c2 per la compatibilità CUDA del driver. Nessuna soglia minima di modello GPU, VRAM o RAM. Il CUDA Toolkit/nvcc viene segnalato nel Health Check come opzionale/non bloccante."
+    "notes": "R5c6a mantiene il preflight CUDA/driver senza soglie minime arbitrarie di modello GPU, VRAM o RAM. Il CUDA Toolkit/nvcc resta diagnostico/opzionale; la compatibilità GPU con la wheel PyTorch è verificata dal Runtime Health Check."
   },
   "components": [
     {
@@ -50,13 +50,13 @@
     },
     {
       "id": "krea2_turbo",
-      "label": "Krea 2 Turbo checkpoint",
+      "label": "Krea 2 Turbo · WanGP Quanto BF16 INT8",
       "destination": "models",
-      "installed_gib": 26.3,
-      "download_gib": 26.3,
-      "temporary_gib": 2.0,
-      "estimate": false,
-      "notes": "Checkpoint turbo.safetensors pubblicato come ~26.3 GB; il piano conserva 26.3 GiB come riserva prudenziale. Accesso gated e licenza/AUP obbligatori."
+      "installed_gib": 13.5,
+      "download_gib": 13.5,
+      "temporary_gib": 1.5,
+      "estimate": true,
+      "notes": "WanGP corrente usa il checkpoint Krea2Turbo_quanto_bf16_int8.safetensors (~13.5 GB) dal repository DeepBeepMeep/krea-2. Asset condivisi Qwen3-VL/VAE possono essere acquisiti on demand e sono coperti dalla riserva condivisa."
     },
     {
       "id": "workspace_reserve",

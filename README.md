@@ -491,3 +491,7 @@ R5c4a hardens `build_setup_windows.bat`: Inno Setup can now be discovered from p
 ## Windows maintenance lifecycle — R5c6
 
 R5c6 turns the validated Windows Setup line into a maintenance installer. Re-running the Setup updates/repairs the Core in place while preserving application data and AI assets by default. The runtime maintenance layer can repair a managed WanGP environment without selecting checkpoint downloads, and the uninstaller asks separately whether to remove the managed runtime, managed `wangp_ckpts`, or Sprite Studio settings/logs/cache/jobs. Adopted/external runtimes are always protected from destructive actions. See `R5C6_MAINTENANCE_LIFECYCLE.md`.
+
+## Krea 2 managed component — R5c6a
+
+R5c6a completes local Krea 2 Turbo integration using WanGP's current `krea2_turbo` model contract. The managed default is `Krea2Turbo_quanto_bf16_int8.safetensors` (~13.5 GB) from `DeepBeepMeep/krea-2`, while compatible checkpoints already present are reused in place. The Image Gen bridge receives a dedicated managed template (`model_type=krea2_turbo`, 8 steps, guidance 0). Krea Community License/AUP acceptance is explicit; any Hugging Face token is optional for the configured public WanGP checkpoint and is never persisted. External/adopted runtimes remain non-destructive and are not modified by Setup. See `R5C6A_KREA2_MANAGED_COMPONENT.md`.

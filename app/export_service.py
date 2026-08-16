@@ -140,7 +140,7 @@ def export_rgba_bundle(
 
     manifest = {
         'schema': 'unum-sunt-sprite-studio-production-v1',
-        'application_version': 'R5c6',
+        'application_version': 'R5c6a',
         'exported_at_utc': datetime.now(timezone.utc).isoformat(),
         'source_kind': source_kind,
         'base_name': safe_name,

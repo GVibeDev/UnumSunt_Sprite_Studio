@@ -214,11 +214,47 @@ class MaintenanceManager:
             if remove_managed_models:
                 if ckpts_root is None or not _safe_managed_target(ckpts_root):
                     raise MaintenanceError(f"Percorso checkpoint non sicuro: {ckpts_root}")
-                removed = _remove_if_exists(ckpts_root)
-                state.models.clear()
-                report.actions.append(MaintenanceAction(
-                    "models.remove", "removed" if removed else "already_missing", str(ckpts_root)
-                ))
+                reused_records = {
+                    model_id: record for model_id, record in state.models.items()
+                    if isinstance(record, dict) and str(record.get("ownership", "")).lower() in {"reused", "external"}
+                }
+                if reused_records:
+                    # A managed model root may contain a checkpoint that existed
+                    # before Sprite Studio adopted it (notably Krea 2). In that
+                    # case never delete the whole tree: remove only files that
+                    # the install state explicitly owns, preserving reused and
+                    # unknown/shared assets.
+                    removed_any = False
+                    for model_id, record in list(state.models.items()):
+                        if model_id in reused_records or not isinstance(record, dict):
+                            continue
+                        raw_path = str(record.get("path", ""))
+                        if not raw_path:
+                            continue
+                        candidate = Path(raw_path).expanduser()
+                        try:
+                            candidate_resolved = candidate.resolve()
+                            ckpts_resolved = ckpts_root.resolve()
+                            candidate_resolved.relative_to(ckpts_resolved)
+                        except Exception:
+                            report.warnings.append(f"Checkpoint gestito fuori dalla root attesa, preservato: {candidate}")
+                            continue
+                        if candidate.is_file():
+                            candidate.unlink()
+                            removed_any = True
+                        state.models.pop(model_id, None)
+                    report.actions.append(MaintenanceAction(
+                        "models.remove", "removed_partial" if removed_any else "preserved", str(ckpts_root)
+                    ))
+                    report.warnings.append(
+                        "Checkpoint preesistenti/riutilizzati rilevati: la cartella wangp_ckpts è stata preservata e sono stati rimossi solo i modelli esplicitamente gestiti."
+                    )
+                else:
+                    removed = _remove_if_exists(ckpts_root)
+                    state.models.clear()
+                    report.actions.append(MaintenanceAction(
+                        "models.remove", "removed" if removed else "already_missing", str(ckpts_root)
+                    ))
 
             if remove_managed_runtime:
                 if runtime_root is None or not _safe_managed_target(runtime_root):
@@ -231,6 +267,7 @@ class MaintenanceManager:
                 state.python_executable = ""
                 state.wangp_script = ""
                 state.settings_template = ""
+                state.image_settings_template = ""
                 state.miniconda_root = ""
                 state.env_root = ""
                 state.wangp_root = ""

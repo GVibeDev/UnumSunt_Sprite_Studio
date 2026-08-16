@@ -34,7 +34,7 @@ def _now() -> str:
 def empty_calibration_state() -> dict[str, Any]:
     return {
         'schema': CALIBRATION_SCHEMA,
-        'application_version': 'R5c6',
+        'application_version': 'R5c6a',
         'baseline_run_id': None,
         'runs': [],
         'updated_at': _now(),

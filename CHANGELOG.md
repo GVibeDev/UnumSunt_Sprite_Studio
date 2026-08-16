@@ -1,3 +1,13 @@
+## R5c6a — Krea 2 Managed Component Completion
+
+- Aligns Krea 2 Turbo with WanGP's current `krea2_turbo` contract and the Quanto BF16 INT8 checkpoint.
+- Adds a managed Krea settings template and automatic Image Gen bridge binding.
+- Reuses compatible WanGP Krea Turbo checkpoints already present before any network download.
+- Keeps an optional Hugging Face token process-local and never persists it.
+- Adds explicit Krea Community License/AUP acceptance to Runtime Manager and Windows Setup.
+- Preserves adopted/external runtimes: Setup never modifies their model trees.
+- Records Krea deployment safeguards as an R5c7 release gate.
+
 ## R5c6 — Repair / Update / Uninstall
 
 - Added maintenance lifecycle CLI for status, managed-runtime repair and selective cleanup.

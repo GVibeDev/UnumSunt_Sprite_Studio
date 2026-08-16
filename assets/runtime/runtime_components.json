@@ -1,6 +1,6 @@
 {
   "schema": "unum-sunt-runtime-components-v1",
-  "profile_id": "wangp-cuda13-windows-r5c3",
+  "profile_id": "wangp-cuda13-windows-r5c6a",
   "miniconda": {
     "url": "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe",
     "filename": "Miniconda3-latest-Windows-x86_64.exe",
@@ -31,13 +31,20 @@
       "gated": false
     },
     "krea2_turbo": {
-      "label": "Krea 2 Turbo",
-      "repo_id": "krea/Krea-2-Turbo",
-      "filename": "turbo.safetensors",
-      "size_bytes": 26300000000,
-      "gated": true,
+      "label": "Krea 2 Turbo · WanGP Quanto BF16 INT8",
+      "repo_id": "DeepBeepMeep/krea-2",
+      "revision": "main",
+      "filename": "Krea2Turbo_quanto_bf16_int8.safetensors",
+      "size_bytes": 0,
+      "estimated_size_bytes": 13500000000,
+      "gated": false,
+      "license_required": true,
       "license_url": "https://huggingface.co/krea/Krea-2-Turbo/blob/main/LICENSE.pdf",
-      "access_url": "https://huggingface.co/krea/Krea-2-Turbo"
+      "access_url": "https://huggingface.co/krea/Krea-2-Turbo",
+      "aup_url": "https://www.krea.ai/krea-2-use-policy",
+      "upstream_model_url": "https://huggingface.co/krea/Krea-2-Turbo",
+      "wan_default_url": "https://huggingface.co/DeepBeepMeep/krea-2/resolve/main/Krea2Turbo_quanto_bf16_int8.safetensors",
+      "notes": "Checkpoint convertito/quantizzato usato dal default corrente WanGP krea2_turbo; la Krea 2 Community License e AUP restano applicabili."
     }
   }
 }

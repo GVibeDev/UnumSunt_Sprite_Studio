@@ -8,7 +8,7 @@ from typing import Iterable
 
 from app.generation.image_provider import LocalWanGPImageConfig
 from app.generation.local_wangp import LocalWanGPConfig, LocalWanGPProvider
-from app.runtime_installer import RuntimeInstallState, resolve_wan_animate_settings_template
+from app.runtime_installer import RuntimeInstallState, resolve_wan_animate_settings_template, resolve_krea2_settings_template_for_checkpoint
 from app.runtime_preflight import RuntimePreflightConfig
 
 
@@ -162,7 +162,23 @@ def adopt_external_runtime(candidate: ExternalRuntimeCandidate) -> RuntimeInstal
     image_config.wangp_script = video_config.wangp_script
     image_config.working_directory = video_config.working_directory
     image_config.strict_python_311 = True
-    # Preserve an existing dedicated image template if the user already has one.
+    # Preserve a dedicated image template. If none exists and a current WanGP
+    # Krea 2 Turbo checkpoint is already present, bind the managed Krea template
+    # without moving or modifying the external model tree.
+    if not image_config.settings_template:
+        model_root_probe = Path(candidate.model_root).expanduser() if candidate.model_root else Path(video_config.working_directory) / "ckpts"
+        # Bind a matching local settings template only when a supported Krea
+        # Turbo checkpoint already exists. This may write a tiny settings copy
+        # under Sprite Studio user data for full BF16, but never modifies the
+        # adopted external runtime or its model tree.
+        for name in (
+            "Krea2Turbo_quanto_bf16_int8.safetensors",
+            "Krea2Turbo_bf16.safetensors",
+        ):
+            checkpoint = model_root_probe / name
+            if checkpoint.is_file():
+                image_config.settings_template = str(resolve_krea2_settings_template_for_checkpoint(checkpoint))
+                break
     image_config.save()
 
     python = Path(video_config.python_executable).resolve()
@@ -183,6 +199,7 @@ def adopt_external_runtime(candidate: ExternalRuntimeCandidate) -> RuntimeInstal
         python_executable=str(python),
         wangp_script=str(wgp),
         settings_template=video_config.settings_template,
+        image_settings_template=image_config.settings_template,
         models={},
         last_error="",
     )

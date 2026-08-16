@@ -79,8 +79,8 @@ class RuntimePreflightTests(unittest.TestCase):
     def test_install_plan_has_cuda13_and_krea_checkpoint_size(self):
         self.assertEqual(self.plan.minimum_reported_cuda, '13.0')
         krea = next(c for c in self.plan.components if c.id == 'krea2_turbo')
-        self.assertEqual(krea.installed_gib, 26.3)
-        self.assertFalse(krea.estimate)
+        self.assertEqual(krea.installed_gib, 13.5)
+        self.assertTrue(krea.estimate)
 
     def test_rtx3070_16gb_ram_is_not_blocked_by_model_or_ram(self):
         report = self._run(memory_gib=16.0)

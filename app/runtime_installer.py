@@ -22,6 +22,7 @@ from app.runtime_gpu_compat import probe_torch_runtime_gpu
 
 MANIFEST_RELATIVE_PATH = Path("assets") / "runtime" / "runtime_components.json"
 WAN_ANIMATE_TEMPLATE_RELATIVE_PATH = Path("assets") / "runtime" / "wan_animate_settings_template.json"
+KREA2_TURBO_TEMPLATE_RELATIVE_PATH = Path("assets") / "runtime" / "krea2_turbo_settings_template.json"
 INSTALL_STATE_NAME = "runtime_install_state.json"
 
 ProgressCallback = Callable[[str, float, str], None]
@@ -48,6 +49,12 @@ class RuntimeModelSpec:
     sha256: str = ""
     license_url: str = ""
     access_url: str = ""
+    aup_url: str = ""
+    revision: str = "main"
+    estimated_size_bytes: int = 0
+    license_required: bool = False
+    wan_default_url: str = ""
+    notes: str = ""
 
     @classmethod
     def from_dict(cls, model_id: str, data: Mapping[str, Any]) -> "RuntimeModelSpec":
@@ -62,6 +69,12 @@ class RuntimeModelSpec:
             sha256=str(data.get("sha256", "")),
             license_url=str(data.get("license_url", "")),
             access_url=str(data.get("access_url", "")),
+            aup_url=str(data.get("aup_url", "")),
+            revision=str(data.get("revision", "main")),
+            estimated_size_bytes=max(0, int(data.get("estimated_size_bytes", 0))),
+            license_required=bool(data.get("license_required", False)),
+            wan_default_url=str(data.get("wan_default_url", "")),
+            notes=str(data.get("notes", "")),
         )
 
 
@@ -144,6 +157,47 @@ def resolve_wan_animate_settings_template() -> Path | None:
     return resolve_runtime_asset(WAN_ANIMATE_TEMPLATE_RELATIVE_PATH)
 
 
+def resolve_krea2_turbo_settings_template() -> Path | None:
+    return resolve_runtime_asset(KREA2_TURBO_TEMPLATE_RELATIVE_PATH)
+
+
+def resolve_krea2_settings_template_for_checkpoint(checkpoint: str | Path | None = None) -> Path:
+    """Resolve a Krea 2 Turbo settings template matching an existing checkpoint.
+
+    The bundled contract targets WanGP's Quanto BF16 INT8 checkpoint.  When an
+    existing full-BF16 WanGP checkpoint is selected, create only a small user
+    settings copy that points to the matching upstream WanGP URL; model files
+    are never moved, renamed or duplicated.
+    """
+    template = resolve_krea2_turbo_settings_template()
+    if template is None:
+        raise RuntimeInstallError(
+            f"Template Krea 2 Turbo gestito non trovato: {KREA2_TURBO_TEMPLATE_RELATIVE_PATH.as_posix()}"
+        )
+    try:
+        payload = json.loads(template.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise RuntimeInstallError(f"Template Krea 2 Turbo gestito non valido: {exc}") from exc
+    if not isinstance(payload, Mapping):
+        raise RuntimeInstallError("Template Krea 2 Turbo gestito non contiene un oggetto JSON.")
+    if str(payload.get("model_type", "")).strip().lower() != "krea2_turbo":
+        raise RuntimeInstallError("Template Krea 2 Turbo privo di model_type='krea2_turbo'.")
+    if not str(payload.get("model_filename", "")).strip():
+        raise RuntimeInstallError("Template Krea 2 Turbo privo di model_filename.")
+
+    checkpoint_path = Path(checkpoint).expanduser() if checkpoint else None
+    if checkpoint_path is not None and checkpoint_path.name == "Krea2Turbo_bf16.safetensors":
+        payload["model_filename"] = (
+            "https://huggingface.co/DeepBeepMeep/krea-2/resolve/main/"
+            "Krea2Turbo_bf16.safetensors"
+        )
+        target = local_data_root() / "runtime_templates" / "krea2_turbo_settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        return target.resolve()
+    return template.resolve()
+
+
 def load_runtime_components_manifest(path: str | Path | None = None) -> RuntimeComponentsManifest:
     target = Path(path) if path is not None else resolve_runtime_components_manifest()
     if target is None or not target.is_file():
@@ -183,6 +237,7 @@ class RuntimeInstallState:
     python_executable: str = ""
     wangp_script: str = ""
     settings_template: str = ""
+    image_settings_template: str = ""
     models: dict[str, dict[str, Any]] = field(default_factory=dict)
     last_error: str = ""
 
@@ -215,6 +270,7 @@ class RuntimeInstallState:
             python_executable=str(payload.get("python_executable", "")),
             wangp_script=str(payload.get("wangp_script", "")),
             settings_template=str(payload.get("settings_template", "")),
+            image_settings_template=str(payload.get("image_settings_template", "")),
             models=dict(payload.get("models", {})) if isinstance(payload.get("models"), Mapping) else {},
             last_error=str(payload.get("last_error", "")),
         )
@@ -310,7 +366,7 @@ class RuntimeInstaller:
                 return target
         part = target.with_suffix(target.suffix + ".part")
         existing = part.stat().st_size if part.exists() else 0
-        headers = {"User-Agent": "UnumSuntSpriteStudio-R5c6"}
+        headers = {"User-Agent": "UnumSuntSpriteStudio-R5c6a"}
         if existing:
             headers["Range"] = f"bytes={existing}-"
         request = urllib.request.Request(url, headers=headers)
@@ -375,7 +431,7 @@ class RuntimeInstaller:
         self._verify_windows_signature(installer, self.manifest.miniconda_publisher_hint)
         self.miniconda_root.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
-            raise RuntimeInstallError("L'installazione Miniconda R5c6 è supportata solo su Windows.")
+            raise RuntimeInstallError("L'installazione Miniconda R5c6a è supportata solo su Windows.")
         args = [
             str(installer),
             "/InstallationType=JustMe",
@@ -494,26 +550,75 @@ class RuntimeInstaller:
         )
 
     def _install_krea2(self, python: Path, *, token: str, accepted: bool) -> Path:
+        """Install/reuse the WanGP-native Krea 2 Turbo checkpoint.
+
+        WanGP's current default ``krea2_turbo`` points at the DeepBeepMeep
+        converted checkpoints, not the official monolithic ``turbo.safetensors``.
+        R5c6a therefore installs the Quanto BF16 INT8 checkpoint used by WanGP
+        directly.  Krea's Community License/AUP acceptance remains mandatory.
+        The optional HF token is passed only to the child process and is never
+        persisted. ``hf_hub_download(local_dir=...)`` keeps resumable metadata.
+        """
         spec = self.manifest.models["krea2_turbo"]
         if not accepted:
             raise RuntimeInstallError("Krea 2 richiede accettazione esplicita della Krea 2 Community License e AUP.")
-        if not token.strip():
-            raise RuntimeInstallError("Krea 2 è gated: inserire un token Hugging Face con accesso già autorizzato al modello.")
+        if spec.gated and not token.strip():
+            raise RuntimeInstallError("Il repository Krea 2 configurato è gated: inserire un token Hugging Face autorizzato.")
+        # Check the selected model root before resolving/creating the WanGP ckpts
+        # junction. This preserves either supported WanGP Turbo checkpoint even
+        # when a runtime tree has been repaired or not yet linked on this machine.
+        supported_names = (
+            spec.filename,
+            "Krea2Turbo_bf16.safetensors",
+        )
+        for name in supported_names:
+            preexisting = self.ckpts_root / name
+            if preexisting.is_file() and preexisting.stat().st_size > 1024 * 1024 * 1024:
+                self._emit("model.krea2", 1.0, f"Krea 2 già presente: {preexisting.name}")
+                return preexisting
+
         self._ensure_ckpts_link()
+        # Existing supported checkpoint wins: no network and no re-download.
+        existing = self._find_existing_krea2_checkpoint()
+        if existing is not None:
+            self._emit("model.krea2", 1.0, f"Krea 2 già presente: {existing.name}")
+            return existing
         target = self.ckpts_root / spec.filename
-        if target.is_file() and (not spec.size_bytes or target.stat().st_size >= int(spec.size_bytes * 0.95)):
-            return target
         helper = (
             "from huggingface_hub import hf_hub_download; import os,sys; "
-            "p=hf_hub_download(repo_id=sys.argv[1], filename=sys.argv[2], token=os.environ.get('HF_TOKEN'), "
-            "local_dir=sys.argv[3]); print(p)"
+            "p=hf_hub_download(repo_id=sys.argv[1], filename=sys.argv[2], revision=sys.argv[3], "
+            "token=(os.environ.get('HF_TOKEN') or None), local_dir=sys.argv[4]); print(p)"
         )
         env = os.environ.copy()
-        env["HF_TOKEN"] = token.strip()
-        self._run([str(python), "-c", helper, spec.repo_id, spec.filename, str(self.ckpts_root)], env=env, timeout=21600)
-        if not target.is_file():
-            raise RuntimeInstallError(f"Download Krea 2 completato ma checkpoint non trovato: {target}")
+        if token.strip():
+            env["HF_TOKEN"] = token.strip()
+        else:
+            env.pop("HF_TOKEN", None)
+        try:
+            self._run([str(python), "-c", helper, spec.repo_id, spec.filename, spec.revision, str(self.ckpts_root)], env=env, timeout=21600)
+        except RuntimeInstallError as exc:
+            safe = str(exc).replace(token.strip(), "<HF_TOKEN_REDACTED>") if token.strip() else str(exc)
+            if "401" in safe or "403" in safe or "gated" in safe.lower():
+                raise RuntimeInstallError(
+                    "Accesso Hugging Face negato durante il download Krea 2. Verificare accesso/licenza del repository e, se richiesto, usare un token autorizzato."
+                ) from exc
+            raise RuntimeInstallError(safe) from exc
+        if not target.is_file() or target.stat().st_size <= 1024 * 1024 * 1024:
+            raise RuntimeInstallError(f"Download Krea 2 completato ma checkpoint non valido: {target}")
         return target
+
+    def _find_existing_krea2_checkpoint(self) -> Path | None:
+        """Return an already present WanGP-supported Krea Turbo checkpoint."""
+        self._ensure_ckpts_link()
+        names = (
+            "Krea2Turbo_quanto_bf16_int8.safetensors",
+            "Krea2Turbo_bf16.safetensors",
+        )
+        for name in names:
+            candidate = self.ckpts_root / name
+            if candidate.is_file() and candidate.stat().st_size > 1024 * 1024 * 1024:
+                return candidate
+        return None
 
     def expected_wangp_python(self) -> Path:
         return self.env_root / "python.exe"
@@ -566,6 +671,9 @@ class RuntimeInstaller:
             raise RuntimeInstallError("Template Wan Animate gestito privo di model_filename.")
         return template.resolve()
 
+    def _managed_krea2_template(self, checkpoint: Path | None = None) -> Path:
+        return resolve_krea2_settings_template_for_checkpoint(checkpoint)
+
     def _write_bridge_config(self, python: Path, *, _validated: bool = False) -> None:
         if not _validated:
             self._validate_bridge_python(python)
@@ -582,8 +690,10 @@ class RuntimeInstaller:
         image_config = LocalWanGPImageConfig.load()
         image_config.python_executable = str(python)
         image_config.wangp_script = str(self.wangp_root / "wgp.py")
+        image_config.settings_template = str(self._managed_krea2_template(self._find_existing_krea2_checkpoint()))
         image_config.working_directory = str(self.wangp_root)
         image_config.strict_python_311 = True
+        image_config.require_template = True
         image_config.save()
 
     def install(self, options: RuntimeInstallOptions) -> RuntimeInstallState:
@@ -631,9 +741,24 @@ class RuntimeInstaller:
                 self.state.save()
             if options.install_krea2:
                 self._emit("model.krea2", 0.72, "Installazione Krea 2 Turbo")
+                existing_before = self._find_existing_krea2_checkpoint()
+                previous = self.state.models.get("krea2_turbo", {})
+                previous_path = str(previous.get("path", "")) if isinstance(previous, Mapping) else ""
+                previous_ownership = str(previous.get("ownership", "")) if isinstance(previous, Mapping) else ""
                 path = self._install_krea2(python, token=options.hf_token, accepted=options.accept_krea_license)
-                self.state.models["krea2_turbo"] = {"status": "installed", "path": str(path), "bytes": path.stat().st_size}
+                same_known_path = bool(previous_path) and Path(previous_path).expanduser().resolve() == path.expanduser().resolve()
+                if same_known_path and previous_ownership in {"managed", "reused"}:
+                    model_ownership = previous_ownership
+                else:
+                    model_ownership = "reused" if existing_before is not None else "managed"
+                self.state.models["krea2_turbo"] = {
+                    "status": "installed",
+                    "path": str(path),
+                    "bytes": path.stat().st_size,
+                    "ownership": model_ownership,
+                }
                 self.state.save()
+                self._write_bridge_config(python, _validated=True)
 
             self.state.python_executable = str(self.env_root / "python.exe")
             self.state.wangp_script = str(self.wangp_root / "wgp.py")
@@ -641,6 +766,10 @@ class RuntimeInstaller:
                 self.state.settings_template = str(self._managed_animate_template())
             except Exception:
                 self.state.settings_template = ""
+            try:
+                self.state.image_settings_template = str(self._managed_krea2_template(self._find_existing_krea2_checkpoint()))
+            except Exception:
+                self.state.image_settings_template = ""
             health = self.health_check()
             self.state.status = "ready" if health.ready else "warning"
             self.state.updated_at_utc = datetime.now(timezone.utc).isoformat()
@@ -677,6 +806,20 @@ class RuntimeInstaller:
             template_ok = False
             template_detail = str(exc)
         items.append(RuntimeHealthItem("wan.animate_template", template_ok, template_detail))
+        try:
+            krea_template = self._managed_krea2_template(self._find_existing_krea2_checkpoint())
+            krea_payload = json.loads(krea_template.read_text(encoding="utf-8"))
+            krea_template_ok = (
+                isinstance(krea_payload, Mapping)
+                and str(krea_payload.get("model_type", "")).strip().lower() == "krea2_turbo"
+                and bool(str(krea_payload.get("model_filename", "")).strip())
+                and int(krea_payload.get("num_inference_steps", 0)) > 0
+            )
+            krea_detail = f"{krea_template} · model_type={krea_payload.get('model_type')!r}"
+        except Exception as exc:
+            krea_template_ok = False
+            krea_detail = str(exc)
+        items.append(RuntimeHealthItem("krea2.image_template", krea_template_ok, krea_detail, required=False))
         nvcc = shutil.which("nvcc")
         if not nvcc:
             cuda_path = os.environ.get("CUDA_PATH", "").strip()
@@ -734,8 +877,13 @@ class RuntimeInstaller:
                 ok = path.stat().st_size == spec.size_bytes
                 detail = f"{path} · {path.stat().st_size} bytes"
             else:
-                ok = path.is_file() and (not spec.size_bytes or path.stat().st_size >= int(spec.size_bytes * 0.95))
-                detail = str(path)
+                if model_id == "krea2_turbo":
+                    existing = self._find_existing_krea2_checkpoint()
+                    ok = existing is not None
+                    detail = str(existing or path)
+                else:
+                    ok = path.is_file() and (not spec.size_bytes or path.stat().st_size >= int(spec.size_bytes * 0.95))
+                    detail = str(path)
             items.append(RuntimeHealthItem(f"model.{model_id}", ok, detail, required=False))
         ready = all(item.ok for item in items if item.required)
         return RuntimeHealthReport(ready, tuple(items))
@@ -744,11 +892,22 @@ class RuntimeInstaller:
         spec = self.manifest.models.get(model_id)
         if spec is None:
             raise KeyError(model_id)
+        record = self.state.models.get(model_id, {})
+        if isinstance(record, Mapping) and str(record.get("ownership", "")).lower() in {"reused", "external"}:
+            raise RuntimeInstallError(
+                f"{spec.label} è un checkpoint preesistente riutilizzato: Sprite Studio non lo cancellerà automaticamente."
+            )
         path = self.ckpts_root / spec.filename
         removed = False
-        if path.is_file():
-            path.unlink()
-            removed = True
+        candidates = [path]
+        if model_id == "krea2_turbo":
+            candidates.extend([
+                self.ckpts_root / "Krea2Turbo_bf16.safetensors",
+            ])
+        for candidate in candidates:
+            if candidate.is_file():
+                candidate.unlink()
+                removed = True
         self.state.models.pop(model_id, None)
         self.state.updated_at_utc = datetime.now(timezone.utc).isoformat()
         self.state.save()

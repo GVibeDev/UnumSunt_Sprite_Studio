@@ -24,7 +24,9 @@ class RuntimeInstallerTests(unittest.TestCase):
         self.assertEqual(manifest.pytorch_index_url, 'https://download.pytorch.org/whl/cu130')
         self.assertIn('wan_animate', manifest.models)
         self.assertIn('krea2_turbo', manifest.models)
-        self.assertTrue(manifest.models['krea2_turbo'].gated)
+        self.assertFalse(manifest.models['krea2_turbo'].gated)
+        self.assertTrue(manifest.models['krea2_turbo'].license_required)
+        self.assertEqual(manifest.models['krea2_turbo'].filename, 'Krea2Turbo_quanto_bf16_int8.safetensors')
         self.assertEqual(manifest.models['wan_animate'].sha256, 'c62c8eb97de825ceb66c0e9123b56b2becf5086eb44264ad020b0db6025c6218')
 
     def test_default_options_do_not_embed_token_persistence(self):
@@ -56,7 +58,7 @@ class RuntimeInstallerTests(unittest.TestCase):
             self.assertTrue(removed)
             self.assertFalse(target.exists())
 
-    def test_krea_install_requires_license_and_token_before_process(self):
+    def test_krea_install_requires_license_for_public_wangp_checkpoint(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             config = RuntimePreflightConfig(str(root/'runtime'), str(root/'models'))
@@ -65,8 +67,7 @@ class RuntimeInstallerTests(unittest.TestCase):
             fake_python.write_bytes(b'')
             with self.assertRaisesRegex(Exception, 'Community License'):
                 installer._install_krea2(fake_python, token='hf_token', accepted=False)
-            with self.assertRaisesRegex(Exception, 'token Hugging Face'):
-                installer._install_krea2(fake_python, token='', accepted=True)
+            self.assertFalse(installer.manifest.models['krea2_turbo'].gated)
 
     def test_windows_miniconda_arguments_do_not_register_python_or_path(self):
         source = Path(__file__).resolve().parents[1] / 'app' / 'runtime_installer.py'
