@@ -17,6 +17,18 @@ def _argument_value(flag: str) -> str | None:
 
 
 
+def _configure_windows_shell_identity() -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        from app.version import APP_WINDOWS_APP_ID
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_WINDOWS_APP_ID)
+    except Exception:
+        pass
+
+
 def _safe_cli_print(message: str) -> None:
     """Write CLI progress only when a console stream exists.
 
@@ -205,6 +217,7 @@ def main() -> int:
 
     configure_logging()
     install_exception_hook()
+    _configure_windows_shell_identity()
 
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)

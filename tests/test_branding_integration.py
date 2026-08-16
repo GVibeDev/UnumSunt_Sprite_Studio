@@ -2,8 +2,16 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from app.branding import ICON_ICO_NAME, ICON_PNG_NAME, SPLASH_NAME, resolve_branding_asset, splash_metadata_lines
-from app.version import APP_AUTHOR, APP_BUILD_LABEL, APP_LICENSE, APP_VERSION
+from app.branding import (
+    ICON_ICO_NAME,
+    ICON_PNG_NAME,
+    SPLASH_NAME,
+    INSTALLER_WIZARD_NAME,
+    INSTALLER_WIZARD_SMALL_NAME,
+    resolve_branding_asset,
+    splash_metadata_lines,
+)
+from app.version import APP_AUTHOR, APP_BUILD_LABEL, APP_LICENSE, APP_VERSION, APP_WINDOWS_APP_ID
 
 
 class BrandingIntegrationTests(unittest.TestCase):
@@ -32,12 +40,26 @@ class BrandingIntegrationTests(unittest.TestCase):
         self.assertIn("branding_datas = [('assets/branding', 'assets/branding')]", spec)
         self.assertIn("icon='assets/branding/app_icon.ico'", spec)
 
+    def test_installer_uses_branded_setup_assets(self):
+        root = Path(__file__).resolve().parents[1]
+        iss = (root / 'installer' / 'UnumSuntSpriteStudio_R5c7.iss').read_text(encoding='utf-8')
+        self.assertIn('SetupIconFile=..\\assets\\branding\\app_icon.ico', iss)
+        self.assertIn(f'WizardImageFile=..\\assets\\branding\\{INSTALLER_WIZARD_NAME}', iss)
+        self.assertIn(f'WizardSmallImageFile=..\\assets\\branding\\{INSTALLER_WIZARD_SMALL_NAME}', iss)
+
+    def test_windows_shell_app_id_is_declared(self):
+        self.assertEqual(APP_WINDOWS_APP_ID, 'GVibeDev.UnumSuntSpriteStudio')
+        main_text = (Path(__file__).resolve().parents[1] / 'main.py').read_text(encoding='utf-8')
+        self.assertIn('SetCurrentProcessExplicitAppUserModelID', main_text)
+
     def test_project_contains_required_branding_assets(self):
         root = Path(__file__).resolve().parents[1]
         branding = root / 'assets' / 'branding'
         self.assertTrue((branding / ICON_PNG_NAME).exists())
         self.assertTrue((branding / ICON_ICO_NAME).exists())
         self.assertTrue((branding / SPLASH_NAME).exists())
+        self.assertTrue((branding / INSTALLER_WIZARD_NAME).exists())
+        self.assertTrue((branding / INSTALLER_WIZARD_SMALL_NAME).exists())
 
 
 if __name__ == '__main__':

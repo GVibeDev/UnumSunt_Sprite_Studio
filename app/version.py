@@ -5,6 +5,7 @@ APP_ORGANIZATION = "Unum Sunt"
 APP_VERSION = "R5c7"
 APP_TITLE = f"{APP_NAME} — {APP_VERSION}"
 WINDOWS_PRODUCT_VERSION = "5.7.0.0"
+APP_WINDOWS_APP_ID = "GVibeDev.UnumSuntSpriteStudio"
 
 APP_BUILD_LABEL = "Windows Release Candidate Hardening"
 APP_AUTHOR = "GVibeDev"

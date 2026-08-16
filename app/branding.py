@@ -10,6 +10,8 @@ BRANDING_DIR = Path("assets") / "branding"
 ICON_PNG_NAME = "app_icon.png"
 ICON_ICO_NAME = "app_icon.ico"
 SPLASH_NAME = "splash_screen.png"
+INSTALLER_WIZARD_NAME = "installer_wizard.bmp"
+INSTALLER_WIZARD_SMALL_NAME = "installer_wizard_small.bmp"
 
 
 def branding_search_roots() -> list[Path]:
@@ -55,8 +57,13 @@ def splash_metadata_lines() -> list[str]:
 
 def load_app_icon():
     from PySide6.QtGui import QIcon
+    import sys
 
-    path = icon_png_path() or icon_ico_path()
+    path = None
+    if sys.platform.startswith("win"):
+        path = icon_ico_path() or icon_png_path()
+    else:
+        path = icon_png_path() or icon_ico_path()
     if path is None:
         return None
     icon = QIcon(str(path))
