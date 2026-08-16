@@ -867,6 +867,7 @@ class MainWindow(QMainWindow):
 
     def _open_video_path(self, path: str) -> bool:
         self._stop_playback()
+        self.cleanup_studio.prepare_source_change()
         try:
             metadata = self.video.open(path)
         except VideoOpenError as exc:
@@ -877,6 +878,7 @@ class MainWindow(QMainWindow):
 
     def _open_sequence_manifest_path(self, manifest_path: str, *, select_all: bool = False) -> bool:
         self._stop_playback()
+        self.cleanup_studio.prepare_source_change()
         try:
             metadata = self.video.open_sequence_manifest(manifest_path)
         except VideoOpenError as exc:
@@ -1496,10 +1498,12 @@ class MainWindow(QMainWindow):
     def _on_active_group_will_change(self, old_group_id: str, new_group_id: str) -> None:
         if old_group_id:
             self._save_active_group_snapshot()
+        self.cleanup_studio.prepare_source_change()
         self.cleanup_studio.reset_context_history()
 
     def _clear_loaded_video_context(self) -> None:
         self._stop_playback()
+        self.cleanup_studio.prepare_source_change()
         self.video.close()
         self.current_frame_index = 0
         self.current_frame_rgb = None

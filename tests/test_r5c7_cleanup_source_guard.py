@@ -20,7 +20,8 @@ class R5c7CleanupSourceGuardTests(unittest.TestCase):
 
     def test_frame_selection_checks_metadata_before_loading(self):
         self.assertIn("metadata = self._metadata_provider()", self.source)
-        self.assertIn("if metadata is None:\n            self.set_selected_frames([])", self.source)
+        self.assertIn("if metadata is None:\n            return", self.source)
+        self.assertIn("if self._source_transition or current is None:", self.source)
 
 
 if __name__ == "__main__":

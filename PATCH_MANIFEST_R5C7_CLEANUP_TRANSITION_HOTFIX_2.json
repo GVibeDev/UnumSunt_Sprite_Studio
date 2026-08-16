@@ -1,0 +1,33 @@
+{
+  "schema": "unum-sunt-patch-manifest-v1",
+  "base": "R5c7 + Cleanup Source Guard",
+  "patch": "R5c7 Cleanup Source Transition Hotfix 2",
+  "status": "TEST_ONLY",
+  "files": [
+    {
+      "path": "R5C7_CLEANUP_TRANSITION_HOTFIX_2.md",
+      "sha256": "5f6da40353f3a22eb7c85aa6292a518005bca33b9660db8b4e8cabcf63a286aa",
+      "size": 1173
+    },
+    {
+      "path": "app/cleanup_studio.py",
+      "sha256": "c22c40b0e1c03b37fd4a02eee7f3cb2ca71f6d9ef3950a9e5b961c8cc82bfb8b",
+      "size": 31367
+    },
+    {
+      "path": "app/main_window.py",
+      "sha256": "6c5531aa4dc7f431eac619042cb2a9c3d0d88bb1fe444e04e84f27439d2663d7",
+      "size": 101966
+    },
+    {
+      "path": "tests/test_r5c7_cleanup_source_guard.py",
+      "sha256": "f2dda3b3d3e398d176df6382b6df5c8314de7527a2ba248450241f6ab1e92726",
+      "size": 1176
+    },
+    {
+      "path": "tests/test_r5c7_cleanup_source_transition.py",
+      "sha256": "d2c3db99e30737a85d87f91c3d153fea648eff601472ab8a398ed57c33e1b019",
+      "size": 2468
+    }
+  ]
+}

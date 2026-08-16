@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Optional
 
 import numpy as np
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -74,6 +74,7 @@ class CleanupStudio(QWidget):
         self._brush_stroke_working: np.ndarray | None = None
         self._brush_stroke_changed = False
         self._brush_stroke_dabs = 0
+        self._source_transition = False
         self._build_ui()
         self._set_enabled(False)
 
@@ -232,6 +233,25 @@ class CleanupStudio(QWidget):
         self._history_redo.clear()
         self._clear_selection()
 
+    def prepare_source_change(self) -> None:
+        """Quiesce frame UI before VideoSource is closed or replaced.
+
+        QListWidget can emit currentItemChanged while items are being cleared.
+        During project/group switches that signal must never attempt to decode
+        against the source that is in the process of being closed.
+        """
+        self._source_transition = True
+        self._selected_indices = []
+        self._current_frame_index = None
+        self._clear_selection()
+        with QSignalBlocker(self.frame_list):
+            self.frame_list.clear()
+            self.frame_list.setCurrentItem(None)
+        self.canvas.set_image(None)
+        self.current_label.setText('Nessun frame')
+        self.info_label.setText('Cambio sorgente in corso…')
+        self._set_enabled(False)
+
     def _set_enabled(self, enabled: bool) -> None:
         self.canvas.setEnabled(enabled)
         self.frame_list.setEnabled(enabled)
@@ -250,11 +270,13 @@ class CleanupStudio(QWidget):
                 )
             )
         self._selected_indices = normalized
-        self.frame_list.clear()
-        for idx in self._selected_indices:
-            item = QListWidgetItem(f'F{idx:06d}')
-            item.setData(Qt.ItemDataRole.UserRole, idx)
-            self.frame_list.addItem(item)
+        with QSignalBlocker(self.frame_list):
+            self.frame_list.clear()
+            for idx in self._selected_indices:
+                item = QListWidgetItem(f'F{idx:06d}')
+                item.setData(Qt.ItemDataRole.UserRole, idx)
+                self.frame_list.addItem(item)
+        self._source_transition = False
         enabled = bool(self._selected_indices) and metadata is not None
         self._set_enabled(enabled)
         if enabled:
@@ -338,22 +360,23 @@ class CleanupStudio(QWidget):
 
     @perf_instrument('cleanup.refresh_current_preview')
     def _refresh_current_preview(self, *, emit_request: bool = True) -> None:
-        if self._current_frame_index is None:
+        if self._source_transition or self._current_frame_index is None:
             return
         metadata = self._metadata_provider()
         if metadata is None or not (0 <= self._current_frame_index < metadata.frame_count):
             self._selected_indices = []
-            self.frame_list.clear()
+            with QSignalBlocker(self.frame_list):
+                self.frame_list.clear()
             self._show_missing_or_empty_source(missing_source=metadata is None)
             return
         try:
             rgba = self._selected_rgba(self._current_frame_index)
         except VideoOpenError:
-            # The source can disappear between a Qt selection event and frame
-            # decoding (project/group switch, close/reopen, shutdown). This is
-            # a normal transient UI state, not an application crash.
+            # A source can disappear between a UI event and frame decoding.
+            # Reset without emitting QListWidget selection signals.
             self._selected_indices = []
-            self.frame_list.clear()
+            with QSignalBlocker(self.frame_list):
+                self.frame_list.clear()
             self._show_missing_or_empty_source(missing_source=True)
             return
         self.canvas.set_image(self._preview_rgb(rgba))
@@ -363,28 +386,30 @@ class CleanupStudio(QWidget):
             self.frame_requested.emit(self._current_frame_index)
 
     def _set_current_frame(self, frame_index: int, *, emit_request: bool = True) -> None:
+        if self._source_transition:
+            return
         if self._current_frame_index != frame_index:
             self._clear_selection()
         self._current_frame_index = frame_index
         for row in range(self.frame_list.count()):
             item = self.frame_list.item(row)
             if int(item.data(Qt.ItemDataRole.UserRole)) == frame_index:
-                self.frame_list.blockSignals(True)
-                self.frame_list.setCurrentItem(item)
-                self.frame_list.blockSignals(False)
+                with QSignalBlocker(self.frame_list):
+                    self.frame_list.setCurrentItem(item)
                 break
         self._refresh_current_preview(emit_request=emit_request)
 
     def _on_frame_item_changed(self, current: QListWidgetItem | None, previous: QListWidgetItem | None) -> None:
-        if current is None:
+        # Never mutate/repopulate QListWidget synchronously from its own
+        # currentItemChanged signal. Source transitions are driven explicitly
+        # by prepare_source_change()/set_selected_frames().
+        if self._source_transition or current is None:
             return
         metadata = self._metadata_provider()
         if metadata is None:
-            self.set_selected_frames([])
             return
         frame_index = int(current.data(Qt.ItemDataRole.UserRole))
         if not (0 <= frame_index < metadata.frame_count):
-            self.set_selected_frames(self._selected_indices)
             return
         self._set_current_frame(frame_index)
 
