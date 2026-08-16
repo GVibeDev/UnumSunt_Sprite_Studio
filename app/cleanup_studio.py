@@ -39,6 +39,7 @@ from app.alpha_cleanup import (
 from app.chroma_key import apply_chroma_key, render_checkerboard, render_checkerboard_region
 from app.cleanup_canvas import CleanupCanvas
 from app.models import ChromaKeySettings, VideoMetadata
+from app.video_source import VideoOpenError
 
 
 class CleanupStudio(QWidget):
@@ -237,23 +238,41 @@ class CleanupStudio(QWidget):
 
     def set_selected_frames(self, indices: list[int]) -> None:
         previous = self._current_frame_index
-        self._selected_indices = sorted(set(int(i) for i in indices))
+        metadata = self._metadata_provider()
+        if metadata is None:
+            normalized: list[int] = []
+        else:
+            normalized = sorted(
+                set(
+                    int(i)
+                    for i in indices
+                    if 0 <= int(i) < metadata.frame_count
+                )
+            )
+        self._selected_indices = normalized
         self.frame_list.clear()
         for idx in self._selected_indices:
             item = QListWidgetItem(f'F{idx:06d}')
             item.setData(Qt.ItemDataRole.UserRole, idx)
             self.frame_list.addItem(item)
-        enabled = bool(self._selected_indices)
+        enabled = bool(self._selected_indices) and metadata is not None
         self._set_enabled(enabled)
         if enabled:
             target = previous if previous in self._selected_indices else self._selected_indices[0]
             self._set_current_frame(target, emit_request=False)
             self.info_label.setText(f'{len(self._selected_indices)} frame disponibili per il clean-up.')
         else:
-            self._current_frame_index = None
-            self._clear_selection()
-            self.canvas.set_image(None)
-            self.current_label.setText('Nessun frame')
+            self._show_missing_or_empty_source(missing_source=metadata is None)
+
+    def _show_missing_or_empty_source(self, *, missing_source: bool) -> None:
+        self._current_frame_index = None
+        self._clear_selection()
+        self.canvas.set_image(None)
+        self.current_label.setText('Nessun frame')
+        self._set_enabled(False)
+        if missing_source:
+            self.info_label.setText('Nessuna sorgente video aperta. Apri o importa una sorgente prima del clean-up.')
+        else:
             self.info_label.setText('Seleziona frame in R1 per rifinire alpha e piccoli difetti.')
 
     def _selected_rgba(self, frame_index: int) -> np.ndarray:
@@ -321,7 +340,22 @@ class CleanupStudio(QWidget):
     def _refresh_current_preview(self, *, emit_request: bool = True) -> None:
         if self._current_frame_index is None:
             return
-        rgba = self._selected_rgba(self._current_frame_index)
+        metadata = self._metadata_provider()
+        if metadata is None or not (0 <= self._current_frame_index < metadata.frame_count):
+            self._selected_indices = []
+            self.frame_list.clear()
+            self._show_missing_or_empty_source(missing_source=metadata is None)
+            return
+        try:
+            rgba = self._selected_rgba(self._current_frame_index)
+        except VideoOpenError:
+            # The source can disappear between a Qt selection event and frame
+            # decoding (project/group switch, close/reopen, shutdown). This is
+            # a normal transient UI state, not an application crash.
+            self._selected_indices = []
+            self.frame_list.clear()
+            self._show_missing_or_empty_source(missing_source=True)
+            return
         self.canvas.set_image(self._preview_rgb(rgba))
         self._update_canvas_overlays()
         self.current_label.setText(f'Frame {self._current_frame_index}')
@@ -344,7 +378,15 @@ class CleanupStudio(QWidget):
     def _on_frame_item_changed(self, current: QListWidgetItem | None, previous: QListWidgetItem | None) -> None:
         if current is None:
             return
-        self._set_current_frame(int(current.data(Qt.ItemDataRole.UserRole)))
+        metadata = self._metadata_provider()
+        if metadata is None:
+            self.set_selected_frames([])
+            return
+        frame_index = int(current.data(Qt.ItemDataRole.UserRole))
+        if not (0 <= frame_index < metadata.frame_count):
+            self.set_selected_frames(self._selected_indices)
+            return
+        self._set_current_frame(frame_index)
 
     def _select_relative(self, delta: int) -> None:
         if not self._selected_indices or self._current_frame_index not in self._selected_indices:
