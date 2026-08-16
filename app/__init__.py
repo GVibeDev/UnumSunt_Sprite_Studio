@@ -1,1 +1,1 @@
-"""Unum Sunt Sprite Studio R5c4a."""
+"""Unum Sunt Sprite Studio R5c6."""

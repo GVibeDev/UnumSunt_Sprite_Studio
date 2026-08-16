@@ -92,7 +92,7 @@ def main() -> int:
         candidates = discover_existing_runtimes(extra_roots=roots)
         target = _argument_value("--runtime-discover")
         if not target or target.startswith("--"):
-            target = str(Path.cwd() / "runtime_discovery_R5c4a.json")
+            target = str(Path.cwd() / "runtime_discovery_R5c6.json")
         payload = {
             "status": "found" if candidates else "none",
             "candidates": [candidate.__dict__ for candidate in candidates],
@@ -108,7 +108,7 @@ def main() -> int:
         roots = [runtime_root] if runtime_root and not runtime_root.startswith("--") else []
         target = _argument_value("--runtime-auto-adopt")
         if not target or target.startswith("--"):
-            target = str(Path.cwd() / "runtime_adoption_R5c4a.json")
+            target = str(Path.cwd() / "runtime_adoption_R5c6.json")
         state, attempts = auto_adopt_existing_runtime(extra_roots=roots)
         payload = {
             "status": "adopted" if state is not None else "not_found",
@@ -147,6 +147,55 @@ def main() -> int:
             Path(target).write_text(json.dumps(state.__dict__, indent=2, ensure_ascii=False), encoding="utf-8")
             return 0 if state.status in {"ready", "warning"} else 4
         except Exception as exc:
+            Path(target).write_text(json.dumps({"status": "failed", "error": str(exc)}, indent=2, ensure_ascii=False), encoding="utf-8")
+            return 4
+
+    if "--maintenance-status" in sys.argv:
+        from app.maintenance import MaintenanceManager
+        import json
+
+        target = _argument_value("--maintenance-status")
+        if not target or target.startswith("--"):
+            target = str(Path.cwd() / "maintenance_status_R5c6.json")
+        report = MaintenanceManager().status_report()
+        Path(target).write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+        return 0
+
+    if "--maintenance-repair" in sys.argv:
+        from app.maintenance import MaintenanceManager
+        import json
+
+        target = _argument_value("--maintenance-repair")
+        if not target or target.startswith("--"):
+            target = str(Path.cwd() / "maintenance_repair_R5c6.json")
+        try:
+            report = MaintenanceManager().repair_managed_runtime(
+                accept_anaconda_tos="--accept-anaconda-tos" in sys.argv,
+            )
+            Path(target).write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+            return 0 if report.status in {"ok", "protected"} else 4
+        except Exception as exc:
+            Path(target).write_text(json.dumps({"status": "failed", "error": str(exc)}, indent=2, ensure_ascii=False), encoding="utf-8")
+            return 4
+
+    if "--maintenance-cleanup" in sys.argv:
+        from app.maintenance import MaintenanceManager
+        import json
+
+        target = _argument_value("--maintenance-cleanup")
+        if not target or target.startswith("--"):
+            target = str(Path.cwd() / "maintenance_cleanup_R5c6.json")
+        try:
+            report = MaintenanceManager().cleanup(
+                remove_managed_runtime="--remove-managed-runtime" in sys.argv,
+                remove_managed_models="--remove-managed-models" in sys.argv,
+                remove_user_data="--remove-user-data" in sys.argv,
+            )
+            Path(target).parent.mkdir(parents=True, exist_ok=True)
+            Path(target).write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+            return 0
+        except Exception as exc:
+            Path(target).parent.mkdir(parents=True, exist_ok=True)
             Path(target).write_text(json.dumps({"status": "failed", "error": str(exc)}, indent=2, ensure_ascii=False), encoding="utf-8")
             return 4
 

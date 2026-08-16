@@ -169,7 +169,7 @@ def _export_variant(
 
     manifest = {
         'schema': 'unum-sunt-sprite-studio-animation-v4',
-        'application_version': 'R5c4a',
+        'application_version': 'R5c6',
         'exported_at_utc': datetime.now(timezone.utc).isoformat(),
         'source_video': {
             'path': str(video_metadata.path),

@@ -310,7 +310,7 @@ class RuntimeInstaller:
                 return target
         part = target.with_suffix(target.suffix + ".part")
         existing = part.stat().st_size if part.exists() else 0
-        headers = {"User-Agent": "UnumSuntSpriteStudio-R5c4a"}
+        headers = {"User-Agent": "UnumSuntSpriteStudio-R5c6"}
         if existing:
             headers["Range"] = f"bytes={existing}-"
         request = urllib.request.Request(url, headers=headers)
@@ -375,7 +375,7 @@ class RuntimeInstaller:
         self._verify_windows_signature(installer, self.manifest.miniconda_publisher_hint)
         self.miniconda_root.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
-            raise RuntimeInstallError("L'installazione Miniconda R5c4a è supportata solo su Windows.")
+            raise RuntimeInstallError("L'installazione Miniconda R5c6 è supportata solo su Windows.")
         args = [
             str(installer),
             "/InstallationType=JustMe",

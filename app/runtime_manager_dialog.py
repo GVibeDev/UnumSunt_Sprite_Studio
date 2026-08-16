@@ -75,7 +75,7 @@ class RuntimeManagerDialog(QDialog):
     runtime_config_changed = Signal()
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Gestione runtime AI locale · R5c4a")
+        self.setWindowTitle("Gestione runtime AI locale · R5c6")
         self.resize(1040, 820)
         self.config = RuntimePreflightConfig.load()
         self.manifest = load_runtime_components_manifest()
@@ -88,7 +88,7 @@ class RuntimeManagerDialog(QDialog):
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         intro = QLabel(
-            "Installa e gestisce il runtime AI privato di Sprite Studio. Il preflight R5c4a resta vincolante: "
+            "Installa e gestisce il runtime AI privato di Sprite Studio. Il preflight R5c6 resta vincolante: "
             "CUDA/driver, spazio e percorsi devono essere validi; modello GPU, VRAM e RAM restano diagnostici."
         )
         intro.setWordWrap(True)
@@ -427,7 +427,7 @@ class RuntimeManagerDialog(QDialog):
             return
         self._set_busy(True)
         self.progress.setValue(0)
-        self.log.appendPlainText("=== Avvio installazione R5c4a ===")
+        self.log.appendPlainText("=== Avvio installazione R5c6 ===")
         thread = QThread(self)
         worker = RuntimeInstallWorker(config, options)
         worker.moveToThread(thread)

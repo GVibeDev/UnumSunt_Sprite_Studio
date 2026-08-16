@@ -1810,7 +1810,7 @@ class MainWindow(QMainWindow):
 
     def _capture_app_state(self) -> dict:
         return {
-            'version': 'R5c4a',
+            'version': 'R5c6',
             'current_tab': int(self.workspace_tabs.currentIndex()),
             'current_project_path': self.project_workspace.current_project_path,
             'last_video_path': (str(self.video.metadata.path) if self.video.is_open and self.video.source_kind == 'video' else None),

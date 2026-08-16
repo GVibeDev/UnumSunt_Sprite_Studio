@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-Write-Host '=== Unum Sunt Sprite Studio R5c4a - Windows Setup Bootstrapper ==='
+Write-Host '=== Unum Sunt Sprite Studio R5c6 - Windows Setup Bootstrapper ==='
 
 # 1. Produce first the canonical standalone Core. The Setup never packages the
 # source tree and therefore remains independent of Python on the target PC.
@@ -204,27 +204,27 @@ if (-not $iscc) {
 }
 
 Write-Host "Compiler installer: $iscc"
-$installerScript = Join-Path $PSScriptRoot 'installer\UnumSuntSpriteStudio_R5c4a.iss'
-if (-not (Test-Path $installerScript)) { throw 'Script Inno Setup R5c4a non trovato.' }
+$installerScript = Join-Path $PSScriptRoot 'installer\UnumSuntSpriteStudio_R5c6.iss'
+if (-not (Test-Path $installerScript)) { throw 'Script Inno Setup R5c6 non trovato.' }
 
 $installerOut = Join-Path $PSScriptRoot 'release\installer'
 New-Item -ItemType Directory -Force $installerOut | Out-Null
-Remove-Item -Force (Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c4a_Setup_x64.exe') -ErrorAction SilentlyContinue
-Remove-Item -Force (Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c4a_Setup_x64_SHA256.txt') -ErrorAction SilentlyContinue
+Remove-Item -Force (Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c6_Setup_x64.exe') -ErrorAction SilentlyContinue
+Remove-Item -Force (Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c6_Setup_x64_SHA256.txt') -ErrorAction SilentlyContinue
 
 Write-Host 'Compilazione Setup.exe...'
 & $iscc /Qp $installerScript | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'Compilazione Inno Setup fallita.' }
 
-$setupExe = Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c4a_Setup_x64.exe'
+$setupExe = Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c6_Setup_x64.exe'
 if (-not (Test-Path $setupExe)) { throw 'Setup.exe non trovato dopo la compilazione.' }
 
 $hash = (Get-FileHash -Algorithm SHA256 $setupExe).Hash.ToLowerInvariant()
-$hashFile = Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c4a_Setup_x64_SHA256.txt'
+$hashFile = Join-Path $installerOut 'UnumSunt_Sprite_Studio_R5c6_Setup_x64_SHA256.txt'
 "$hash  $(Split-Path $setupExe -Leaf)" | Set-Content -Encoding ascii $hashFile
 
 Write-Host ''
-Write-Host 'SETUP R5c4a COMPLETATO'
+Write-Host 'SETUP R5c6 COMPLETATO'
 Write-Host "Installer: $setupExe"
 Write-Host "SHA-256: $hash"
 Write-Host 'Il Setup installa sempre il Core; il runtime AI resta un componente opzionale e riutilizza runtime esterni validi quando possibile.'

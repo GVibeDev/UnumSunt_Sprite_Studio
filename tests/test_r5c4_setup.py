@@ -11,7 +11,7 @@ from app.runtime_installer import RuntimeInstallState
 class R5c4SetupTests(unittest.TestCase):
     def test_inno_script_defines_core_complete_custom_types(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        script = (root / 'installer' / 'UnumSuntSpriteStudio_R5c4a.iss').read_text(encoding='utf-8')
+        script = (root / 'installer' / 'UnumSuntSpriteStudio_R5c6.iss').read_text(encoding='utf-8')
         self.assertIn('Name: "core"; Description: "Core', script)
         self.assertIn('Name: "complete"; Description: "Completa', script)
         self.assertIn('Name: "custom"; Description: "Personalizzata"; Flags: iscustom', script)
@@ -29,7 +29,7 @@ class R5c4SetupTests(unittest.TestCase):
         compiler = script.index('ISCC.exe')
         self.assertLess(standalone, compiler)
         self.assertIn('JRSoftware.InnoSetup', script)
-        self.assertIn('UnumSunt_Sprite_Studio_R5c4a_Setup_x64.exe', script)
+        self.assertIn('UnumSunt_Sprite_Studio_R5c6_Setup_x64.exe', script)
 
     def test_auto_adopt_uses_first_healthy_candidate(self) -> None:
         first = ExternalRuntimeCandidate('a/python.exe', 'a/wgp.py', 'a', source='first')

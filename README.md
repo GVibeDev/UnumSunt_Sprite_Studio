@@ -486,3 +486,8 @@ R5c4 adds `build_setup_windows.bat`, which first builds the canonical standalone
 ### R5c4a Inno Setup bootstrap hotfix
 
 R5c4a hardens `build_setup_windows.bat`: Inno Setup can now be discovered from per-user/custom installations and the Windows registry, and WinGet “already installed/no update” statuses no longer abort the build before `ISCC.exe` is re-detected. See `R5C4A_INNO_DISCOVERY_HOTFIX.md`.
+
+
+## Windows maintenance lifecycle — R5c6
+
+R5c6 turns the validated Windows Setup line into a maintenance installer. Re-running the Setup updates/repairs the Core in place while preserving application data and AI assets by default. The runtime maintenance layer can repair a managed WanGP environment without selecting checkpoint downloads, and the uninstaller asks separately whether to remove the managed runtime, managed `wangp_ckpts`, or Sprite Studio settings/logs/cache/jobs. Adopted/external runtimes are always protected from destructive actions. See `R5C6_MAINTENANCE_LIFECYCLE.md`.

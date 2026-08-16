@@ -47,7 +47,7 @@ class R5c1StandaloneTests(unittest.TestCase):
         self.assertFalse(payload['ai_runtime']['bundled'])
 
     def test_version_is_current_release(self) -> None:
-        self.assertEqual(APP_VERSION, 'R5c4a')
+        self.assertEqual(APP_VERSION, 'R5c6')
 
 
 if __name__ == '__main__':

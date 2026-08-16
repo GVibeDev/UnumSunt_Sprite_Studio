@@ -596,13 +596,13 @@ def run_runtime_preflight(
             metadata={"reported_cuda": nvidia_probe.cuda_version, "required_cuda": plan.minimum_reported_cuda},
         ))
 
-    # RAM and GPU model/VRAM are deliberately informational in R5c4a.
+    # RAM and GPU model/VRAM are deliberately informational in R5c6.
     if memory_bytes is not None:
         checks.append(PreflightCheck(
             "system.ram",
             "RAM fisica",
             STATUS_INFO,
-            f"{memory_bytes / GIB:.1f} GiB rilevati · nessuna soglia bloccante in R5c4a",
+            f"{memory_bytes / GIB:.1f} GiB rilevati · nessuna soglia bloccante in R5c6",
             blocking=False,
         ))
     if nvidia_probe.gpus:

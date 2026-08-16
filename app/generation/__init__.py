@@ -1,1 +1,1 @@
-"""Normalized video and image generation providers for Unum Sunt Sprite Studio R5c4a."""
+"""Normalized video and image generation providers for Unum Sunt Sprite Studio R5c6."""

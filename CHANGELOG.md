@@ -1,3 +1,13 @@
+## R5c6 — Repair / Update / Uninstall
+
+- Added maintenance lifecycle CLI for status, managed-runtime repair and selective cleanup.
+- Running Setup over the same AppId acts as Core update/repair while preserving user data outside the install tree.
+- Setup remembers runtime/model paths and adoption/fallback choices, but never persists legal/TOS acceptance.
+- Uninstaller offers independent opt-in removal of managed runtime, managed checkpoints and application data.
+- External/adopted runtimes are protected from repair or deletion.
+- Managed model cleanup is constrained to `model_root/wangp_ckpts`; unrelated files in the selected model disk are untouched.
+- Krea 2 Setup completion remains outside this milestone.
+
 ## R5c4a — Inno Setup Discovery & WinGet Bootstrap Hotfix
 
 - Fixed Inno Setup compiler discovery for per-user/custom Windows installations.

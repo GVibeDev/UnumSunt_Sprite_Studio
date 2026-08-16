@@ -297,7 +297,7 @@ class MockImageProvider(ImageGeneratorProvider):
     ) -> None:
         manifest = {
             'schema': 'unum-sunt-image-generation-manifest-v1',
-            'application_version': 'R5c4a',
+            'application_version': 'R5c6',
             'job_id': request.job_id,
             'provider': request.provider,
             'model': request.model,

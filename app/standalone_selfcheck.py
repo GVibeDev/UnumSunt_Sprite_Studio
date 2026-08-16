@@ -79,8 +79,8 @@ def build_self_check_payload(*, import_runtime: bool = True) -> dict[str, Any]:
         "checks": checks,
         "ai_runtime": {
             "bundled": False,
-            "status": "external_managed_in_R5c4a",
-            "note": "WanGP/Miniconda/PyTorch/models are external to the Core bundle and managed by the R5c4a Runtime Manager.",
+            "status": "external_managed_in_R5c6",
+            "note": "WanGP/Miniconda/PyTorch/models are external to the Core bundle and managed by the R5c6 Runtime Manager.",
         },
     }
 

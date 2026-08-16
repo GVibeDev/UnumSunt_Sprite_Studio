@@ -1,22 +1,24 @@
-Unum Sunt Sprite Studio — R5c4a Candidate Test Report
-======================================================
+Unum Sunt Sprite Studio — R5c6 Candidate Test Report
+====================================================
 
-Milestone: R5c4a — Inno Setup Discovery & WinGet Bootstrap Hotfix
-Validated base: UnumSunt_Sprite_Studio_R5c3e
-Immediate parent candidate: R5c4
+Milestone: R5c6 — Repair / Update / Uninstall
+Validated base: UnumSunt_Sprite_Studio_R5c4a
 
 Automated regression: PASSED
-Tests executed: 266
-Result: 266 passed, 0 failed, 0 errors
+Tests executed: 276
+Result: 276 passed, 0 failed, 0 errors
 
-Static checks:
-- py_compile / compileall: PASSED
-- R5c4 Setup orchestration tests: PASSED
-- R5c4a Inno discovery contract tests: PASSED
-- per-user LocalAppData discovery: PASSED
-- registry App Paths / InstallLocation discovery contract: PASSED
-- WinGet re-probe after non-zero status: PASSED
+Static / smoke checks:
+- python compileall: PASSED
+- maintenance status CLI smoke: PASSED
+- managed/external ownership cleanup guards: PASSED
+- managed model-root safety contract: PASSED
+- Setup same-AppId update contract: PASSED
+- Setup PreviousData persistence contract: PASSED
+- uninstall selective cleanup CLI contract: PASSED
+- R5c4a Inno discovery regression: PASSED
 
 Platform gate:
 - Inno Setup compilation cannot be executed in this Linux container.
-- Final Setup.exe must be compiled and smoke-tested on Windows using build_setup_windows.bat.
+- Final Setup.exe must be built and tested on Windows with build_setup_windows.bat.
+- Required manual validation: upgrade over R5c4a, Core repair, preserve/reuse runtime, and selective uninstall choices.
