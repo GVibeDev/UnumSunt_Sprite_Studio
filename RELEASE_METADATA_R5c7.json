@@ -1,0 +1,18 @@
+{
+  "project": "Unum Sunt Sprite Studio",
+  "version": "R5c7",
+  "tag": "R5c7",
+  "status": "validated_release",
+  "platform": "Windows x64",
+  "core_license": "GPL-3.0-or-later",
+  "artifacts": {
+    "setup": "UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe",
+    "standalone": "UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone.zip",
+    "source": "UnumSunt_Sprite_Studio_R5c7_Source.zip",
+    "release_manifest": "RELEASE_MANIFEST_R5c7.json"
+  },
+  "runtime_pins": {
+    "wangp_revision": "6e35b37e309ccebeed193ef53cdff66fb973b693",
+    "krea2_revision": "f7a3040b990b672af3c30b5ad1f0df8ffd244881"
+  }
+}

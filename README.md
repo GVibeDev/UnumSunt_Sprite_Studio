@@ -1,3 +1,62 @@
+# Unum Sunt Sprite Studio — R5c7
+
+**Status:** validated Windows Release Candidate / public release baseline.  
+**License:** GNU GPL-3.0-or-later for the project-owned Core.  
+**Platform:** Windows x64.  
+
+Unum Sunt Sprite Studio is a desktop production suite for turning video and AI-assisted image/video generation into cleaned, aligned and exportable 2D sprite assets. The R5c7 line is the first distribution-ready Windows baseline: the Core is packaged as a standalone application, while WanGP, Miniconda/Python 3.11, PyTorch and model checkpoints remain external components managed or adopted by the Runtime Manager.
+
+## R5c7 highlights
+
+- standalone Windows Core with PyInstaller and Inno Setup installer;
+- branded EXE, taskbar identity, Start/Desktop shortcuts and installer wizard;
+- managed/adopted WanGP runtime with non-destructive ownership rules;
+- Wan Animate and Krea 2 integration;
+- selectable WanGP Image Gen memory profile and reserved-RAM cap;
+- validated update / repair / uninstall lifecycle with optional preservation of runtime, models and user data;
+- production presets, guided workflows, Character Set / Layer Manager and project persistence;
+- hardened ZIP extraction and pinned managed WanGP/Krea revisions;
+- Krea pre-generation policy acknowledgement plus manual review before promotion to the WAN reference pipeline;
+- GPL/third-party distribution material included in the official Windows build.
+
+## Quick start
+
+For normal Windows use, install the published `UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe`. The **Core** can be installed without any AI runtime. Local AI features can adopt an existing compatible WanGP installation or use the Runtime Manager to prepare a managed runtime.
+
+Developers can run the source tree with the dependencies in `requirements.txt`. The canonical Windows build commands are:
+
+```text
+build_windows_standalone.bat
+build_setup_windows.bat
+```
+
+The public release helper is:
+
+```text
+PREPARE_PUBLIC_RELEASE_R5C7.bat
+```
+
+It assembles the Setup, standalone ZIP, Corresponding Source archive, checksums and release manifest under `release\public\R5c7`.
+
+## Licensing and external AI components
+
+The project-owned Sprite Studio Core is licensed under **GPL-3.0-or-later**; see `LICENSE`. WanGP, Krea 2, Wan Animate and all other third-party components remain under their own terms. See `THIRD_PARTY_NOTICES.txt`, `KREA_SAFETY_AND_USE.txt` and `GPL_DISTRIBUTION_CHECKLIST.txt`.
+
+The official Setup does not turn external AI runtimes or model weights into GPL-covered components. The R5c7 architecture launches WanGP as a separate external process and preserves upstream notices and usage requirements.
+
+## Release verification
+
+R5c7 passed the automated Core regression suite and the Windows RC validation pipeline, followed by manual validation of install/startup, branding, AI generation workflows, project/Character switching, maintenance/uninstall behavior and the final GPL/Krea compliance UI. See `TEST_REPORT.txt`, `R5C7_WINDOWS_RC_VALIDATION.md` and `RELEASE_NOTES_R5c7.md`.
+
+## Security
+
+Please see `SECURITY.md`. Do not publish credentials, model tokens or sensitive vulnerability details in public issues.
+
+---
+
+# Development history
+
+The sections below preserve the detailed milestone notes accumulated during development.
 
 ## R5c3 — Automated AI Runtime Installer / Model Manager
 

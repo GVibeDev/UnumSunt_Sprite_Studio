@@ -1,22 +1,26 @@
 {
   "project": "Unum Sunt Sprite Studio",
   "version": "R5c7",
-  "status": "test_candidate_compliance",
+  "status": "validated_release",
   "working_base": "UnumSunt_Sprite_Studio_R5c7",
   "validated_baseline": "UnumSunt_Sprite_Studio_R5c7",
-  "milestone": "Windows Release Candidate — GPL & Compliance Finalization",
+  "milestone": "Validated Windows Release Candidate / Public Release Baseline",
+  "validated_at": "2026-08-17",
   "automatic_tests": {
     "status": "passed",
-    "count": 322
+    "count": 322,
+    "failures": 0,
+    "errors": 0
   },
   "build_checks": {
     "compileall": "passed",
     "unittest_discovery": "322 passed",
-    "previous_windows_rc_validation": "22 PASS / 9 manual WARN / 0 FAIL before compliance patch",
-    "core_pip_check_previous_rc": "passed",
-    "wangp_pip_check_previous_rc": "passed",
-    "windows_rebuild_after_compliance_patch": "required",
-    "krea_compliance_ui_manual_smoke": "required"
+    "windows_rc_automated": "22 PASS / 9 manual gates / 0 FAIL at automated stage",
+    "core_pip_check": "passed",
+    "wangp_pip_check": "passed",
+    "manual_windows_validation": "passed by author",
+    "cleanup_transition_fix": "passed by author",
+    "gpl_krea_compliance_ui": "passed by author"
   },
   "license": {
     "core": "GPL-3.0-or-later",
@@ -24,6 +28,7 @@
     "third_party_notices": "THIRD_PARTY_NOTICES.txt",
     "release_checklist": "GPL_DISTRIBUTION_CHECKLIST.txt",
     "krea_safety": "KREA_SAFETY_AND_USE.txt",
+    "security_policy": "SECURITY.md",
     "build_license_inventory": "tools/collect_release_licenses.py"
   },
   "runtime_pins": {
@@ -41,21 +46,20 @@
     "target_requires_python": false,
     "installer_license_page": "LICENSE"
   },
-  "release_gates_open": [
-    "Rebuild standalone + Setup on Windows so GPL/legal payload is collected and bundled",
-    "Manual smoke-test of Krea pre-generation attestation and post-generation review gate",
-    "Publish/provide Corresponding Source for the exact released Core revision alongside binary release"
-  ],
+  "public_release": {
+    "tag": "R5c7",
+    "preparer": "PREPARE_PUBLIC_RELEASE_R5C7.bat",
+    "release_notes": "RELEASE_NOTES_R5c7.md",
+    "public_checklist": "PUBLIC_RELEASE_CHECKLIST_R5c7.md",
+    "metadata": "RELEASE_METADATA_R5c7.json",
+    "corresponding_source_required": true
+  },
+  "release_gates_open": [],
   "files": [
     {
       "path": ".gitignore",
       "bytes": 574,
       "sha256": "e65b40d82098ca7338c14d533cc0751a59ac485358dda09d63e2ee3921421c84"
-    },
-    {
-      "path": "APPLY_PATCH_R5C7.bat",
-      "bytes": 1155,
-      "sha256": "ca7d636160c2cb845bbeb1deb6be254ab03b5524d552bf969c20a5cdcb63b56d"
     },
     {
       "path": "BUILD_RUNTIME_BOOTSTRAP_R5C1B.md",
@@ -64,8 +68,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 19992,
-      "sha256": "2b4197a5de64ee4c9b053b151918012c1bb9d5595f2ec79d55709ae3390d240a"
+      "bytes": 19810,
+      "sha256": "04500dc52a8364b61ab5b980134a4ad24c60a98727daec3a5b991723806d4bde"
     },
     {
       "path": "GPL_DISTRIBUTION_CHECKLIST.txt",
@@ -293,21 +297,6 @@
       "sha256": "55eecb3719bf378f7bf070c827a528e59fcee991eed51c90655237921d1acfb7"
     },
     {
-      "path": "PATCH_MANIFEST_R5C7_CLEANUP_TRANSITION_HOTFIX_2.json",
-      "bytes": 1012,
-      "sha256": "df2ceb848f8c6be29f6eecf802eb2e238c23990551a74687baf8be83bb9aac2c"
-    },
-    {
-      "path": "PATCH_MANIFEST_R5C7_GPL_COMPLIANCE_FINALIZATION.json",
-      "bytes": 1341,
-      "sha256": "19d23d3f4fa9e8caec9554bb461383c41f2801146555440dd03a8b656ee0f8de"
-    },
-    {
-      "path": "PATCH_MANIFEST_R5C7_RC_HARDENING.json",
-      "bytes": 7751,
-      "sha256": "9871558cc35943835b14d01b4831541a50138ba89719a196d0a908ccd8a7c2ce"
-    },
-    {
       "path": "PERFORMANCE_OPTIMIZATION_R5E13B.md",
       "bytes": 1203,
       "sha256": "c84474e67de7fbabc1e278a1b2ad2daadb36859c5bbcb41ce241d9b7dca5ba44"
@@ -316,6 +305,16 @@
       "path": "PERFORMANCE_PROFILING_R5E13A.md",
       "bytes": 870,
       "sha256": "ab2ce9c400da1a9a2e5149ff4cf6b7f012b31762c0b34eab3c4be9e6586b9405"
+    },
+    {
+      "path": "PREPARE_PUBLIC_RELEASE_R5C7.bat",
+      "bytes": 263,
+      "sha256": "696a81b189164d5a947222ea7a1bf5b1352e10b85f1dced552cb2ba208af14e0"
+    },
+    {
+      "path": "PUBLIC_RELEASE_CHECKLIST_R5c7.md",
+      "bytes": 2159,
+      "sha256": "968642092d7b4e1ae0fb542f22fc7249b606f6e1286ba3051218de1d76c8f3e2"
     },
     {
       "path": "R5C1B_WINDOWS_BOOTSTRAP_HOTFIX.md",
@@ -383,34 +382,24 @@
       "sha256": "f636ab4fd8b66f46d175a7765b12f760a19549d15b37d43a061df562acf935ca"
     },
     {
-      "path": "R5C7_BRANDING_INSTALLER_ICON_TEST.md",
-      "bytes": 889,
-      "sha256": "a3b5b9cba0015437ce7327bf29d6f58f4fd5d41a5e639fd22193fea39ede6ef1"
-    },
-    {
-      "path": "R5C7_CLEANUP_SOURCE_GUARD_HOTFIX.md",
-      "bytes": 818,
-      "sha256": "24b40a6bff521d105bde2ec1195633fa84f3838a8a662f88eb4d8b91595c52ad"
-    },
-    {
-      "path": "R5C7_CLEANUP_TRANSITION_HOTFIX_2.md",
-      "bytes": 1173,
-      "sha256": "5f6da40353f3a22eb7c85aa6292a518005bca33b9660db8b4e8cabcf63a286aa"
-    },
-    {
-      "path": "R5C7_GPL_COMPLIANCE_FINALIZATION.md",
-      "bytes": 2070,
-      "sha256": "1938c7a549d5f922e2c4036895401538e94a01c3e3fd023c513c97847ea55122"
-    },
-    {
-      "path": "R5C7_RELEASE_HARDENING.md",
-      "bytes": 1660,
-      "sha256": "05fe94258f39bb47b08906510cc88b45ecbf170d1445cd1ffb891a4da1a14f07"
+      "path": "R5C7_WINDOWS_RC_VALIDATION.md",
+      "bytes": 1163,
+      "sha256": "e092cf87485efc14759059173aa1e90d68c6d6a737eb62af669cc118f56af134"
     },
     {
       "path": "README.md",
-      "bytes": 22911,
-      "sha256": "06453e9a95f3cbe310f14dc96e8c4a9162d7dab3c729f94865ab3b16868ba176"
+      "bytes": 26207,
+      "sha256": "99cf2296dc7af8bd8de4282e5c4a5611398fd52cd547c5b11c90760cbaaf46b0"
+    },
+    {
+      "path": "RELEASE_METADATA_R5c7.json",
+      "bytes": 602,
+      "sha256": "f3f7de73c335b19bcb1be1590b432f36609a14db7658d6c1e2c6fe9bd4363403"
+    },
+    {
+      "path": "RELEASE_NOTES_R5c7.md",
+      "bytes": 2844,
+      "sha256": "0cd31746d87c3d85fdc1126d572d9b854bb420bbfa9537131fe68ca520586262"
     },
     {
       "path": "RUNTIME_INSTALLER_R5C3.md",
@@ -423,9 +412,14 @@
       "sha256": "4cdf85687482397ec885475dcb5c3e6ae0232aff17680f034b7abfec72f17ba5"
     },
     {
+      "path": "SECURITY.md",
+      "bytes": 1438,
+      "sha256": "693786715fbea1517c1ae59c562ec368f0b9c5e59f0baca5665a25ccd48e0149"
+    },
+    {
       "path": "TEST_REPORT.txt",
-      "bytes": 1865,
-      "sha256": "cf3bb6db353aaac88379696c9b1a740aa2c81bd44422e6fb9e854a9a6d364257"
+      "bytes": 1765,
+      "sha256": "bf01e59a4fe7b747506921bdcfd394fb311bffe49156a9ff5fefafd24251f142"
     },
     {
       "path": "THIRD_PARTY_NOTICES.txt",
@@ -436,6 +430,11 @@
       "path": "UnumSuntSpriteStudio.spec",
       "bytes": 1448,
       "sha256": "bb586232b6b87cd1b9fa94ab3e14967151b2661896edd79db286a3c8e06493ed"
+    },
+    {
+      "path": "VALIDATE_R5C7_WINDOWS.bat",
+      "bytes": 779,
+      "sha256": "2e3a9c533c8feb570396d01190c13381665322fa91498a25529222599444f7cb"
     },
     {
       "path": "WINDOWS_SETUP_R5C4.md",
@@ -770,7 +769,7 @@
     {
       "path": "app/version.py",
       "bytes": 527,
-      "sha256": "cec3f568a368e43809e5dfbf732246fcece331235fac5494689ba0a775265a09"
+      "sha256": "eedda1f9897ae1bc5cc8a4672d67d59240d0e0894dcaf716a2ed55b4e6d45de6"
     },
     {
       "path": "app/video_source.py",
@@ -1148,9 +1147,19 @@
       "sha256": "966d27a7edebdc4e01a8fee845192e5ebc29df18c18cb79e6faa340058dbbf35"
     },
     {
+      "path": "tools/prepare_public_release.ps1",
+      "bytes": 7487,
+      "sha256": "169e19eb8c08c82916123613c05d68f393574f82daa6af31326fd076c4af0043"
+    },
+    {
       "path": "tools/write_release_manifest.py",
       "bytes": 1607,
       "sha256": "6a5f8c772ea6a70944808accc24fb2b13ad7a668ef9f95c01446b7a110c0f35a"
+    },
+    {
+      "path": "validate_windows_rc.ps1",
+      "bytes": 11248,
+      "sha256": "f51ae35888158ab89efc6def7e7a3f998fc413b9f1d0c8de22fc762488fa52b6"
     }
   ]
 }

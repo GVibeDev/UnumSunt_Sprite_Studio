@@ -1,32 +1,44 @@
-Unum Sunt Sprite Studio — R5c6a Candidate Test Report
-======================================================
+Unum Sunt Sprite Studio — R5c7 Final Validation Report
+=====================================================
 
-Milestone: R5c6a — Krea 2 Managed Component Completion
-Validated base: UnumSunt_Sprite_Studio_R5c6
+Version: R5c7
+Status: VALIDATED WINDOWS RELEASE CANDIDATE / PUBLIC RELEASE BASELINE
+Validated by author: 17 August 2026
+Core license: GPL-3.0-or-later
 
-Automated regression: PASSED
-Tests executed: 287
-Result: 287 passed, 0 failed, 0 errors
+Automated regression
+--------------------
+- unittest discovery: 322 passed, 0 failed, 0 errors
+- compileall: PASSED
+- source/version contract: R5c7
 
-Static / smoke checks:
-- python compileall (app/main/tests/tools): PASSED
-- `main.py --version`: PASSED (`Unum Sunt Sprite Studio R5c6a`)
-- runtime JSON parse: PASSED
-- release-manifest writer smoke: PASSED; emits live R5c6a metadata
-- maintenance status CLI smoke: PASSED
-- managed Krea template contract (`model_type=krea2_turbo`, 8 steps, guidance 0): PASSED
-- Krea manifest contract / explicit License+AUP metadata: PASSED
-- existing Quanto checkpoint reuse without download: PASSED
-- existing full-BF16 checkpoint reuse without forced INT8 download: PASSED
-- full-BF16 matching Image Gen template: PASSED
-- HF token non-persistence contract: PASSED
-- reused/pre-existing Krea checkpoint destructive-removal protection: PASSED
-- maintenance cleanup preserves reused Krea checkpoints: PASSED
-- Windows Setup Krea component / License+AUP gate / external-runtime warning: PASSED (static contract)
-- R5c6 maintenance and R5c4a Inno bootstrap regressions: PASSED
+Windows RC automated validation
+-------------------------------
+- result: PASS_WITH_MANUAL_GATES at automated stage
+- 22 PASS / 9 manual WARN / 0 FAIL
+- standalone + Setup build: PASSED
+- Core pip check: PASSED
+- WanGP pip check: PASSED
+- frozen version: PASSED
+- Windows version resource: PASSED
+- EXE embedded icon: PASSED
+- frozen self-check: PASSED
+- Setup SHA-256 generation: PASSED
 
-Platform / release gates:
-- Inno Setup compilation cannot be executed in this Linux container; build and Setup.exe require Windows validation.
-- Real Krea 2 checkpoint download and Image Gen inference have not been executed in this container.
-- First Windows test must verify: existing checkpoint reuse or resumable download, bridge Image Gen health, short generation, and no token persistence.
-- Krea's official model card states deployment safeguards/content filtering or equivalent review processes are required under its Community License; product-level compliance remains an R5c7 release gate.
+Manual validation subsequently completed by the author
+-----------------------------------------------------
+- installed application startup and branding: PASSED
+- real image/video generation on the validated build line: PASSED
+- uninstall behavior with preservation of selected runtime/models/user data: PASSED
+- Character/project switching after Clean-up transition fix: PASSED
+- GPL installer page and Krea compliance/review UI: PASSED
+
+Release engineering / security
+------------------------------
+- managed ZIP path traversal and symlink protection: PASSED
+- external/adopted runtime destructive-operation protection: PASSED
+- secrets/token persistence contract: PASSED
+- Core/runtime/model separation preserved
+- GPL and third-party distribution material included in official build path
+
+The exact public binary release must still be generated from the exact tagged source revision and published together with its checksum and Corresponding Source archive.
