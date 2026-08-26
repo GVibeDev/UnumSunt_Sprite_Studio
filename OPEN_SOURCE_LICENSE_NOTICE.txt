@@ -1,35 +1,5 @@
-UNUM SUNT SPRITE STUDIO R5c7
-OPEN-SOURCE LICENSE NOTICE / INFORMATIVA LICENZA OPEN SOURCE
-
-ITALIANO
-========
-
-Unum Sunt Sprite Studio Core è software libero e open source distribuito
-secondo i termini della GNU General Public License versione 3 o successiva
-(GPL-3.0-or-later).
-
-L'acquisto tramite itch.io fornisce accesso alla distribuzione Windows
-confezionata di Sprite Studio. Il prezzo richiesto per la distribuzione non
-trasforma il programma in software proprietario e non limita i diritti
-concessi dalla GPL.
-
-La GPL consente, secondo i propri termini, di usare, studiare, modificare e
-ridistribuire il programma. Il Corresponding Source completo della versione
-distribuita viene fornito o reso disponibile insieme ai binari senza costi
-aggiuntivi.
-
-Il testo completo della GNU GPLv3 è incluso nel file LICENSE.
-
-Runtime AI, modelli, checkpoint, librerie e altri componenti di terze parti
-sono componenti separati e restano soggetti alle rispettive licenze e
-condizioni. Consultare THIRD_PARTY_NOTICES.txt e KREA_SAFETY_AND_USE.txt.
-
-Questa schermata è un'informativa di licenza. Non è richiesta
-un'accettazione della GPL per installare o eseguire il Core.
-
-
-ENGLISH
-=======
+UNUM SUNT SPRITE STUDIO R5c8
+OPEN-SOURCE LICENSE NOTICE
 
 Unum Sunt Sprite Studio Core is free and open-source software distributed
 under the GNU General Public License version 3 or later (GPL-3.0-or-later).

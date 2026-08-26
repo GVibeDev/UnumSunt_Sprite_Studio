@@ -115,7 +115,7 @@ class FrameAnalysisTests(unittest.TestCase):
             duplicate_threshold=0.02,
         )
         self.assertGreaterEqual(len(result.duplicate_pairs), 1)
-        self.assertIn("quasi duplicato", result.features[1].flags)
+        self.assertIn("near duplicate", result.features[1].flags)
 
     def test_sensitivity_mapping_is_monotonic(self) -> None:
         self.assertLess(

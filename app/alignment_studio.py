@@ -96,15 +96,15 @@ class AlignmentStudio(QWidget):
         root.setContentsMargins(8, 8, 8, 8)
 
         top_row = QHBoxLayout()
-        self.refresh_button = QPushButton('Aggiorna dai frame R1')
+        self.refresh_button = QPushButton('Update from R1 Frames')
         self.refresh_button.clicked.connect(self.prepare_from_r1)
-        self.auto_anchors_button = QPushButton('Stima tutte le ancore')
+        self.auto_anchors_button = QPushButton('Estimate All Anchors')
         self.auto_anchors_button.clicked.connect(self._estimate_all_anchors)
-        self.fit_button = QPushButton('Adatta tutti alla tela')
+        self.fit_button = QPushButton('Fit All to Canvas')
         self.fit_button.clicked.connect(self._fit_all)
-        self.reset_offsets_button = QPushButton('Azzera offset')
+        self.reset_offsets_button = QPushButton('Reset Offset')
         self.reset_offsets_button.clicked.connect(self._reset_all_offsets)
-        self.play_button = QPushButton('▶ Anteprima loop')
+        self.play_button = QPushButton('▶ Preview Loop')
         self.play_button.clicked.connect(self._toggle_loop)
         for w in (self.refresh_button, self.auto_anchors_button, self.fit_button, self.reset_offsets_button):
             top_row.addWidget(w)
@@ -112,7 +112,7 @@ class AlignmentStudio(QWidget):
         top_row.addWidget(self.play_button)
         root.addLayout(top_row)
 
-        self.dirty_label = QLabel('R2 non preparata: seleziona i frame in R1 e premi “Aggiorna dai frame R1”.')
+        self.dirty_label = QLabel('R2 is not prepared: select frames in R1 and click “Update from R1 Frames”.')
         self.dirty_label.setWordWrap(True)
         self.dirty_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 6px; background: #3b3020; border: 1px solid #7e6633; }')
         root.addWidget(self.dirty_label)
@@ -135,11 +135,11 @@ class AlignmentStudio(QWidget):
         scroll.setMinimumSize(620, 560)
         left_layout.addWidget(scroll, 1)
         nav_row = QHBoxLayout()
-        previous_button = QPushButton('◀ Frame precedente')
+        previous_button = QPushButton('◀ Previous Frame')
         previous_button.clicked.connect(lambda: self._select_relative_frame(-1))
-        next_button = QPushButton('Frame successivo ▶')
+        next_button = QPushButton('Next Frame ▶')
         next_button.clicked.connect(lambda: self._select_relative_frame(1))
-        self.current_frame_label = QLabel('Nessun frame')
+        self.current_frame_label = QLabel('No Frames')
         self.current_frame_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         nav_row.addWidget(previous_button)
         nav_row.addWidget(self.current_frame_label, 1)
@@ -157,7 +157,7 @@ class AlignmentStudio(QWidget):
         controls_layout = QVBoxLayout(controls)
         controls_layout.setContentsMargins(4, 0, 0, 0)
 
-        canvas_group = QGroupBox('Geometria output e ancora globale · R5e2')
+        canvas_group = QGroupBox('Output Geometry and Global Anchor · R5e2')
         canvas_form = QFormLayout(canvas_group)
         self.output_size_preset_combo = QComboBox()
         for preset in OUTPUT_SIZE_PRESETS:
@@ -166,51 +166,51 @@ class AlignmentStudio(QWidget):
         self.output_size_preset_combo.setCurrentIndex(default_preset_index if default_preset_index >= 0 else 0)
         self.canvas_width_spin = QSpinBox(); self.canvas_width_spin.setRange(MIN_OUTPUT_DIMENSION, MAX_OUTPUT_DIMENSION); self.canvas_width_spin.setValue(96)
         self.canvas_height_spin = QSpinBox(); self.canvas_height_spin.setRange(MIN_OUTPUT_DIMENSION, MAX_OUTPUT_DIMENSION); self.canvas_height_spin.setValue(96)
-        self.lock_aspect_checkbox = QCheckBox('Blocca rapporto larghezza / altezza')
-        self.preserve_pivot_checkbox = QCheckBox('Riposiziona il pivot in proporzione al formato')
+        self.lock_aspect_checkbox = QCheckBox('Lock Width / Height Ratio')
+        self.preserve_pivot_checkbox = QCheckBox('Reposition Pivot Proportionally to Format')
         self.preserve_pivot_checkbox.setChecked(True)
-        self.auto_fit_resize_checkbox = QCheckBox('Adatta automaticamente la scala al cambio formato')
+        self.auto_fit_resize_checkbox = QCheckBox('Automatically adapt scale when the output format changes')
         self.auto_fit_resize_checkbox.setChecked(False)
         self.canvas_pivot_x_spin = QDoubleSpinBox(); self.canvas_pivot_x_spin.setRange(0, MAX_OUTPUT_DIMENSION); self.canvas_pivot_x_spin.setDecimals(2); self.canvas_pivot_x_spin.setValue(48)
         self.canvas_pivot_y_spin = QDoubleSpinBox(); self.canvas_pivot_y_spin.setRange(0, MAX_OUTPUT_DIMENSION); self.canvas_pivot_y_spin.setDecimals(2); self.canvas_pivot_y_spin.setValue(88)
         self.margin_spin = QSpinBox(); self.margin_spin.setRange(0, 64); self.margin_spin.setValue(4)
         self.scale_spin = QDoubleSpinBox(); self.scale_spin.setRange(0.005, 64.0); self.scale_spin.setDecimals(6); self.scale_spin.setSingleStep(0.01); self.scale_spin.setValue(1.0)
-        self.anchor_mode_combo = QComboBox(); self.anchor_mode_combo.addItem('Punto a terra', 'ground'); self.anchor_mode_combo.addItem('Centro geometrico', 'centroid'); self.anchor_mode_combo.addItem('Zona superiore', 'upper_body')
-        bottom_center_button = QPushButton('Ancora basso-centro')
+        self.anchor_mode_combo = QComboBox(); self.anchor_mode_combo.addItem('Ground Point', 'ground'); self.anchor_mode_combo.addItem('Geometric Center', 'centroid'); self.anchor_mode_combo.addItem('Upper Area', 'upper_body')
+        bottom_center_button = QPushButton('Bottom-Center Anchor')
         bottom_center_button.clicked.connect(self._set_bottom_center_pivot)
-        fit_geometry_button = QPushButton('Applica formato e adatta tutti')
+        fit_geometry_button = QPushButton('Apply Format and Fit All')
         fit_geometry_button.clicked.connect(self._apply_geometry_and_fit)
         pivot_buttons = QWidget()
         pivot_buttons_layout = QHBoxLayout(pivot_buttons)
         pivot_buttons_layout.setContentsMargins(0, 0, 0, 0)
         pivot_buttons_layout.addWidget(bottom_center_button)
         pivot_buttons_layout.addWidget(fit_geometry_button)
-        self.geometry_contract_label = QLabel('Output 96 × 96 · quadrato · nessun frame preparato')
+        self.geometry_contract_label = QLabel('Output 96 × 96 · square · no prepared frames')
         self.geometry_contract_label.setWordWrap(True)
         self.geometry_contract_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #263238; border: 1px solid #607d8b; }')
         canvas_form.addRow('Preset output', self.output_size_preset_combo)
-        canvas_form.addRow('Larghezza px', self.canvas_width_spin)
-        canvas_form.addRow('Altezza px', self.canvas_height_spin)
+        canvas_form.addRow('Width px', self.canvas_width_spin)
+        canvas_form.addRow('Height px', self.canvas_height_spin)
         canvas_form.addRow('', self.lock_aspect_checkbox)
         canvas_form.addRow('', self.preserve_pivot_checkbox)
         canvas_form.addRow('', self.auto_fit_resize_checkbox)
-        canvas_form.addRow('Ancora tela X', self.canvas_pivot_x_spin)
-        canvas_form.addRow('Ancora tela Y', self.canvas_pivot_y_spin)
-        canvas_form.addRow('Margine sicurezza', self.margin_spin)
-        canvas_form.addRow('Scala condivisa', self.scale_spin)
-        canvas_form.addRow('Modalità auto-ancora', self.anchor_mode_combo)
+        canvas_form.addRow('Canvas Anchor X', self.canvas_pivot_x_spin)
+        canvas_form.addRow('Canvas Anchor Y', self.canvas_pivot_y_spin)
+        canvas_form.addRow('Safety Margin', self.margin_spin)
+        canvas_form.addRow('Shared Scale', self.scale_spin)
+        canvas_form.addRow('Auto-Anchor Mode', self.anchor_mode_combo)
         canvas_form.addRow('', pivot_buttons)
-        canvas_form.addRow('Diagnostica', self.geometry_contract_label)
+        canvas_form.addRow('Diagnostics', self.geometry_contract_label)
         controls_layout.addWidget(canvas_group)
 
-        profile_group = QGroupBox('Profili allineamento')
+        profile_group = QGroupBox('Alignment Profiles')
         profile_layout = QVBoxLayout(profile_group)
         self.alignment_profile_combo = QComboBox()
-        profile_load_button = QPushButton('Carica profilo')
+        profile_load_button = QPushButton('Load Profile')
         profile_load_button.clicked.connect(self._load_selected_alignment_profile)
-        profile_save_button = QPushButton('Salva profilo corrente')
+        profile_save_button = QPushButton('Save Current Profile')
         profile_save_button.clicked.connect(self._save_current_alignment_profile_as)
-        profile_delete_button = QPushButton('Elimina profilo')
+        profile_delete_button = QPushButton('Delete Profile')
         profile_delete_button.clicked.connect(self._delete_selected_alignment_profile)
         profile_layout.addWidget(self.alignment_profile_combo)
         profile_layout.addWidget(profile_load_button)
@@ -218,7 +218,7 @@ class AlignmentStudio(QWidget):
         profile_layout.addWidget(profile_delete_button)
         controls_layout.addWidget(profile_group)
 
-        frame_group = QGroupBox('Allineamento frame corrente')
+        frame_group = QGroupBox('Current Frame Alignment')
         frame_form = QFormLayout(frame_group)
         self.source_pivot_x_spin = QDoubleSpinBox(); self.source_pivot_x_spin.setRange(-4096, 4096); self.source_pivot_x_spin.setDecimals(2)
         self.source_pivot_y_spin = QDoubleSpinBox(); self.source_pivot_y_spin.setRange(-4096, 4096); self.source_pivot_y_spin.setDecimals(2)
@@ -227,7 +227,7 @@ class AlignmentStudio(QWidget):
         pivot_button_row = QWidget()
         pivot_button_layout = QHBoxLayout(pivot_button_row)
         pivot_button_layout.setContentsMargins(0, 0, 0, 0)
-        self.click_pivot_button = QPushButton('Clicca ancora')
+        self.click_pivot_button = QPushButton('Click Anchor')
         self.click_pivot_button.setCheckable(True)
         self.click_pivot_button.toggled.connect(self.canvas.set_pivot_edit_mode)
         auto_current_button = QPushButton('Stima')
@@ -242,52 +242,52 @@ class AlignmentStudio(QWidget):
             button.setFixedWidth(36)
             button.clicked.connect(lambda checked=False, x=dx, y=dy: self._nudge_current(x, y))
             nudge_layout.addWidget(button)
-        frame_form.addRow('Ancora sorgente X', self.source_pivot_x_spin)
-        frame_form.addRow('Ancora sorgente Y', self.source_pivot_y_spin)
-        frame_form.addRow('Imposta ancora', pivot_button_row)
+        frame_form.addRow('Source Anchor X', self.source_pivot_x_spin)
+        frame_form.addRow('Source Anchor Y', self.source_pivot_y_spin)
+        frame_form.addRow('Set Anchor', pivot_button_row)
         frame_form.addRow('Offset X', self.offset_x_spin)
         frame_form.addRow('Offset Y', self.offset_y_spin)
         frame_form.addRow('Sposta', nudge_widget)
         controls_layout.addWidget(frame_group)
 
-        view_group = QGroupBox('Vista e onion skin')
+        view_group = QGroupBox('View and Onion Skin')
         view_form = QFormLayout(view_group)
         self.zoom_spin = QSpinBox(); self.zoom_spin.setRange(1, 16); self.zoom_spin.setValue(6)
-        self.onion_checkbox = QCheckBox('Mostra frame precedente'); self.onion_checkbox.setChecked(True)
+        self.onion_checkbox = QCheckBox('Show Previous Frame'); self.onion_checkbox.setChecked(True)
         self.onion_opacity_slider = QSlider(Qt.Orientation.Horizontal); self.onion_opacity_slider.setRange(0, 100); self.onion_opacity_slider.setValue(30)
-        self.grid_checkbox = QCheckBox('Griglia 8 px'); self.grid_checkbox.setChecked(True)
+        self.grid_checkbox = QCheckBox('8 px Grid'); self.grid_checkbox.setChecked(True)
         self.pivot_checkbox = QCheckBox('Croce ancora'); self.pivot_checkbox.setChecked(True)
-        self.ground_checkbox = QCheckBox('Linea riferimento'); self.ground_checkbox.setChecked(True)
+        self.ground_checkbox = QCheckBox('Reference Line'); self.ground_checkbox.setChecked(True)
         view_form.addRow('Zoom', self.zoom_spin)
         view_form.addRow('', self.onion_checkbox)
-        view_form.addRow('Opacità onion', self.onion_opacity_slider)
+        view_form.addRow('Onion Opacity', self.onion_opacity_slider)
         view_form.addRow('', self.grid_checkbox)
         view_form.addRow('', self.pivot_checkbox)
         view_form.addRow('', self.ground_checkbox)
         controls_layout.addWidget(view_group)
 
-        animation_group = QGroupBox('Animazione ed esportazione')
+        animation_group = QGroupBox('Animation and Export')
         animation_form = QFormLayout(animation_group)
         self.animation_name_edit = QLineEdit('walk')
         self.direction_combo = QComboBox(); self.direction_combo.addItems(['south-east','south','south-west','west','north-west','north','north-east','east'])
         self.fps_spin = QSpinBox(); self.fps_spin.setRange(1, 60); self.fps_spin.setValue(10)
         self.loop_checkbox = QCheckBox('Loop'); self.loop_checkbox.setChecked(True)
         self.export_format_combo = QComboBox(); self.export_format_combo.addItems(['PNG', 'WebP lossless'])
-        self.sheet_layout_combo = QComboBox(); self.sheet_layout_combo.addItems(['Orizzontale', 'Griglia', 'Verticale'])
+        self.sheet_layout_combo = QComboBox(); self.sheet_layout_combo.addItems(['Horizontal', 'Grid', 'Vertical'])
         self.sheet_columns_spin = QSpinBox(); self.sheet_columns_spin.setRange(1, 64); self.sheet_columns_spin.setValue(8)
         self.sheet_padding_spin = QSpinBox(); self.sheet_padding_spin.setRange(0, 64); self.sheet_padding_spin.setValue(0)
-        self.mirror_export_combo = QComboBox(); self.mirror_export_combo.addItem('Nessuno', 'none'); self.mirror_export_combo.addItem('Genera direzione opposta a specchio', 'opposite-lateral')
-        export_button = QPushButton('Esporta frame + sprite sheet')
+        self.mirror_export_combo = QComboBox(); self.mirror_export_combo.addItem('None', 'none'); self.mirror_export_combo.addItem('Generate Mirrored Opposite Direction', 'opposite-lateral')
+        export_button = QPushButton('Export Frames + Sprite Sheet')
         export_button.clicked.connect(self._export_animation)
-        animation_form.addRow('Nome', self.animation_name_edit)
-        animation_form.addRow('Direzione', self.direction_combo)
+        animation_form.addRow('Name', self.animation_name_edit)
+        animation_form.addRow('Direction', self.direction_combo)
         animation_form.addRow('FPS', self.fps_spin)
         animation_form.addRow('', self.loop_checkbox)
-        animation_form.addRow('Formato', self.export_format_combo)
+        animation_form.addRow('Format', self.export_format_combo)
         animation_form.addRow('Layout sheet', self.sheet_layout_combo)
-        animation_form.addRow('Colonne griglia', self.sheet_columns_spin)
+        animation_form.addRow('Grid Columns', self.sheet_columns_spin)
         animation_form.addRow('Spaziatura', self.sheet_padding_spin)
-        animation_form.addRow('Mirror laterale', self.mirror_export_combo)
+        animation_form.addRow('Horizontal Mirror', self.mirror_export_combo)
         animation_form.addRow('', export_button)
         controls_layout.addWidget(animation_group)
         controls_layout.addStretch(1)
@@ -423,7 +423,7 @@ class AlignmentStudio(QWidget):
         if persist_last:
             self._remember_current_alignment_settings()
         if self._selected_indices:
-            self.mark_dirty('Profilo allineamento applicato. Aggiorna R2 dai frame R1.')
+            self.mark_dirty('Alignment profile applied. Update R2 from R1 frames.')
 
     def _refresh_alignment_profiles_combo(self, selected_name: str | None = None) -> None:
         names = self.profile_store.list_profiles('alignment')
@@ -441,7 +441,7 @@ class AlignmentStudio(QWidget):
             self._apply_alignment_profile_data(data, persist_last=False)
 
     def _save_current_alignment_profile_as(self) -> None:
-        name, ok = QInputDialog.getText(self, 'Salva profilo allineamento', 'Nome profilo:')
+        name, ok = QInputDialog.getText(self, 'Save Alignment Profile', 'Profile name:')
         if not ok:
             return
         normalized = name.strip()
@@ -449,7 +449,7 @@ class AlignmentStudio(QWidget):
             return
         self.profile_store.set_profile('alignment', normalized, self._capture_alignment_profile_data())
         self._refresh_alignment_profiles_combo(normalized)
-        self.status_message.emit(f'Profilo allineamento salvato: {normalized}')
+        self.status_message.emit(f'Alignment profile saved: {normalized}')
 
     def _load_selected_alignment_profile(self) -> None:
         name = self.alignment_profile_combo.currentText().strip()
@@ -457,33 +457,33 @@ class AlignmentStudio(QWidget):
             return
         data = self.profile_store.get_profile('alignment', name)
         if data is None:
-            QMessageBox.information(self, 'Profilo non trovato', 'Il profilo selezionato non è disponibile.')
+            QMessageBox.information(self, 'Profile Not Found', 'The selected profile is not available.')
             self._refresh_alignment_profiles_combo()
             return
         self._apply_alignment_profile_data(data, persist_last=True)
-        self.status_message.emit(f'Profilo allineamento caricato: {name}')
+        self.status_message.emit(f'Alignment profile loaded: {name}')
 
     def _delete_selected_alignment_profile(self) -> None:
         name = self.alignment_profile_combo.currentText().strip()
         if not name:
             return
-        answer = QMessageBox.question(self, 'Elimina profilo', f'Eliminare il profilo "{name}"?')
+        answer = QMessageBox.question(self, 'Delete Profile', f'Delete profile "{name}"?')
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.profile_store.delete_profile('alignment', name)
         self._refresh_alignment_profiles_combo()
-        self.status_message.emit(f'Profilo allineamento eliminato: {name}')
+        self.status_message.emit(f'Alignment profile deleted: {name}')
 
     def set_selected_frames(self, frame_indices: list[int]) -> None:
         normalized = sorted(set(int(index) for index in frame_indices))
         if normalized != self._selected_indices:
             self._selected_indices = normalized
-            self.mark_dirty('La selezione R1 è cambiata. Premi “Aggiorna dai frame R1”.')
+            self.mark_dirty('The R1 selection changed. Click “Update from R1 Frames”.')
 
     def mark_dirty(self, message: str | None = None) -> None:
         self._dirty = True
         self._stop_loop()
-        self.dirty_label.setText(message or 'Le impostazioni R1 o i profili sono cambiati. Aggiorna R2 prima di esportare.')
+        self.dirty_label.setText(message or 'R1 settings or profiles changed. Update R2 before exporting.')
         self.dirty_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 6px; background: #3b3020; border: 1px solid #7e6633; }')
 
     def clear_project(self) -> None:
@@ -496,10 +496,10 @@ class AlignmentStudio(QWidget):
         self._current_placement = None
         self.frame_list.clear()
         self.canvas.set_images(None, None)
-        self.current_frame_label.setText('Nessun frame')
+        self.current_frame_label.setText('No Frames')
         self._dirty = True
         self._set_prepared_controls_enabled(False)
-        self.dirty_label.setText('R2 non preparata: seleziona i frame in R1 e premi “Aggiorna dai frame R1”.')
+        self.dirty_label.setText('R2 is not prepared: select frames in R1 and click “Update from R1 Frames”.')
         self._update_geometry_contract()
 
     def ensure_prepared(self) -> None:
@@ -516,12 +516,12 @@ class AlignmentStudio(QWidget):
     def prepare_from_r1(self) -> None:
         metadata = self._metadata_provider()
         if metadata is None:
-            QMessageBox.information(self, 'Nessun video', 'Aprire prima un video nella scheda Estrazione R1.')
+            QMessageBox.information(self, 'No Video', 'Open a video in the R1 Extraction tab first.')
             return
         if not self._selected_indices:
-            QMessageBox.information(self, 'Nessun frame', 'Selezionare almeno un fotogramma nella scheda Estrazione R1.')
+            QMessageBox.information(self, 'No Frames', 'Select at least one frame in the R1 Extraction tab.')
             return
-        progress = QProgressDialog('Preparazione sagome per R2…', 'Annulla', 0, len(self._selected_indices), self)
+        progress = QProgressDialog('Preparing subjects for R2…', 'Cancel', 0, len(self._selected_indices), self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(0)
         new_subjects: dict[int, SubjectFrame] = {}
@@ -530,7 +530,7 @@ class AlignmentStudio(QWidget):
             for position, frame_index in enumerate(self._selected_indices, start=1):
                 if progress.wasCanceled():
                     return
-                progress.setLabelText(f'Estrazione sagoma frame {frame_index} ({position}/{len(self._selected_indices)})')
+                progress.setLabelText(f'Extracting subject from frame {frame_index} ({position}/{len(self._selected_indices)})')
                 subject = self._subject_for_index(frame_index)
                 new_subjects[frame_index] = subject
                 anchor_x, anchor_y = estimate_anchor_by_mode(subject.rgba, str(self.anchor_mode_combo.currentData()))
@@ -538,7 +538,7 @@ class AlignmentStudio(QWidget):
                 progress.setValue(position)
         except Exception as exc:
             progress.close()
-            QMessageBox.critical(self, 'Errore preparazione R2', f'Impossibile preparare i frame:\n{exc}')
+            QMessageBox.critical(self, 'R2 Preparation Error', f'Unable to prepare frames:\n{exc}')
             return
         progress.close()
         self._subjects = new_subjects
@@ -552,19 +552,19 @@ class AlignmentStudio(QWidget):
         try:
             self.settings.shared_scale = calculate_shared_fit_scale(self._subjects, self._states, self.settings)
         except ValueError as exc:
-            QMessageBox.critical(self, 'Errore scala', str(exc))
+            QMessageBox.critical(self, 'Scale Error', str(exc))
             return
         with QSignalBlocker(self.scale_spin):
             self.scale_spin.setValue(self.settings.shared_scale)
         self._remember_current_alignment_settings()
         self._dirty = False
-        self.dirty_label.setText(f'R2 pronta: {len(self._selected_indices)} frame, tela {self.settings.canvas_width}×{self.settings.canvas_height}, scala condivisa {self.settings.shared_scale:.5f}.')
+        self.dirty_label.setText(f'R2 ready: {len(self._selected_indices)} frame, canvas {self.settings.canvas_width}×{self.settings.canvas_height}, shared scale {self.settings.shared_scale:.5f}.')
         self.dirty_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 6px; background: #20382a; border: 1px solid #3d7b55; }')
         self._populate_frame_list()
         self._set_prepared_controls_enabled(True)
         self._set_current_frame(self._selected_indices[0])
         self._update_geometry_contract()
-        self.status_message.emit('R2 preparata dai fotogrammi selezionati.')
+        self.status_message.emit('R2 prepared from selected frames.')
 
     def _populate_frame_list(self) -> None:
         self.frame_list.clear()
@@ -600,7 +600,7 @@ class AlignmentStudio(QWidget):
                 break
         metadata = self._metadata_provider()
         time_text = f'{metadata.frame_time_seconds(frame_index):.3f} s' if metadata is not None else '—'
-        self.current_frame_label.setText(f'Frame sorgente {frame_index} · {time_text} · offset ({state.offset_x}, {state.offset_y})')
+        self.current_frame_label.setText(f'Source frame {frame_index} · {time_text} · offset ({state.offset_x}, {state.offset_y})')
         self.frame_requested.emit(frame_index)
         self._render_current()
 
@@ -681,7 +681,7 @@ class AlignmentStudio(QWidget):
     def _apply_geometry_and_fit(self) -> None:
         self._on_global_settings_changed()
         if not self._subjects:
-            self.status_message.emit('Formato output applicato. Preparare i frame R2 per calcolare la scala.')
+            self.status_message.emit('Output format applied. Prepare R2 frames to calculate scale.')
             return
         self._fit_all()
         self._update_geometry_contract()
@@ -689,13 +689,13 @@ class AlignmentStudio(QWidget):
     def _update_geometry_contract(self) -> None:
         width = self.canvas_width_spin.value()
         height = self.canvas_height_spin.value()
-        shape_label = 'quadrato' if width == height else ('orizzontale' if width > height else 'verticale')
+        shape_label = 'square' if width == height else ('horizontal' if width > height else 'vertical')
         base = (
-            f'Output {width} × {height} px · {shape_label} · rapporto {width / height:.4f} · '
+            f'Output {width} × {height} px · {shape_label} · ratio {width / height:.4f} · '
             f'pivot ({self.canvas_pivot_x_spin.value():.2f}, {self.canvas_pivot_y_spin.value():.2f})'
         )
         if not self._subjects:
-            self.geometry_contract_label.setText(base + ' · nessun frame preparato')
+            self.geometry_contract_label.setText(base + ' · no prepared frames')
             self.geometry_contract_label.setStyleSheet(
                 'QLabel { color: #f4f6f8; padding: 7px; background: #263238; border: 1px solid #607d8b; }'
             )
@@ -704,7 +704,7 @@ class AlignmentStudio(QWidget):
         try:
             report = analyze_canvas_geometry(self._subjects, self._states, self.settings)
         except Exception as exc:
-            self.geometry_contract_label.setText(base + f' · diagnostica non disponibile: {exc}')
+            self.geometry_contract_label.setText(base + f' · diagnostics unavailable: {exc}')
             self.geometry_contract_label.setStyleSheet(
                 'QLabel { color: #f4f6f8; padding: 7px; background: #4a2d21; border: 1px solid #9e5a3c; }'
             )
@@ -713,15 +713,15 @@ class AlignmentStudio(QWidget):
             overflow = report.maximum_overflow
             text = (
                 base
-                + f' · ATTENZIONE: {len(report.clipped_frames)}/{report.total_frames} frame tagliati'
+                + f' · WARNING: {len(report.clipped_frames)}/{report.total_frames} clipped frames'
                 + f' · overflow max L{overflow[0]} T{overflow[1]} R{overflow[2]} B{overflow[3]} px'
             )
             style = 'QLabel { color: #f4f6f8; padding: 7px; background: #4a2424; border: 1px solid #a94b4b; }'
         elif report.margin_warning_frames:
-            text = base + f' · nessun taglio · {len(report.margin_warning_frames)} frame oltre il margine di sicurezza'
+            text = base + f' · no clipping · {len(report.margin_warning_frames)} frames outside the safe margin'
             style = 'QLabel { color: #f4f6f8; padding: 7px; background: #493d22; border: 1px solid #9c7d35; }'
         else:
-            text = base + f' · {report.total_frames} frame interamente nel margine di sicurezza'
+            text = base + f' · {report.total_frames} frames fully inside the safe margin'
             style = 'QLabel { color: #f4f6f8; padding: 7px; background: #20382a; border: 1px solid #3d7b55; }'
         self.geometry_contract_label.setText(text)
         self.geometry_contract_label.setStyleSheet(style)
@@ -794,7 +794,7 @@ class AlignmentStudio(QWidget):
         try:
             current_canvas, placement = render_aligned_frame(self._subjects[self._current_frame_index], self._states[self._current_frame_index], self.settings)
         except Exception as exc:
-            self.status_message.emit(f'Errore render R2: {exc}')
+            self.status_message.emit(f'R2 Render Error: {exc}')
             return
         self._current_placement = placement
         onion_canvas = None
@@ -804,7 +804,7 @@ class AlignmentStudio(QWidget):
             onion_canvas, _ = render_aligned_frame(self._subjects[previous_index], self._states[previous_index], self.settings)
         self.canvas.set_canvas_geometry(self.settings.canvas_width, self.settings.canvas_height, self.settings.canvas_pivot_x, self.settings.canvas_pivot_y)
         self.canvas.set_images(current_canvas, onion_canvas)
-        self.current_frame_label.setText(f'Frame sorgente {self._current_frame_index} · offset ({self._states[self._current_frame_index].offset_x}, {self._states[self._current_frame_index].offset_y})')
+        self.current_frame_label.setText(f'Source frame {self._current_frame_index} · offset ({self._states[self._current_frame_index].offset_x}, {self._states[self._current_frame_index].offset_y})')
         self._update_geometry_contract()
 
     def _fit_all(self) -> None:
@@ -814,12 +814,12 @@ class AlignmentStudio(QWidget):
         try:
             scale = calculate_shared_fit_scale(self._subjects, self._states, self.settings)
         except ValueError as exc:
-            QMessageBox.critical(self, 'Errore adattamento', str(exc))
+            QMessageBox.critical(self, 'Fit Error', str(exc))
             return
         self.settings.shared_scale = scale
         self.scale_spin.setValue(scale)
         self._remember_current_alignment_settings()
-        self.status_message.emit(f'Scala condivisa calcolata: {scale:.6f}')
+        self.status_message.emit(f'Shared scale calculated: {scale:.6f}')
 
     def _estimate_all_anchors(self) -> None:
         mode = str(self.anchor_mode_combo.currentData())
@@ -832,7 +832,7 @@ class AlignmentStudio(QWidget):
             state.anchor_mode = mode
         if self._current_frame_index is not None:
             self._set_current_frame(self._current_frame_index)
-        self.status_message.emit('Ancore automatiche ricalcolate.')
+        self.status_message.emit('Automatic anchors recalculated.')
 
     def _estimate_current_anchor(self) -> None:
         if self._current_frame_index is None:
@@ -904,7 +904,7 @@ class AlignmentStudio(QWidget):
         state.anchor_mode = 'manual'
         self.click_pivot_button.setChecked(False)
         self._set_current_frame(self._current_frame_index)
-        self.status_message.emit(f'Ancora manuale impostata: ({source_x:.2f}, {source_y:.2f})')
+        self.status_message.emit(f'Manual anchor set: ({source_x:.2f}, {source_y:.2f})')
 
     def _update_overlays(self) -> None:
         self.canvas.set_overlays(show_grid=self.grid_checkbox.isChecked(), show_pivot=self.pivot_checkbox.isChecked(), show_ground=self.ground_checkbox.isChecked())
@@ -928,11 +928,11 @@ class AlignmentStudio(QWidget):
             return
         self.onion_checkbox.setChecked(False)
         self.play_timer.start(max(1, int(round(1000 / self.fps_spin.value()))))
-        self.play_button.setText('■ Ferma anteprima')
+        self.play_button.setText('■ Stop Preview')
 
     def _stop_loop(self) -> None:
         self.play_timer.stop()
-        self.play_button.setText('▶ Anteprima loop')
+        self.play_button.setText('▶ Preview Loop')
 
     def _restart_play_timer_if_needed(self) -> None:
         if self.play_timer.isActive():
@@ -988,13 +988,13 @@ class AlignmentStudio(QWidget):
                 except Exception:
                     continue
         self._pending_restored_states = pending
-        self.mark_dirty('Sessione R2 ripristinata: aggiorna dai frame R1 per ricostruire le sagome con gli offset salvati.')
+        self.mark_dirty('R2 session restored: update from R1 frames to rebuild subjects with the saved offsets.')
 
     def build_export_payload(self) -> dict:
         self.ensure_prepared()
         metadata = self._metadata_provider()
         if metadata is None or not self._subjects or not self._selected_indices:
-            raise RuntimeError('R2 non pronta: preparare almeno un set di frame allineati.')
+            raise RuntimeError('R2 is not ready: prepare at least one set of aligned frames.')
         self._sync_settings_from_controls()
         rendered_frames = []
         for frame_index in self._selected_indices:
@@ -1016,12 +1016,12 @@ class AlignmentStudio(QWidget):
 
     def _export_animation(self) -> None:
         if self._dirty:
-            QMessageBox.information(self, 'R2 da aggiornare', 'Aggiornare R2 dai frame R1 prima di esportare.')
+            QMessageBox.information(self, 'R2 Needs Update', 'Update R2 from the R1 frames before exporting.')
             return
         metadata = self._metadata_provider()
         if metadata is None or not self._subjects:
             return
-        output_dir = QFileDialog.getExistingDirectory(self, 'Cartella di esportazione animazione', str(metadata.path.parent))
+        output_dir = QFileDialog.getExistingDirectory(self, 'Animation Export Folder', str(metadata.path.parent))
         if not output_dir:
             return
         self._sync_settings_from_controls()
@@ -1029,9 +1029,8 @@ class AlignmentStudio(QWidget):
         if geometry_report.clipped_frames:
             answer = QMessageBox.question(
                 self,
-                'Frame tagliati dal formato output',
-                f'{len(geometry_report.clipped_frames)} frame su {geometry_report.total_frames} superano la tela '
-                f'{self.settings.canvas_width}×{self.settings.canvas_height}. Continuare comunque con l’esportazione?',
+                'Frames clipped by output format',
+                f'{len(geometry_report.clipped_frames)} frames out of {geometry_report.total_frames} exceed the canvas {self.settings.canvas_width}×{self.settings.canvas_height}. Continue with export anyway?',
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -1039,7 +1038,7 @@ class AlignmentStudio(QWidget):
         layout = ('horizontal', 'grid', 'vertical')[self.sheet_layout_combo.currentIndex()]
         mirror_mode = str(self.mirror_export_combo.currentData())
         variant_count = 2 if mirror_mode == 'opposite-lateral' else 1
-        progress = QProgressDialog('Esportazione animazione R2…', 'Annulla', 0, variant_count * (len(self._selected_indices) + 1), self)
+        progress = QProgressDialog('Exporting R2 animation…', 'Cancel', 0, variant_count * (len(self._selected_indices) + 1), self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(0)
         cancelled = False
@@ -1047,16 +1046,16 @@ class AlignmentStudio(QWidget):
         def on_progress(position: int, total: int, frame_index: int) -> None:
             nonlocal cancelled
             if frame_index >= 0:
-                progress.setLabelText(f'Esportazione frame {frame_index} ({position}/{total})')
+                progress.setLabelText(f'Exporting frame {frame_index} ({position}/{total})')
             else:
-                progress.setLabelText(f'Creazione sprite sheet… ({position}/{total})')
+                progress.setLabelText(f'Creating sprite sheet… ({position}/{total})')
             progress.setMaximum(total)
             progress.setValue(position)
             from PySide6.QtWidgets import QApplication
             QApplication.processEvents()
             if progress.wasCanceled():
                 cancelled = True
-                raise AlignmentExportError('Esportazione annullata dall\'utente.')
+                raise AlignmentExportError('Export cancelled by the user.')
 
         try:
             manifest = export_aligned_animation(
@@ -1079,15 +1078,15 @@ class AlignmentStudio(QWidget):
         except Exception as exc:
             progress.close()
             if not cancelled:
-                QMessageBox.critical(self, 'Errore esportazione R2', str(exc))
+                QMessageBox.critical(self, 'R2 Export Error', str(exc))
             return
         progress.close()
         generated = manifest.get('generated_exports', [])
         if generated:
             exported_labels = ', '.join(item.get('direction', '?') for item in generated)
-            message = f'Esportati {manifest["animation"]["frame_count"]} frame allineati.\nDirezioni generate: {exported_labels}.\nOutput in:\n{output_dir}'
+            message = f"Exported {manifest['animation']['frame_count']} aligned frames.\nGenerated directions: {exported_labels}.\nOutput in:\n{output_dir}"
         else:
-            message = f'Esportati {manifest["animation"]["frame_count"]} frame allineati, sprite sheet e manifest in:\n{output_dir}'
-        QMessageBox.information(self, 'Animazione esportata', message)
-        self.status_message.emit('Esportazione R2 completata.')
+            message = f"Exported {manifest['animation']['frame_count']} aligned frames, sprite sheet and manifest in:\n{output_dir}"
+        QMessageBox.information(self, 'Animation Exported', message)
+        self.status_message.emit('R2 export completed.')
 

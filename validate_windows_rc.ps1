@@ -7,10 +7,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-$ExpectedVersion = 'R5c7'
-$ExpectedProductVersion = '5.7.0.0'
+$ExpectedVersion = 'R5c8'
+$ExpectedProductVersion = '5.8.0.0'
 $ExpectedExeName = 'UnumSuntSpriteStudio.exe'
-$ExpectedSetupName = 'UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe'
+$ExpectedSetupName = 'UnumSunt_Sprite_Studio_R5c8_Setup_x64.exe'
 $AuditDir = Join-Path $PSScriptRoot 'release\audit'
 New-Item -ItemType Directory -Force $AuditDir | Out-Null
 
@@ -41,13 +41,13 @@ function Check-File([string]$Area, [string]$Path) {
         Add-Result $Area 'PASS' $Path
         return $true
     }
-    Add-Result $Area 'FAIL' "File mancante: $Path"
+    Add-Result $Area 'FAIL' "Missing file: $Path"
     return $false
 }
 
 function Run-PipCheck([string]$Area, [string]$PythonPath, [bool]$Required) {
     if (-not $PythonPath -or -not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) {
-        Add-Result $Area ($(if ($Required) {'FAIL'} else {'WARN'})) "Python non disponibile: $PythonPath"
+        Add-Result $Area ($(if ($Required) {'FAIL'} else {'WARN'})) "Python unavailable: $PythonPath"
         return
     }
     $output = & $PythonPath -m pip check 2>&1
@@ -61,7 +61,7 @@ function Run-PipCheck([string]$Area, [string]$PythonPath, [bool]$Required) {
 }
 
 Write-Host ''
-Write-Host '=== Unum Sunt Sprite Studio R5c7 - Windows RC Validation ===' -ForegroundColor Cyan
+Write-Host '=== Unum Sunt Sprite Studio R5c8 - Windows RC Validation ===' -ForegroundColor Cyan
 Write-Host "Repository: $PSScriptRoot"
 Write-Host ''
 
@@ -76,14 +76,14 @@ $specPath = Join-Path $PSScriptRoot 'UnumSuntSpriteStudio.spec'
 if (Check-File 'PyInstaller spec' $specPath) {
     $spec = Get-Content -LiteralPath $specPath -Raw
     if ($spec -match "icon='assets/branding/app_icon\.ico'") {
-        Add-Result 'EXE icon contract' 'PASS' 'PyInstaller usa assets/branding/app_icon.ico'
+        Add-Result 'EXE icon contract' 'PASS' 'PyInstaller uses assets/branding/app_icon.ico'
     }
     else {
-        Add-Result 'EXE icon contract' 'FAIL' 'Icona EXE non dichiarata nel file .spec'
+        Add-Result 'EXE icon contract' 'FAIL' 'EXE icon is not declared in the .spec file'
     }
 }
 
-$issPath = Join-Path $PSScriptRoot 'installer\UnumSuntSpriteStudio_R5c7.iss'
+$issPath = Join-Path $PSScriptRoot 'installer\UnumSuntSpriteStudio_R5c8.iss'
 if (Check-File 'Inno Setup source' $issPath) {
     $iss = Get-Content -LiteralPath $issPath -Raw
     foreach ($needle in @('SetupIconFile=..\assets\branding\app_icon.ico', 'WizardImageFile=..\assets\branding\installer_wizard.bmp', 'WizardSmallImageFile=..\assets\branding\installer_wizard_small.bmp')) {
@@ -91,7 +91,7 @@ if (Check-File 'Inno Setup source' $issPath) {
             Add-Result 'Installer branding contract' 'PASS' $needle
         }
         else {
-            Add-Result 'Installer branding contract' 'FAIL' "Manca: $needle"
+            Add-Result 'Installer branding contract' 'FAIL' "Missing: $needle"
         }
     }
 }
@@ -100,22 +100,22 @@ if (Check-File 'Inno Setup source' $issPath) {
 if (-not $SkipBuild -and $BuildSetup) {
     try {
         Write-Host ''
-        Write-Host 'Avvio build Setup R5c7...' -ForegroundColor Cyan
+        Write-Host 'Starting R5c8 Setup build...' -ForegroundColor Cyan
         $args = @()
         if ($InstallInnoSetup) { $args += '-InstallInnoSetup' }
         & (Join-Path $PSScriptRoot 'build_setup_windows.ps1') @args
         if ($LASTEXITCODE -ne 0) { throw "build_setup_windows.ps1 exit code $LASTEXITCODE" }
-        Add-Result 'Windows build' 'PASS' 'Standalone + Setup completati'
+        Add-Result 'Windows build' 'PASS' 'Standalone + Setup completed'
     }
     catch {
         Add-Result 'Windows build' 'FAIL' $_.Exception.Message
     }
 }
 elseif ($SkipBuild) {
-    Add-Result 'Windows build' 'WARN' 'Build saltata su richiesta; vengono validati gli artefatti esistenti.'
+    Add-Result 'Windows build' 'WARN' 'Build skipped by request; existing artifacts will be validated.'
 }
 else {
-    Add-Result 'Windows build' 'WARN' 'Build non richiesta. Rieseguire con -BuildSetup per il gate completo.'
+    Add-Result 'Windows build' 'WARN' 'Build not requested. Run again with -BuildSetup for the complete gate.'
 }
 
 # Core dependency gate
@@ -132,7 +132,7 @@ if (Check-File 'Standalone EXE' $exePath) {
             Add-Result 'Frozen version' 'PASS' $versionOut.Trim()
         }
         else {
-            Add-Result 'Frozen version' 'FAIL' "Atteso $ExpectedVersion; ottenuto: $($versionOut.Trim())"
+            Add-Result 'Frozen version' 'FAIL' "Expected $ExpectedVersion; got: $($versionOut.Trim())"
         }
     }
     catch {
@@ -158,7 +158,7 @@ if (Check-File 'Standalone EXE' $exePath) {
         Add-Type -AssemblyName System.Drawing
         $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
         if ($null -eq $icon) {
-            Add-Result 'EXE embedded icon' 'FAIL' 'Windows non ha estratto alcuna icona associata.'
+            Add-Result 'EXE embedded icon' 'FAIL' 'Windows did not extract an associated icon.'
         }
         else {
             $preview = Join-Path $AuditDir 'exe_icon_preview.png'
@@ -166,14 +166,14 @@ if (Check-File 'Standalone EXE' $exePath) {
             $bitmap.Save($preview, [System.Drawing.Imaging.ImageFormat]::Png)
             $bitmap.Dispose()
             $icon.Dispose()
-            Add-Result 'EXE embedded icon' 'PASS' "Icona estratta: $preview"
+            Add-Result 'EXE embedded icon' 'PASS' "Extracted icon: $preview"
         }
     }
     catch {
-        Add-Result 'EXE embedded icon' 'WARN' "Verifica automatica non disponibile: $($_.Exception.Message)"
+        Add-Result 'EXE embedded icon' 'WARN' "Automated verification unavailable: $($_.Exception.Message)"
     }
 
-    $selfCheckPath = Join-Path $AuditDir 'standalone_selfcheck_R5c7.json'
+    $selfCheckPath = Join-Path $AuditDir 'standalone_selfcheck_R5c8.json'
     try {
         Remove-Item -Force $selfCheckPath -ErrorAction SilentlyContinue
         $process = Start-Process -FilePath $exePath -ArgumentList @('--self-check', ('"{0}"' -f $selfCheckPath)) -Wait -PassThru
@@ -198,7 +198,7 @@ if (Check-File 'Standalone EXE' $exePath) {
 # Setup + checksum gate
 $installerDir = Join-Path $PSScriptRoot 'release\installer'
 $setupPath = Join-Path $installerDir $ExpectedSetupName
-$setupHashPath = Join-Path $installerDir 'UnumSunt_Sprite_Studio_R5c7_Setup_x64_SHA256.txt'
+$setupHashPath = Join-Path $installerDir 'UnumSunt_Sprite_Studio_R5c8_Setup_x64_SHA256.txt'
 if (Check-File 'Setup EXE' $setupPath) {
     if (Check-File 'Setup SHA256' $setupHashPath) {
         try {
@@ -208,7 +208,7 @@ if (Check-File 'Setup EXE' $setupPath) {
                 Add-Result 'Setup checksum' 'PASS' $actualHash
             }
             else {
-                Add-Result 'Setup checksum' 'FAIL' "Atteso $expectedHash; ottenuto $actualHash"
+                Add-Result 'Setup checksum' 'FAIL' "Expected $expectedHash; got $actualHash"
             }
         }
         catch {
@@ -232,7 +232,7 @@ foreach ($name in @('local_wangp.json', 'local_wangp_image.json')) {
     }
 }
 if ($runtimePythons.Count -eq 0) {
-    Add-Result 'WanGP pip check' 'WARN' 'Nessun Python WanGP configurato trovato in LOCALAPPDATA.'
+    Add-Result 'WanGP pip check' 'WARN' 'No configured WanGP Python was found in LOCALAPPDATA.'
 }
 else {
     $index = 1
@@ -244,17 +244,17 @@ else {
 
 # Manual Windows gates cannot be truthfully automated from the repository.
 foreach ($gate in @(
-    'Installazione pulita e avvio',
-    'Icona Start Menu / Desktop / taskbar',
-    'Krea Image Gen reale',
-    'Wan Animate reale',
+    'Clean installation and launch',
+    'Start Menu / Desktop / taskbar icon',
+    'Real Krea Image Gen',
+    'Real Wan Animate',
     'Krea -> reference -> Animate -> Video -> Sprite',
-    'Upgrade da versione precedente',
-    'Repair stessa R5c7',
-    'Uninstall conservativo + reinstallazione',
-    'Uninstall completo su installazione sacrificabile'
+    'Upgrade from a previous version',
+    'Repair the same R5c8 installation',
+    'Conservative uninstall + reinstall',
+    'Full uninstall on a disposable installation'
 )) {
-    Add-Result "Manual gate: $gate" 'WARN' 'Da verificare manualmente sul PC Windows reale.'
+    Add-Result "Manual gate: $gate" 'WARN' 'Must be verified manually on the real Windows PC.'
 }
 
 $pass = @($results | Where-Object status -eq 'PASS').Count
@@ -263,7 +263,7 @@ $fail = @($results | Where-Object status -eq 'FAIL').Count
 $overall = if ($fail -gt 0) { 'FAIL' } elseif ($warn -gt 0) { 'PASS_WITH_MANUAL_GATES' } else { 'PASS' }
 
 $report = [pscustomobject]@{
-    schema = 'unum-sunt-r5c7-windows-rc-validation-v1'
+    schema = 'unum-sunt-r5c8-windows-rc-validation-v1'
     generated_at = (Get-Date).ToString('o')
     expected_version = $ExpectedVersion
     overall = $overall
@@ -271,11 +271,11 @@ $report = [pscustomobject]@{
     results = $results
 }
 
-$jsonPath = Join-Path $AuditDir 'R5c7_WINDOWS_RC_VALIDATION.json'
-$textPath = Join-Path $AuditDir 'R5c7_WINDOWS_RC_VALIDATION.txt'
+$jsonPath = Join-Path $AuditDir 'R5c8_WINDOWS_RC_VALIDATION.json'
+$textPath = Join-Path $AuditDir 'R5c8_WINDOWS_RC_VALIDATION.txt'
 $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $jsonPath -Encoding UTF8
 @(
-    "Unum Sunt Sprite Studio R5c7 - Windows RC Validation",
+    "Unum Sunt Sprite Studio R5c8 - Windows RC Validation",
     "Overall: $overall",
     "PASS=$pass WARN=$warn FAIL=$fail",
     '',

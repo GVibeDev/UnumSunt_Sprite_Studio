@@ -454,20 +454,20 @@ class ProjectStore:
         lineage = self.group_lineage(group_id)
         subject = next((group for group in lineage if group.get('type') == 'subject'), None)
         if subject is None:
-            raise ValueError('Il gruppo non appartiene a un soggetto.')
+            raise ValueError('The group does not belong to a subject.')
         return deepcopy(subject)
 
     def get_character_set(self, subject_id: str) -> dict[str, Any]:
         group = self.get_group(subject_id)
         if group is None or group.get('type') != 'subject':
-            raise ValueError('Character Set disponibile solo su un gruppo Soggetto.')
+            raise ValueError('Character Set is available only on a Subject group.')
         metadata = group.get('metadata') if isinstance(group.get('metadata'), dict) else {}
         return normalize_character_set_state(metadata.get('character_set'))
 
     def set_character_set(self, subject_id: str, state: dict[str, Any]) -> None:
         group = self.get_group(subject_id)
         if group is None or group.get('type') != 'subject':
-            raise ValueError('Character Set disponibile solo su un gruppo Soggetto.')
+            raise ValueError('Character Set is available only on a Subject group.')
         normalized = normalize_character_set_state(state)
         self.update_group(subject_id, metadata={'character_set': normalized})
 
@@ -514,25 +514,25 @@ class ProjectStore:
     def get_direction_layer_stack(self, group_id: str) -> dict[str, Any]:
         group = self.get_group(group_id)
         if group is None or group.get('type') != 'direction':
-            raise ValueError('Lo stack layer è disponibile solo su una direzione.')
+            raise ValueError('The layer stack is available only on a Direction group.')
         metadata = group.get('metadata') if isinstance(group.get('metadata'), dict) else {}
         return normalize_direction_layer_stack(metadata.get('layer_stack'))
 
     def set_direction_layer_stack(self, group_id: str, stack: dict[str, Any]) -> None:
         group = self.get_group(group_id)
         if group is None or group.get('type') != 'direction':
-            raise ValueError('Lo stack layer è disponibile solo su una direzione.')
+            raise ValueError('The layer stack is available only on a Direction group.')
         normalized = normalize_direction_layer_stack(stack)
         self.update_group(group_id, metadata={'layer_stack': normalized})
 
     def import_direction_layer_asset(self, group_id: str, layer_id: str, source: Path) -> dict[str, Any]:
         group = self.get_group(group_id)
         if group is None or group.get('type') != 'direction':
-            raise ValueError('Assegnare layer soltanto a un gruppo Direzione.')
+            raise ValueError('Layers can only be assigned to a Direction group.')
         subject = self.subject_for_group(group_id)
         state = self.get_character_set(subject['id'])
         if not any(layer['id'] == layer_id for layer in state['layers']):
-            raise KeyError(f'Layer non appartenente al soggetto: {layer_id}')
+            raise KeyError(f'Layer does not belong to the subject: {layer_id}')
         target = self.group_workspace(group_id) / 'layers' / layer_id
         manifest = copy_layer_source(Path(source), target, layer_id=layer_id)
         stack = self.get_direction_layer_stack(group_id)

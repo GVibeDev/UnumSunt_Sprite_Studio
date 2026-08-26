@@ -6,7 +6,7 @@ class ThemePreferencesIntegrationTests(unittest.TestCase):
     def test_file_menu_contains_preferences(self) -> None:
         root = Path(__file__).resolve().parents[1]
         source = (root / 'app' / 'main_window.py').read_text(encoding='utf-8')
-        self.assertIn("'Preferenze…'", source)
+        self.assertIn("'Preferences…'", source)
         self.assertIn('self.theme_preferences.open_preferences()', source)
 
     def test_toolbar_contains_theme_switch(self) -> None:

@@ -6,8 +6,8 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
 Write-Host '=== Unum Sunt Sprite Studio - Source Runner ==='
-Write-Host 'Runtime sorgente supportato: Python 3.13.x oppure 3.14.x (x64)'
-Write-Host 'Nota: il lock Python 3.13 riguarda solo la build ufficiale standalone.'
+Write-Host 'Supported source runtime: Python 3.13.x or 3.14.x (x64)'
+Write-Host 'Note: the Python 3.13 lock applies only to the official standalone build.'
 Write-Host ''
 
 function Test-SourcePython([string]$InterpreterPath) {
@@ -65,13 +65,13 @@ $venv = Join-Path $PSScriptRoot '.venv'
 $venvPython = Join-Path $venv 'Scripts\python.exe'
 
 if ($ResetVenv -and (Test-Path $venv)) {
-    Write-Host 'Reset richiesto: rimozione .venv...'
+    Write-Host 'Reset requested: removing .venv...'
     Remove-Item -Recurse -Force $venv
 }
 
 if (Test-Path $venvPython) {
     if (-not (Test-SourcePython $venvPython)) {
-        Write-Host '.venv usa un Python non supportato o e corrotto: ricreazione...' -ForegroundColor Yellow
+        Write-Host '.venv uses an unsupported or corrupted Python runtime: recreating...' -ForegroundColor Yellow
         Remove-Item -Recurse -Force $venv
     }
 }
@@ -79,20 +79,20 @@ if (Test-Path $venvPython) {
 if (-not (Test-Path $venvPython)) {
     $basePython = Resolve-SourcePython
     if (-not $basePython) {
-        throw 'Nessun Python x64 compatibile trovato. Per eseguire il sorgente installare Python 3.13 oppure 3.14. Per la build ufficiale usare build_windows_standalone.bat, che gestisce separatamente Python 3.13.'
+        throw 'No compatible x64 Python runtime was found. Install Python 3.13 or 3.14 to run from source. For the official build, use build_windows_standalone.bat, which manages Python 3.13 separately.'
     }
-    Write-Host "Creazione .venv con: $basePython"
+    Write-Host "Creating .venv with: $basePython"
     & $basePython -m venv $venv
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $venvPython)) {
-        throw 'Creazione ambiente .venv fallita.'
+        throw 'Failed to create the .venv environment.'
     }
 }
 
-Write-Host "Runtime sorgente: $(& $venvPython --version 2>&1)"
+Write-Host "Source runtime: $(& $venvPython --version 2>&1)"
 & $venvPython -m pip install --upgrade pip
-if ($LASTEXITCODE -ne 0) { throw 'Aggiornamento pip fallito.' }
+if ($LASTEXITCODE -ne 0) { throw 'pip upgrade failed.' }
 & $venvPython -m pip install -r requirements.txt
-if ($LASTEXITCODE -ne 0) { throw 'Installazione requirements fallita.' }
+if ($LASTEXITCODE -ne 0) { throw 'Requirements installation failed.' }
 
 & $venvPython main.py
 exit $LASTEXITCODE

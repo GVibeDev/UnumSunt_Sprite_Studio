@@ -4,7 +4,7 @@ cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0run_windows.ps1" %*
 if errorlevel 1 (
     echo.
-    echo AVVIO DA SORGENTE FALLITO.
+    echo SOURCE STARTUP FAILED.
     pause
     exit /b 1
 )

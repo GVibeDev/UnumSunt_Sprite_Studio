@@ -13,12 +13,12 @@ $BuildPythonMinor = 13
 $BuildPythonTag = '3.13'
 $BuildPythonLabel = 'Python 3.13 x64'
 
-Write-Host '=== Unum Sunt Sprite Studio R5c7 - Windows Standalone Core ==='
-Write-Host "Build runtime ufficiale: $BuildPythonLabel"
+Write-Host '=== Unum Sunt Sprite Studio R5c8 - Windows Standalone Core ==='
+Write-Host "Official build runtime: $BuildPythonLabel"
 Write-Host ''
 
 if (-not [Environment]::Is64BitOperatingSystem) {
-    throw 'R5c7 supporta esclusivamente Windows x64.'
+    throw 'R5c8 supports Windows x64 only.'
 }
 
 function Test-BuildPython([string]$InterpreterPath) {
@@ -117,10 +117,10 @@ function Confirm-PythonInstall {
     if ($NoPythonInstallPrompt) { return $false }
 
     Write-Host ''
-    Write-Host "$BuildPythonLabel non e' disponibile sul sistema." -ForegroundColor Yellow
-    Write-Host 'Python 3.14 o altre versioni gia presenti NON verranno modificate.'
-    $answer = Read-Host 'Installare automaticamente Python 3.13 x64 per la build? [S/N]'
-    return @('s', 'si', 'sì', 'y', 'yes') -contains $answer.Trim().ToLowerInvariant()
+    Write-Host "$BuildPythonLabel is not available on this system." -ForegroundColor Yellow
+    Write-Host 'Python 3.14 and any other existing Python versions will NOT be modified.'
+    $answer = Read-Host 'Install Python 3.13 x64 automatically for this build? [Y/N]'
+    return @('y', 'yes') -contains $answer.Trim().ToLowerInvariant()
 }
 
 function Ensure-PythonManager {
@@ -129,41 +129,41 @@ function Ensure-PythonManager {
 
     $winget = Get-Command winget -ErrorAction SilentlyContinue
     if (-not $winget) {
-        throw 'Python Install Manager non trovato e WinGet non disponibile. Installare Python 3.13 x64 manualmente e rilanciare la build.'
+        throw 'Python Install Manager was not found and WinGet is unavailable. Install Python 3.13 x64 manually and run the build again.'
     }
 
-    Write-Host 'Installazione Python Install Manager tramite WinGet...'
+    Write-Host 'Installing Python Install Manager through WinGet...'
     & $winget.Source install 9NQ7512CXL7T -e --accept-package-agreements --accept-source-agreements --disable-interactivity | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        throw 'Installazione del Python Install Manager tramite WinGet fallita.'
+        throw 'Python Install Manager installation through WinGet failed.'
     }
 
     # Give Windows app aliases a moment to become visible, then probe again.
     Start-Sleep -Seconds 2
     $manager = Get-PythonManagerPath
     if (-not $manager) {
-        throw 'Python Install Manager installato, ma il comando pymanager non e ancora disponibile. Chiudere e rilanciare build_windows_standalone.bat.'
+        throw 'Python Install Manager was installed, but the pymanager command is not available yet. Close this terminal and run build_windows_standalone.bat again.'
     }
     return $manager
 }
 
 function Install-Python313Runtime {
     if (-not (Confirm-PythonInstall)) {
-        throw "$BuildPythonLabel necessario per la build ufficiale. Installazione annullata."
+        throw "$BuildPythonLabel is required for the official build. Installation cancelled."
     }
 
     $manager = Ensure-PythonManager
-    Write-Host "Installazione $BuildPythonLabel tramite Python Install Manager..."
+    Write-Host "Installing $BuildPythonLabel through Python Install Manager..."
     & $manager install $BuildPythonTag | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        throw "Installazione di $BuildPythonLabel fallita."
+        throw "Installation of $BuildPythonLabel failed."
     }
     try { & $manager install --refresh | Out-Null } catch { }
     Start-Sleep -Seconds 1
 
     $resolved = Get-Python313Path
     if (-not $resolved) {
-        throw "$BuildPythonLabel risulta installato ma non e stato possibile risolvere il percorso dell'interprete."
+        throw "$BuildPythonLabel appears to be installed, but the interpreter path could not be resolved."
     }
     return $resolved
 }
@@ -172,16 +172,16 @@ $venv = Join-Path $PSScriptRoot '.build-venv'
 $python = Join-Path $venv 'Scripts\python.exe'
 
 if ($ResetBuildVenv -and (Test-Path $venv)) {
-    Write-Host 'Reset richiesto: rimozione .build-venv...'
+    Write-Host 'Reset requested: removing .build-venv...'
     Remove-Item -Recurse -Force $venv
 }
 
 if (Test-Path $python) {
     if (Test-BuildPython $python) {
-        Write-Host "Ambiente build esistente valido: $(& $python --version 2>&1)"
+        Write-Host "Existing build environment is valid: $(& $python --version 2>&1)"
     }
     else {
-        Write-Host '.build-venv usa una versione Python non compatibile o e corrotto: ricreazione automatica...' -ForegroundColor Yellow
+        Write-Host '.build-venv uses an incompatible Python version or is corrupted: recreating it automatically...' -ForegroundColor Yellow
         Remove-Item -Recurse -Force $venv
     }
 }
@@ -193,38 +193,38 @@ if (-not (Test-Path $python)) {
     }
 
     if (-not (Test-BuildPython $basePython)) {
-        throw "Interprete risolto non conforme al contratto ${BuildPythonLabel}: $basePython"
+        throw "Resolved interpreter does not satisfy the ${BuildPythonLabel} contract: $basePython"
     }
 
-    Write-Host "Creazione ambiente build con: $basePython"
+    Write-Host "Creating build environment with: $basePython"
     & $basePython -m venv $venv
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $python)) {
-        throw 'Creazione .build-venv fallita.'
+        throw 'Failed to create .build-venv.'
     }
 }
 
 if (-not (Test-BuildPython $python)) {
-    throw '.build-venv non soddisfa il contratto Python 3.13 x64.'
+    throw '.build-venv does not satisfy the Python 3.13 x64 contract.'
 }
 
-Write-Host "Runtime build attivo: $(& $python --version 2>&1)"
-Write-Host "Interprete build: $python"
+Write-Host "Active build runtime: $(& $python --version 2>&1)"
+Write-Host "Build interpreter: $python"
 Write-Host ''
 
 & $python -m pip install --upgrade pip
-if ($LASTEXITCODE -ne 0) { throw 'Aggiornamento pip fallito.' }
+if ($LASTEXITCODE -ne 0) { throw 'pip upgrade failed.' }
 & $python -m pip install -r requirements-build.txt
-if ($LASTEXITCODE -ne 0) { throw 'Installazione requirements-build fallita.' }
+if ($LASTEXITCODE -ne 0) { throw 'requirements-build installation failed.' }
 
 if (-not $SkipTests) {
-    Write-Host 'Esecuzione regressione automatica...'
+    Write-Host 'Running automated regression suite...'
     & $python -m unittest discover -s tests -p 'test_*.py'
-    if ($LASTEXITCODE -ne 0) { throw 'Test automatici falliti. Build interrotta.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Automated tests failed. Build stopped.' }
 }
 
-Write-Host 'Raccolta licenze/notice dal build environment...'
+Write-Host 'Collecting licenses/notices from the build environment...'
 & $python tools\collect_release_licenses.py --output build\legal
-if ($LASTEXITCODE -ne 0) { throw 'Raccolta licenze third-party fallita.' }
+if ($LASTEXITCODE -ne 0) { throw 'Third-party license collection failed.' }
 
 Remove-Item -Recurse -Force build\pyinstaller -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force dist\UnumSuntSpriteStudio -ErrorAction SilentlyContinue
@@ -232,43 +232,43 @@ New-Item -ItemType Directory -Force build\pyinstaller | Out-Null
 
 Write-Host 'Build PyInstaller onedir...'
 & $python -m PyInstaller --noconfirm --clean --workpath build\pyinstaller UnumSuntSpriteStudio.spec
-if ($LASTEXITCODE -ne 0) { throw 'PyInstaller ha restituito un errore.' }
+if ($LASTEXITCODE -ne 0) { throw 'PyInstaller returned an error.' }
 
 $distDir = Join-Path $PSScriptRoot 'dist\UnumSuntSpriteStudio'
 $exe = Join-Path $distDir 'UnumSuntSpriteStudio.exe'
-if (-not (Test-Path $exe)) { throw 'EXE standalone non trovato dopo PyInstaller.' }
+if (-not (Test-Path $exe)) { throw 'Standalone EXE was not found after PyInstaller.' }
 
 $selfCheck = Join-Path $distDir 'standalone_selfcheck.json'
-Write-Host 'Self-check del binario congelato...'
+Write-Host 'Running frozen-binary self-check...'
 Remove-Item -Force $selfCheck -ErrorAction SilentlyContinue
 
 $selfCheckArgs = @('--self-check', ('"{0}"' -f $selfCheck))
 $selfCheckProcess = Start-Process -FilePath $exe -ArgumentList $selfCheckArgs -Wait -PassThru
 if ($selfCheckProcess.ExitCode -ne 0) {
-    throw "Self-check del binario standalone fallito (exit code $($selfCheckProcess.ExitCode))."
+    throw "Standalone binary self-check failed (exit code $($selfCheckProcess.ExitCode))."
 }
-if (-not (Test-Path $selfCheck)) { throw 'Il self-check non ha prodotto il report JSON.' }
+if (-not (Test-Path $selfCheck)) { throw 'The self-check did not produce its JSON report.' }
 $check = Get-Content $selfCheck -Raw | ConvertFrom-Json
-if ($check.status -ne 'passed' -or -not $check.frozen) { throw 'Self-check non valido: il runtime congelato non risulta READY.' }
+if ($check.status -ne 'passed' -or -not $check.frozen) { throw 'Invalid self-check: the frozen runtime is not READY.' }
 
-& $python tools\write_release_manifest.py $distDir (Join-Path $distDir 'RELEASE_MANIFEST_R5c7.json')
-if ($LASTEXITCODE -ne 0) { throw 'Impossibile generare il release manifest.' }
+& $python tools\write_release_manifest.py $distDir (Join-Path $distDir 'RELEASE_MANIFEST_R5c8.json')
+if ($LASTEXITCODE -ne 0) { throw 'Failed to generate the release manifest.' }
 
 $releaseDir = Join-Path $PSScriptRoot 'release'
 New-Item -ItemType Directory -Force $releaseDir | Out-Null
-$zipPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone.zip'
-$hashPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone_SHA256.txt'
+$zipPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c8_Windows_x64_Standalone.zip'
+$hashPath = Join-Path $releaseDir 'UnumSunt_Sprite_Studio_R5c8_Windows_x64_Standalone_SHA256.txt'
 Remove-Item -Force $zipPath, $hashPath -ErrorAction SilentlyContinue
 
-Write-Host 'Creazione archivio release...'
+Write-Host 'Creating release archive...'
 Compress-Archive -Path $distDir -DestinationPath $zipPath -CompressionLevel Optimal
 $hash = (Get-FileHash -Algorithm SHA256 $zipPath).Hash.ToLowerInvariant()
 "$hash  $(Split-Path $zipPath -Leaf)" | Set-Content -Encoding ascii $hashPath
 
 Write-Host ''
-Write-Host 'BUILD COMPLETATA'
+Write-Host 'BUILD COMPLETED'
 Write-Host "Standalone: $distDir"
 Write-Host "Release ZIP: $zipPath"
 Write-Host "SHA-256: $hash"
-Write-Host 'Il PC destinatario NON richiede Python. Python 3.13 serve soltanto alla pipeline di build.'
-Write-Host 'Il runtime AI resta esterno al bundle Core ed è gestito dal Runtime Manager R5c7.'
+Write-Host 'The target PC does NOT require Python. Python 3.13 is required only by the build pipeline.'
+Write-Host 'The AI runtime remains external to the Core bundle and is managed by the R5c8 Runtime Manager.'

@@ -22,7 +22,7 @@ class R5c7ReleaseComplianceTests(unittest.TestCase):
         cls.root = Path(__file__).resolve().parents[1]
 
     def test_core_license_is_gpl3_or_later(self):
-        self.assertEqual(APP_VERSION, 'R5c7')
+        self.assertEqual(APP_VERSION, 'R5c8')
         self.assertEqual(APP_LICENSE, 'GPL-3.0-or-later')
         license_text = (self.root / 'LICENSE').read_text(encoding='utf-8')
         self.assertIn('GNU GENERAL PUBLIC LICENSE', license_text)
@@ -36,13 +36,15 @@ class R5c7ReleaseComplianceTests(unittest.TestCase):
         self.assertIn('6e35b37e309ccebeed193ef53cdff66fb973b693', notice)
         self.assertIn('f7a3040b990b672af3c30b5ad1f0df8ffd244881', notice)
 
-    def test_installer_displays_gpl_license(self):
-        iss = (self.root / 'installer' / 'UnumSuntSpriteStudio_R5c7.iss').read_text(encoding='utf-8')
-        self.assertIn('LicenseFile=..\\LICENSE', iss)
+    def test_installer_displays_gpl_information_without_forced_acceptance(self):
+        iss = (self.root / 'installer' / 'UnumSuntSpriteStudio_R5c8.iss').read_text(encoding='utf-8')
+        self.assertIn('InfoBeforeFile=..\\OPEN_SOURCE_LICENSE_NOTICE.txt', iss)
+        self.assertNotIn('LicenseFile=..\\LICENSE', iss)
 
     def test_pyinstaller_bundles_legal_material(self):
         spec = (self.root / 'UnumSuntSpriteStudio.spec').read_text(encoding='utf-8')
         self.assertIn("('LICENSE', '.')", spec)
+        self.assertIn("('OPEN_SOURCE_LICENSE_NOTICE.txt', '.')", spec)
         self.assertIn("('THIRD_PARTY_NOTICES.txt', '.')", spec)
         self.assertIn("('KREA_SAFETY_AND_USE.txt', '.')", spec)
         self.assertIn("('build/legal', 'licenses')", spec)
@@ -95,7 +97,7 @@ class R5c7ReleaseComplianceTests(unittest.TestCase):
         self.assertIn('current_job_requires_krea_review', source)
         self.assertIn('last_image_requires_krea_review', source)
         self.assertIn('write_review_record', source)
-        self.assertIn('Revisione Krea 2 richiesta', source)
+        self.assertIn('Krea 2 review required', source)
         self.assertIn('Non-Krea providers retain the original R5e9 immediate hand-off contract.', source)
 
 

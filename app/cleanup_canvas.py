@@ -50,7 +50,7 @@ class CleanupCanvas(QWidget):
         else:
             array = np.asarray(rgb)
             if array.ndim != 3 or array.shape[2] != 3 or array.dtype != np.uint8:
-                raise ValueError('CleanupCanvas richiede un preview RGB uint8 H×W×3.')
+                raise ValueError('CleanupCanvas requires an RGB uint8 H×W×3 preview.')
             self._rgb = np.ascontiguousarray(array)
             # The QImage references _rgb directly. Keeping the ndarray as an instance
             # attribute guarantees the backing memory lifetime and removes the former
@@ -71,13 +71,13 @@ class CleanupCanvas(QWidget):
             return
         region = np.asarray(rgb_region)
         if region.ndim != 3 or region.shape[2] != 3 or region.dtype != np.uint8:
-            raise ValueError('La regione preview deve essere RGB uint8 H×W×3.')
+            raise ValueError('The preview region must be RGB uint8 H×W×3.')
         left = int(left)
         top = int(top)
         right = left + int(region.shape[1])
         bottom = top + int(region.shape[0])
         if left < 0 or top < 0 or right > self._rgb.shape[1] or bottom > self._rgb.shape[0]:
-            raise ValueError('Regione preview fuori dai limiti del frame.')
+            raise ValueError('Preview region is outside the frame bounds.')
         self._rgb[top:bottom, left:right] = region
         margin = max(2, self._zoom // 2)
         dirty = QRect(
@@ -97,7 +97,7 @@ class CleanupCanvas(QWidget):
     def set_tool_mode(self, mode: str) -> None:
         normalized = str(mode).strip().lower()
         if normalized not in {'brush', 'rectangle', 'polygon'}:
-            raise ValueError(f'Strumento clean-up non supportato: {mode}')
+            raise ValueError(f'Unsupported clean-up tool: {mode}')
         if normalized != self._tool_mode:
             if self._painting:
                 self._painting = False

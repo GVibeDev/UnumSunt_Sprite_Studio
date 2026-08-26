@@ -171,7 +171,7 @@ class AlignmentExportTests(unittest.TestCase):
 
         with TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            with self.assertRaisesRegex(Exception, 'mirror laterale'):
+            with self.assertRaisesRegex(Exception, 'Horizontal mirroring'):
                 export_aligned_animation(
                     frame_indices=[2, 5],
                     subjects=subjects,

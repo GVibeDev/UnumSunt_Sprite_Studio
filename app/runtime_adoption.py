@@ -62,7 +62,7 @@ def candidate_from_current_bridge() -> ExternalRuntimeCandidate | None:
         working_directory=str(wgp_root),
         settings_template=_official_template_or_empty(config.settings_template),
         model_root=str(ckpts if ckpts.exists() else wgp_root),
-        source="configurazione bridge corrente",
+        source='current bridge configuration',
     )
     return candidate if candidate.valid_paths() else None
 
@@ -133,7 +133,7 @@ def discover_existing_runtimes(
     )
     for root in unique_roots:
         for python_rel, wgp_rel in pairs:
-            add(_candidate_from_pair(root / python_rel, root / wgp_rel, source=f"rilevato in {root}"))
+            add(_candidate_from_pair(root / python_rel, root / wgp_rel, source=f'detected in {root}'))
     return found
 
 
@@ -154,7 +154,7 @@ def adopt_external_runtime(candidate: ExternalRuntimeCandidate) -> RuntimeInstal
     """Register an existing runtime without moving, renaming or downloading it."""
     report, video_config = validate_external_candidate(candidate)
     if not report.available:
-        raise RuntimeError("Runtime esterno non adottabile:\n" + report.summary())
+        raise RuntimeError('External runtime cannot be adopted:\n' + report.summary())
 
     video_config.save()
     image_config = LocalWanGPImageConfig.load()

@@ -70,8 +70,7 @@ class SpriteSheetWorkspace(QWidget):
         root.setContentsMargins(8, 8, 8, 8)
 
         intro = QLabel(
-            'Importa spritesheet esistenti, decomponili in frame e riusa la pipeline R1/R2/R3/R4. '
-            'La reference sheet WAN viene costruita da key pose esplicitamente selezionate.'
+            'Import existing spritesheets, decompose them into frames, and reuse the R1/R2/R3/R4 pipeline. The WAN reference sheet is built from explicitly selected key poses.'
         )
         intro.setWordWrap(True)
         intro.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #252b33; border: 1px solid #555; }')
@@ -83,7 +82,7 @@ class SpriteSheetWorkspace(QWidget):
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 5, 0)
-        self.preview_label = QLabel('Nessuno spritesheet caricato')
+        self.preview_label = QLabel('No spritesheet loaded')
         self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setMinimumSize(620, 520)
         self.preview_label.setStyleSheet('QLabel { color: #f4f6f8; background: #171a1f; border: 1px solid #41464f; }')
@@ -102,19 +101,19 @@ class SpriteSheetWorkspace(QWidget):
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(5, 0, 0, 0)
 
-        source_group = QGroupBox('Sorgente')
+        source_group = QGroupBox('Source')
         source_form = QFormLayout(source_group)
         self.source_label = QLabel('—')
         self.source_label.setWordWrap(True)
-        open_button = QPushButton('Apri spritesheet…')
+        open_button = QPushButton('Open Spritesheet…')
         open_button.clicked.connect(self._open_sheet)
         self.mode_combo = QComboBox()
-        self.mode_combo.addItem('Griglia regolare', 'grid')
-        self.mode_combo.addItem('Atlas irregolare · alpha components', 'atlas')
+        self.mode_combo.addItem('Regular Grid', 'grid')
+        self.mode_combo.addItem('Irregular Atlas · alpha components', 'atlas')
         self.mode_combo.currentIndexChanged.connect(self._update_mode_controls)
         source_form.addRow('', open_button)
         source_form.addRow('File', self.source_label)
-        source_form.addRow('Modalità', self.mode_combo)
+        source_form.addRow('Mode', self.mode_combo)
         right_layout.addWidget(source_group)
 
         grid_group = QGroupBox('Grid slicer')
@@ -126,14 +125,14 @@ class SpriteSheetWorkspace(QWidget):
         self.hpad_spin = QSpinBox(); self.hpad_spin.setRange(0, 1024)
         self.vpad_spin = QSpinBox(); self.vpad_spin.setRange(0, 1024)
         self.margin_spin = QSpinBox(); self.margin_spin.setRange(0, 2048)
-        self.order_combo = QComboBox(); self.order_combo.addItem('Righe → colonne', 'row_major'); self.order_combo.addItem('Colonne → righe', 'column_major')
-        auto_button = QPushButton('Auto-detect griglia')
+        self.order_combo = QComboBox(); self.order_combo.addItem('Rows → Columns', 'row_major'); self.order_combo.addItem('Columns → Rows', 'column_major')
+        auto_button = QPushButton('Auto-detect Grid')
         auto_button.clicked.connect(self._auto_detect_grid)
         grid_form.addRow('Frame width', self.frame_w_spin)
         grid_form.addRow('Frame height', self.frame_h_spin)
         grid_form.addRow('Rows', self.rows_spin)
         grid_form.addRow('Columns', self.cols_spin)
-        grid_form.addRow('Padding orizz.', self.hpad_spin)
+        grid_form.addRow('Horizontal Padding', self.hpad_spin)
         grid_form.addRow('Padding vert.', self.vpad_spin)
         grid_form.addRow('Outer margin', self.margin_spin)
         grid_form.addRow('Reading order', self.order_combo)
@@ -141,36 +140,36 @@ class SpriteSheetWorkspace(QWidget):
         self.grid_group = grid_group
         right_layout.addWidget(grid_group)
 
-        atlas_group = QGroupBox('Atlas irregolare')
+        atlas_group = QGroupBox('Irregular Atlas')
         atlas_form = QFormLayout(atlas_group)
         self.atlas_min_area_spin = QSpinBox(); self.atlas_min_area_spin.setRange(1, 10000000); self.atlas_min_area_spin.setValue(8)
         self.atlas_alignment_combo = QComboBox()
         self.atlas_alignment_combo.addItem('Bottom center', 'bottom_center')
         self.atlas_alignment_combo.addItem('Center', 'center')
         self.atlas_alignment_combo.addItem('Top left', 'top_left')
-        atlas_form.addRow('Area minima componente', self.atlas_min_area_spin)
-        atlas_form.addRow('Normalizza canvas', self.atlas_alignment_combo)
+        atlas_form.addRow('Minimum component area', self.atlas_min_area_spin)
+        atlas_form.addRow('Normalize Canvas', self.atlas_alignment_combo)
         self.atlas_group = atlas_group
         right_layout.addWidget(atlas_group)
 
         extract_group = QGroupBox('Decompose')
         extract_form = QFormLayout(extract_group)
-        self.extract_info = QLabel('Nessuna estrazione eseguita.')
+        self.extract_info = QLabel('No extraction has been run.')
         self.extract_info.setWordWrap(True)
-        extract_button = QPushButton('Estrai / aggiorna preview frame')
+        extract_button = QPushButton('Extract / Update Frame Preview')
         extract_button.clicked.connect(self._extract)
-        select_all_button = QPushButton('Seleziona tutti i frame')
+        select_all_button = QPushButton('Select All Frames')
         select_all_button.clicked.connect(self._select_all_frames)
-        extract_form.addRow('Stato', self.extract_info)
+        extract_form.addRow('Status', self.extract_info)
         extract_form.addRow('', extract_button)
         extract_form.addRow('', select_all_button)
         right_layout.addWidget(extract_group)
 
-        import_group = QGroupBox('Pipeline esistente')
+        import_group = QGroupBox('Existing Pipeline')
         import_form = QFormLayout(import_group)
         self.fps_spin = QSpinBox(); self.fps_spin.setRange(1, 120); self.fps_spin.setValue(12)
-        import_all_button = QPushButton('Importa tutti nella pipeline')
-        import_selected_button = QPushButton('Importa selezionati nella pipeline')
+        import_all_button = QPushButton('Import All into Pipeline')
+        import_selected_button = QPushButton('Import Selected into Pipeline')
         import_all_button.clicked.connect(lambda: self._import_pipeline(selected_only=False))
         import_selected_button.clicked.connect(lambda: self._import_pipeline(selected_only=True))
         import_form.addRow('FPS timeline', self.fps_spin)
@@ -182,7 +181,7 @@ class SpriteSheetWorkspace(QWidget):
         reference_form = QFormLayout(reference_group)
         self.reference_columns_spin = QSpinBox(); self.reference_columns_spin.setRange(1, 8); self.reference_columns_spin.setValue(4)
         self.reference_padding_spin = QSpinBox(); self.reference_padding_spin.setRange(0, 128); self.reference_padding_spin.setValue(8)
-        reference_button = QPushButton('Crea reference sheet dai selezionati')
+        reference_button = QPushButton('Create Reference Sheet from Selected')
         reference_button.clicked.connect(self._create_reference_sheet)
         reference_form.addRow('Columns', self.reference_columns_spin)
         reference_form.addRow('Padding', self.reference_padding_spin)
@@ -190,8 +189,7 @@ class SpriteSheetWorkspace(QWidget):
         right_layout.addWidget(reference_group)
 
         note = QLabel(
-            'Nota: la detection automatica è sempre correggibile manualmente. Gli atlas irregolari vengono '
-            'normalizzati su un canvas comune prima di entrare nella pipeline, perché R1/R2/R3 richiedono geometria stabile.'
+            'Note: automatic detection can always be corrected manually. Irregular atlases are normalized onto a common canvas before entering the pipeline because R1/R2/R3 require stable geometry.'
         )
         note.setWordWrap(True)
         note.setStyleSheet('color: #9198a5;')
@@ -215,16 +213,16 @@ class SpriteSheetWorkspace(QWidget):
     def _open_sheet(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self,
-            'Apri spritesheet',
+            'Open Spritesheet',
             '',
-            'Immagini (*.png *.webp *.bmp *.tif *.tiff);;Tutti i file (*)',
+            'Images (*.png *.webp *.bmp *.tif *.tiff);;All Files (*)',
         )
         if not path:
             return
         try:
             rgba = load_image_rgba(path)
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore spritesheet', str(exc))
+            QMessageBox.critical(self, 'Spritesheet Error', str(exc))
             return
         self._source_path = Path(path).resolve()
         self._source_rgba = rgba
@@ -237,12 +235,12 @@ class SpriteSheetWorkspace(QWidget):
         self.source_label.setText(self._source_path.name)
         self.source_label.setToolTip(str(self._source_path))
         self.preview_label.setPixmap(self._pixmap_from_rgba(rgba))
-        self.extract_info.setText(f'Sorgente {rgba.shape[1]}×{rgba.shape[0]} caricata. Configura o usa Auto-detect.')
+        self.extract_info.setText(f'Source {rgba.shape[1]}×{rgba.shape[0]} loaded. Configure it or use Auto-detect.')
         self.frame_w_spin.setMaximum(rgba.shape[1])
         self.frame_h_spin.setMaximum(rgba.shape[0])
         self.frame_w_spin.setValue(min(self.frame_w_spin.value(), rgba.shape[1]))
         self.frame_h_spin.setValue(min(self.frame_h_spin.value(), rgba.shape[0]))
-        self.status_message.emit(f'Spritesheet aperto: {self._source_path.name}')
+        self.status_message.emit(f'Spritesheet opened: {self._source_path.name}')
 
     def _update_mode_controls(self, *_args) -> None:
         grid = str(self.mode_combo.currentData()) == 'grid'
@@ -268,8 +266,8 @@ class SpriteSheetWorkspace(QWidget):
         index = self.order_combo.findData(s.reading_order)
         if index >= 0:
             self.order_combo.setCurrentIndex(index)
-        self.extract_info.setText(f'Auto-detect: confidenza {result.confidence}. {result.reason} Valori modificabili manualmente.')
-        self.status_message.emit(f'Auto-detect griglia: {result.confidence}.')
+        self.extract_info.setText(f'Auto-detect: confidence {result.confidence}. {result.reason} Values can be edited manually.')
+        self.status_message.emit(f'Grid auto-detect: {result.confidence}.')
 
     def _grid_settings(self) -> GridSliceSettings:
         return GridSliceSettings(
@@ -285,7 +283,7 @@ class SpriteSheetWorkspace(QWidget):
 
     def _extract(self) -> None:
         if self._source_rgba is None or self._source_path is None:
-            QMessageBox.information(self, 'Nessuna sorgente', 'Aprire prima uno spritesheet.')
+            QMessageBox.information(self, 'No Source', 'Open a spritesheet first.')
             return
         try:
             if str(self.mode_combo.currentData()) == 'grid':
@@ -300,11 +298,11 @@ class SpriteSheetWorkspace(QWidget):
                     'grid': settings.to_dict(),
                     'rectangles': [list(rect) for rect in rects],
                 }
-                self.extract_info.setText(f'Griglia estratta: {len(frames)} frame da {settings.columns}×{settings.rows}.')
+                self.extract_info.setText(f'Extracted grid: {len(frames)} frames from {settings.columns}×{settings.rows}.')
             else:
                 regions = detect_atlas_regions(self._source_rgba, min_area=self.atlas_min_area_spin.value())
                 if not regions:
-                    raise ValueError('Nessuna componente atlas rilevata. Per immagini opache usare Grid slicer o preparare alpha.')
+                    raise ValueError('No atlas component detected. For opaque images, use Grid Slicer or prepare alpha.')
                 raw_frames = extract_atlas_frames(self._source_rgba, regions)
                 frames, canvas, offsets = normalize_frames_to_canvas(
                     raw_frames,
@@ -324,12 +322,12 @@ class SpriteSheetWorkspace(QWidget):
                         'offsets': [list(value) for value in offsets],
                     },
                 }
-                self.extract_info.setText(f'Atlas estratto: {len(frames)} componenti; canvas comune {canvas[0]}×{canvas[1]}.')
+                self.extract_info.setText(f'Atlas extracted: {len(frames)} components; common canvas {canvas[0]}×{canvas[1]}.')
         except Exception as exc:
-            QMessageBox.warning(self, 'Decompose non riuscito', str(exc))
+            QMessageBox.warning(self, 'Decompose Failed', str(exc))
             return
         self._refresh_frame_list()
-        self.status_message.emit(f'Decompose completato: {len(self._frames)} frame.')
+        self.status_message.emit(f'Decompose completed: {len(self._frames)} frame.')
 
     def _refresh_frame_list(self) -> None:
         self.frame_list.clear()
@@ -354,15 +352,15 @@ class SpriteSheetWorkspace(QWidget):
         if store is None or not group_id:
             QMessageBox.information(
                 self,
-                'Project Group richiesto',
-                'Per importare una sequenza persistente è necessario un Project Group attivo.',
+                'Project Group required',
+                'An active Project Group is required to import a persistent sequence.',
             )
             return None
         return store, group_id, store.group_workspace(group_id)
 
     def _save_sequence(self, indices: list[int]) -> dict | None:
         if not indices or not self._frames or self._source_path is None:
-            QMessageBox.information(self, 'Nessun frame', 'Eseguire Decompose e scegliere almeno un frame.')
+            QMessageBox.information(self, 'No Frames', 'Run Decompose and select at least one frame.')
             return None
         context = self._require_group_workspace()
         if context is None:
@@ -403,25 +401,25 @@ class SpriteSheetWorkspace(QWidget):
 
     def _import_pipeline(self, *, selected_only: bool) -> None:
         if not self._frames:
-            QMessageBox.information(self, 'Nessun frame', 'Eseguire prima Decompose.')
+            QMessageBox.information(self, 'No Frames', 'Run Decompose first.')
             return
         indices = self._selected_indices() if selected_only else list(range(len(self._frames)))
         if selected_only and not indices:
-            QMessageBox.information(self, 'Nessuna selezione', 'Selezionare i frame da importare.')
+            QMessageBox.information(self, 'No Selection', 'Select the frames to import.')
             return
         payload = self._save_sequence(indices)
         if payload is None:
             return
         self.sequence_ready.emit(payload)
-        self.status_message.emit(f'Sequenza spritesheet pronta: {len(indices)} frame.')
+        self.status_message.emit(f'Spritesheet sequence ready: {len(indices)} frame.')
 
     def _create_reference_sheet(self) -> None:
         if not self._frames or self._source_path is None:
-            QMessageBox.information(self, 'Nessun frame', 'Eseguire prima Decompose.')
+            QMessageBox.information(self, 'No Frames', 'Run Decompose first.')
             return
         indices = self._selected_indices()
         if not indices:
-            QMessageBox.information(self, 'Nessuna key pose', 'Selezionare i frame da usare nella reference sheet WAN.')
+            QMessageBox.information(self, 'No Key Pose', 'Select the frames to use in the WAN reference sheet.')
             return
         try:
             sheet, manifest = create_reference_sheet(
@@ -449,4 +447,4 @@ class SpriteSheetWorkspace(QWidget):
         payload['source_sheet'] = str(self._source_path)
         manifest_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding='utf-8')
         self.reference_sheet_ready.emit(str(output_path))
-        self.status_message.emit(f'WAN Reference Sheet creata: {output_path.name}')
+        self.status_message.emit(f'WAN Reference Sheet created: {output_path.name}')

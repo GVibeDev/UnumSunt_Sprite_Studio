@@ -125,7 +125,7 @@ class RuntimePreflightTests(unittest.TestCase):
         report = self._run(gpu=NvidiaProbe(True, '12.8', (NvidiaGpuInfo('Any NVIDIA GPU', '570', 2048),), ''))
         self.assertEqual(report.status, STATUS_BLOCKED)
         cuda = next(c for c in report.checks if c.id == 'cuda.compatibility')
-        self.assertIn('richiesto >= 13.0', cuda.detail)
+        self.assertIn('required >= 13.0', cuda.detail)
 
     def test_insufficient_storage_blocks(self):
         report = self._run(free_gib=10)
@@ -151,7 +151,7 @@ class RuntimePreflightTests(unittest.TestCase):
         self.assertEqual(errors, [])
         ok, errors = validate_windows_path_text(r'C:\AI\CON\models')
         self.assertFalse(ok)
-        self.assertTrue(any('riservato' in e for e in errors))
+        self.assertTrue(any('reserved' in e.lower() for e in errors))
 
     def test_drive_key_uses_windows_anchor_even_off_windows(self):
         self.assertEqual(path_drive_key(Path(r'G:\AI\runtime'), platform_name='nt'), 'g:\\')
@@ -163,7 +163,7 @@ class RuntimePreflightTests(unittest.TestCase):
 
     def test_report_contains_provisional_size_note(self):
         report = self._run()
-        self.assertTrue(any('Stime provvisorie' in note for note in report.notes))
+        self.assertTrue(any('Provisional space estimates' in note for note in report.notes))
 
     def test_cli_and_spec_are_wired_for_preflight(self):
         root = Path(__file__).resolve().parents[1]

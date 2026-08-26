@@ -69,10 +69,10 @@ def add_layer(state: dict[str, Any], name: str, *, kind: str = 'custom') -> tupl
     result = normalize_character_set_state(state)
     normalized_name = str(name).strip()
     if not normalized_name:
-        raise ValueError('Il nome del layer non può essere vuoto.')
+        raise ValueError('The layer name cannot be empty.')
     kind = str(kind).lower()
     if kind not in LAYER_KINDS:
-        raise ValueError(f'Tipo layer non supportato: {kind}')
+        raise ValueError(f'Unsupported layer type: {kind}')
     layer = {
         'id': f'layer_{uuid.uuid4().hex[:10]}',
         'name': normalized_name,
@@ -96,12 +96,12 @@ def update_layer(state: dict[str, Any], layer_id: str, **changes: Any) -> dict[s
         if 'name' in changes:
             name = str(changes['name']).strip()
             if not name:
-                raise ValueError('Il nome del layer non può essere vuoto.')
+                raise ValueError('The layer name cannot be empty.')
             layer['name'] = name
         if 'kind' in changes:
             kind = str(changes['kind']).lower()
             if kind not in LAYER_KINDS:
-                raise ValueError(f'Tipo layer non supportato: {kind}')
+                raise ValueError(f'Unsupported layer type: {kind}')
             layer['kind'] = kind
         for key in ('enabled', 'export_enabled'):
             if key in changes:
@@ -193,7 +193,7 @@ def inspect_layer_source(source: Path) -> dict[str, Any]:
     mode: str
     if source.is_file():
         if source.suffix.lower() not in SUPPORTED_LAYER_EXTENSIONS:
-            raise ValueError('I layer raster supportano PNG o WebP.')
+            raise ValueError('Raster layers support PNG or WebP.')
         files = [source]
         mode = 'single'
     elif source.is_dir():
@@ -202,10 +202,10 @@ def inspect_layer_source(source: Path) -> dict[str, Any]:
             if path.is_file() and path.suffix.lower() in SUPPORTED_LAYER_EXTENSIONS
         )
         if not files:
-            raise ValueError('La cartella non contiene frame PNG/WebP.')
+            raise ValueError('The folder contains no PNG/WebP frames.')
         mode = 'sequence'
     else:
-        raise ValueError('Sorgente layer non valida.')
+        raise ValueError('Invalid layer source.')
 
     expected: tuple[int, int] | None = None
     has_alpha = True
@@ -215,7 +215,7 @@ def inspect_layer_source(source: Path) -> dict[str, Any]:
             if expected is None:
                 expected = size
             elif size != expected:
-                raise ValueError('I frame del layer non hanno tutti la stessa dimensione.')
+                raise ValueError('The layer frames do not all have the same dimensions.')
             has_alpha = has_alpha and ('A' in image.getbands() or image.info.get('transparency') is not None)
     assert expected is not None
     return {

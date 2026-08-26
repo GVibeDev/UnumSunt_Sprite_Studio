@@ -57,7 +57,7 @@ def _resolve_mirrored_direction(direction: str) -> str:
     mirrored = LATERAL_MIRROR_MAP.get(normalized)
     if mirrored is None:
         raise AlignmentExportError(
-            'Il mirror laterale è disponibile solo per NE/E/SE/NW/W/SW.'
+            'Horizontal mirroring is available only for NE/E/SE/NW/W/SW.'
         )
     return mirrored
 
@@ -234,12 +234,12 @@ def export_aligned_animation(
     progress_callback: Callable[[int, int, int], None] | None = None,
 ) -> dict:
     if not frame_indices:
-        raise AlignmentExportError('Nessun fotogramma da esportare.')
+        raise AlignmentExportError('No frames to export.')
 
     alignment_settings.validate()
     extension = output_format.lower().strip()
     if extension not in {'png', 'webp'}:
-        raise AlignmentExportError(f'Formato non supportato: {output_format}')
+        raise AlignmentExportError(f'Unsupported format: {output_format}')
 
     output_dir = Path(output_directory).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -250,7 +250,7 @@ def export_aligned_animation(
         mirrored_direction = _resolve_mirrored_direction(direction)
         variant_directions.append(mirrored_direction)
     elif mirror_mode not in {'none', ''}:
-        raise AlignmentExportError(f'Modalità mirror non supportata: {mirror_mode}')
+        raise AlignmentExportError(f'Unsupported mirror mode: {mirror_mode}')
 
     placements = []
     primary_rendered_frames: list[np.ndarray] = []
@@ -262,7 +262,7 @@ def export_aligned_animation(
         state = states.get(frame_index)
         if subject is None or state is None:
             raise AlignmentExportError(
-                f'Dati di allineamento mancanti per il frame {frame_index}.'
+                f'Missing alignment data for frame {frame_index}.'
             )
         rendered, placement = render_aligned_frame(subject, state, alignment_settings)
         primary_rendered_frames.append(rendered)

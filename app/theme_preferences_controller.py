@@ -50,7 +50,7 @@ class ThemePreferencesController:
 
         theme = TAB_THEMES[self.theme_name]
         if self.switch_action is not None:
-            self.switch_action.setText(f'Tema: {theme.label}')
+            self.switch_action.setText(f'Theme: {theme.label}')
         if self.switch_widget is not None:
             self.switch_widget.setStyleSheet(theme_button_stylesheet(self.theme_name))
 

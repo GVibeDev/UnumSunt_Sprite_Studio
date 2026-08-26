@@ -208,11 +208,11 @@ def _starter_export() -> dict[str, Any]:
 
 def starter_presets() -> dict[str, dict[str, Any]]:
     specs = (
-        ('Starter · Walk · 96×96', 'Struttura Walk 96×96 + export PNG trasparente in griglia. I parametri WAN non sono impostati: calibrazione richiesta.', 96, 96, 'walk', ['walk', '96x96']),
-        ('Starter · Idle · 96×96', 'Struttura Idle 96×96 + export PNG trasparente in griglia. I parametri WAN non sono impostati: calibrazione richiesta.', 96, 96, 'idle', ['idle', '96x96']),
-        ('Starter · Small · 48×48', 'Output 48×48 con auto-fit + export PNG trasparente. Nessun parametro generativo viene imposto.', 48, 48, None, ['small', '48x48']),
-        ('Starter · Small · 36×36', 'Output 36×36 con auto-fit + export PNG trasparente. Nessun parametro generativo viene imposto.', 36, 36, None, ['small', '36x36']),
-        ('Starter · PNG Transparent Grid', 'Solo preset di export: frame + sprite sheet PNG trasparente in griglia.', 0, 0, None, ['export', 'png', 'transparent']),
+        ('Starter · Walk · 96×96', 'Walk 96×96 structure + transparent PNG grid export. WAN parameters are not set: calibration required.', 96, 96, 'walk', ['walk', '96x96']),
+        ('Starter · Idle · 96×96', 'Idle 96×96 structure + transparent PNG grid export. WAN parameters are not set: calibration required.', 96, 96, 'idle', ['idle', '96x96']),
+        ('Starter · Small · 48×48', '48×48 output with auto-fit + transparent PNG export. No generation parameters are forced.', 48, 48, None, ['small', '48x48']),
+        ('Starter · Small · 36×36', '36×36 output with auto-fit + transparent PNG export. No generation parameters are forced.', 36, 36, None, ['small', '36x36']),
+        ('Starter · PNG Transparent Grid', 'Export-only preset: frames + transparent PNG sprite sheet in a grid.', 0, 0, None, ['export', 'png', 'transparent']),
     )
     result: dict[str, dict[str, Any]] = {}
     for name, description, width, height, animation, tags in specs:
@@ -265,7 +265,7 @@ class ProductionPresetStore:
     def delete(self, name: str) -> None:
         preset = self.get(name)
         if preset and preset.get('builtin'):
-            raise ValueError('I preset Starter integrati non possono essere eliminati.')
+            raise ValueError('Built-in Starter presets cannot be deleted.')
         self.profiles_store.delete_profile('pipeline', name)
 
     def duplicate(self, source_name: str, target_name: str) -> dict[str, Any]:

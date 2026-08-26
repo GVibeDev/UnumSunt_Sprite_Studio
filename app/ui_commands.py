@@ -21,12 +21,12 @@ TAB_ROUTES = (
 )
 
 TAB_SHORT_LABELS = (
-    '0 · Progetto',
-    '1 · Genera',
-    '2 · Estrazione',
+    '0 · Project',
+    '1 · Generate',
+    '2 · Extraction',
     '3 · Clean-up',
-    '4 · Allineamento',
-    '5 · Selezione',
+    '4 · Alignment',
+    '5 · Selection',
     '6 · Export',
     '7 · Preset',
     '8 · Calibration',
@@ -38,18 +38,18 @@ TAB_SHORT_LABELS = (
 )
 
 TAB_TOOLTIPS = (
-    'Progetto e Project Groups',
-    'Generazione video WAN / WanGP',
-    'Estrazione R1 e selezione fotogrammi',
-    'Clean-up alpha e maschere',
-    'Allineamento e geometria output',
-    'Selezione intelligente dei frame',
+    'Project and Project Groups',
+    'WAN / WanGP video generation',
+    'R1 extraction and frame selection',
+    'Alpha and mask clean-up',
+    'Alignment and output geometry',
+    'Smart frame selection',
     'Export Studio',
-    'Preset Produttivi',
+    'Production Presets',
     'Calibration Lab',
-    'Prompt Builder e Prompt Profiles',
+    'Prompt Builder and Prompt Profiles',
     'Sprite Sheet Import / Decompose / Reference Builder',
-    'Generazione immagini locale',
+    'Local image generation',
     'Guided Workflows / Workflow Router',
     'Character Set / Layer Manager',
 )

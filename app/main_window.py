@@ -74,6 +74,7 @@ from app.version import APP_VERSION
 from app.theme_preferences_controller import ThemePreferencesController
 from app.runtime_preflight_dialog import RuntimePreflightDialog
 from app.runtime_bridge_controller import RuntimeBridgeController
+from app.help_dialog import HelpDialog
 from app.version import APP_TITLE
 
 
@@ -118,11 +119,11 @@ class MainWindow(QMainWindow):
         self.chroma_profiles.load_last_used()
         self._restore_app_state()
         if self.statusBar() is not None and not self.statusBar().currentMessage():
-            self.statusBar().showMessage('Pronto. Aprire un video, importare uno spritesheet o creare un progetto.')
+            self.statusBar().showMessage('Ready. Create/open a project, or choose Help → Quick Start for the production workflow.')
 
     def _init_domain_controllers(self) -> None:
         def choose_additional_color(initial_rgb: tuple[int, int, int]) -> tuple[int, int, int] | None:
-            color = QColorDialog.getColor(QColor(*initial_rgb), self, 'Colore sfondo aggiuntivo')
+            color = QColorDialog.getColor(QColor(*initial_rgb), self, 'Additional Background Color')
             if not color.isValid():
                 return None
             return color.red(), color.green(), color.blue()
@@ -130,8 +131,8 @@ class MainWindow(QMainWindow):
         def ask_additional_tolerance(current: int) -> int | None:
             value, ok = QInputDialog.getInt(
                 self,
-                'Tolleranza colore aggiuntivo',
-                'Valore (-1 = usa tolleranza globale):',
+                'Additional Color Tolerance',
+                'Value (-1 = use global tolerance):',
                 current,
                 -1,
                 255,
@@ -159,7 +160,7 @@ class MainWindow(QMainWindow):
         )
 
         def ask_profile_name() -> str | None:
-            name, ok = QInputDialog.getText(self, 'Salva profilo alpha/chroma', 'Nome profilo:')
+            name, ok = QInputDialog.getText(self, 'Save Alpha/Chroma Profile', 'Profile name:')
             return str(name) if ok else None
 
         self.chroma_profiles = ChromaProfileController(
@@ -184,7 +185,7 @@ class MainWindow(QMainWindow):
             sync_cleanup_selection=lambda: self.cleanup_studio.set_selected_frames(self.selected_frames),
             ask_profile_name=ask_profile_name,
             confirm_delete=lambda name: QMessageBox.question(
-                self, 'Elimina profilo', f'Eliminare il profilo "{name}"?'
+                self, 'Delete Profile', f'Delete profile "{name}"?'
             ) == QMessageBox.StandardButton.Yes,
             show_info=lambda title, text: QMessageBox.information(self, title, text),
             status=lambda text: self.statusBar().showMessage(text),
@@ -201,16 +202,16 @@ class MainWindow(QMainWindow):
         self.project_workspace.active_group_will_change.connect(self._on_active_group_will_change)
         self.project_workspace.active_group_changed.connect(self._on_active_group_changed)
         self.project_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.project_workspace, '0 · Progetto')
+        self.workspace_tabs.addTab(self.project_workspace, '0 · Project')
 
         self.generation_workspace = GenerationWorkspace()
         self.generation_workspace.video_ready.connect(self._import_generated_video)
         self.generation_workspace.job_started.connect(self._on_generation_job_started)
         self.generation_workspace.job_finished.connect(self._on_generation_job_finished)
         self.generation_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.generation_workspace, '1 · Genera')
+        self.workspace_tabs.addTab(self.generation_workspace, '1 · Generate')
 
-        self.workspace_tabs.addTab(self._build_extraction_workspace(), '2 · Estrazione R1')
+        self.workspace_tabs.addTab(self._build_extraction_workspace(), '2 · R1 Extraction')
 
         self.cleanup_studio = CleanupStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -232,7 +233,7 @@ class MainWindow(QMainWindow):
         )
         self.alignment_studio.frame_requested.connect(self._set_frame)
         self.alignment_studio.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.alignment_studio, '4 · Allineamento R5e2')
+        self.workspace_tabs.addTab(self.alignment_studio, '4 · Alignment R5e2')
 
         self.smart_studio = SmartSelectionStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -244,7 +245,7 @@ class MainWindow(QMainWindow):
         self.smart_studio.frame_requested.connect(self._set_frame)
         self.smart_studio.selection_applied.connect(self._apply_smart_selection)
         self.smart_studio.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.smart_studio, '5 · Selezione intelligente R3')
+        self.workspace_tabs.addTab(self.smart_studio, '5 · Smart Selection R3')
 
         self.export_studio = ExportStudio(
             raw_frames_provider=self._build_raw_export_payload,
@@ -260,7 +261,7 @@ class MainWindow(QMainWindow):
             apply_callback=self._apply_production_preset,
         )
         self.production_presets_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.production_presets_workspace, '7 · Preset Produttivi R5e4a')
+        self.workspace_tabs.addTab(self.production_presets_workspace, '7 · Production Presets R5e4a')
 
         self.calibration_workspace = CalibrationWorkspace(
             project_store_provider=lambda: self.project_workspace.project_store,
@@ -346,8 +347,8 @@ class MainWindow(QMainWindow):
             self.rgba_overrides[int(frame_index)] = rgba.copy()
 
     def _on_overrides_changed(self) -> None:
-        self.alignment_studio.mark_dirty('Le sagome ritoccate sono cambiate. Aggiorna R2 prima di esportare.')
-        self.smart_studio.mark_dirty('Il clean-up è cambiato: se serve, ripetere l’analisi R3.')
+        self.alignment_studio.mark_dirty('Retouched subject masks changed. Update R2 before exporting.')
+        self.smart_studio.mark_dirty('Clean-up changed: repeat the R3 analysis if needed.')
         self._refresh_previews()
 
     def statusBarMessage(self, message: str) -> None:
@@ -370,11 +371,11 @@ class MainWindow(QMainWindow):
         self.subject_preview = PreviewLabel()
         self.background_candidate_preview = PreviewLabel()
         self.original_preview.image_clicked.connect(self._sample_background_from_frame)
-        self.preview_tabs.addTab(self.original_preview, 'Originale')
-        self.preview_tabs.addTab(self.mask_preview, 'Maschera')
-        self.preview_tabs.addTab(self.result_preview, 'Risultato trasparente')
-        self.preview_tabs.addTab(self.subject_preview, 'Sagoma rilevata')
-        self.preview_tabs.addTab(self.background_candidate_preview, 'Sfondo candidato')
+        self.preview_tabs.addTab(self.original_preview, 'Original')
+        self.preview_tabs.addTab(self.mask_preview, 'Mask')
+        self.preview_tabs.addTab(self.result_preview, 'Transparent Result')
+        self.preview_tabs.addTab(self.subject_preview, 'Detected Subject')
+        self.preview_tabs.addTab(self.background_candidate_preview, 'Background candidate')
         splitter.addWidget(self.preview_tabs)
         side_panel = self._build_side_panel()
         side_scroll = QScrollArea()
@@ -404,32 +405,32 @@ class MainWindow(QMainWindow):
             item.setProperty('command_id', command_id)
             return item
 
-        self.new_project_action = action('new_project', 'Nuovo progetto', lambda: self.project_workspace._create_project_interactive(), QKeySequence.StandardKey.New)
-        self.open_project_action = action('open_project', 'Apri progetto…', lambda: self.project_workspace._open_project_interactive(), QKeySequence.StandardKey.Open)
-        self.save_project_action = action('save_project', 'Salva progetto', self._save_project_snapshot, QKeySequence.StandardKey.Save)
-        self.open_video_action = action('open_video', 'Apri video…', self._open_video, 'Ctrl+Shift+O')
-        self.open_spritesheet_action = action('open_spritesheet', 'Apri spritesheet…', self._open_spritesheet_from_command, 'Ctrl+Alt+O')
+        self.new_project_action = action('new_project', 'New Project', lambda: self.project_workspace._create_project_interactive(), QKeySequence.StandardKey.New)
+        self.open_project_action = action('open_project', 'Open Project…', lambda: self.project_workspace._open_project_interactive(), QKeySequence.StandardKey.Open)
+        self.save_project_action = action('save_project', 'Save Project', self._save_project_snapshot, QKeySequence.StandardKey.Save)
+        self.open_video_action = action('open_video', 'Open Video…', self._open_video, 'Ctrl+Shift+O')
+        self.open_spritesheet_action = action('open_spritesheet', 'Open Spritesheet…', self._open_spritesheet_from_command, 'Ctrl+Alt+O')
 
-        self.play_action = action('play', 'Riproduci', self._toggle_playback, QKeySequence(Qt.Key.Key_Space))
+        self.play_action = action('play', 'Play', self._toggle_playback, QKeySequence(Qt.Key.Key_Space))
         self.prev_action = action('prev_frame', 'Frame −1', lambda: self._set_frame(self.current_frame_index - 1), QKeySequence(Qt.Key.Key_Left))
         self.next_action = action('next_frame', 'Frame +1', lambda: self._set_frame(self.current_frame_index + 1), QKeySequence(Qt.Key.Key_Right))
-        self.add_frame_action = action('add_frame', 'Aggiungi fotogramma', self._add_current_frame, 'A')
-        self.remove_frame_action = action('remove_frame', 'Rimuovi selezionato', self._remove_selected_frames, QKeySequence.StandardKey.Delete)
-        self.export_action = action('export_r1', 'Esporta selezione R1…', self._export_frames, 'Ctrl+Shift+E')
+        self.add_frame_action = action('add_frame', 'Add Frame', self._add_current_frame, 'A')
+        self.remove_frame_action = action('remove_frame', 'Remove Selected', self._remove_selected_frames, QKeySequence.StandardKey.Delete)
+        self.export_action = action('export_r1', 'Export R1 Selection…', self._export_frames, 'Ctrl+Shift+E')
 
-        self.route_project_action = action('route_project', 'Progetto / Project Groups', lambda: self._route_command_workspace('project'))
-        self.route_generation_action = action('route_generation', 'Generazione video', lambda: self._route_command_workspace('generation'))
+        self.route_project_action = action('route_project', 'Project / Project Groups', lambda: self._route_command_workspace('project'))
+        self.route_generation_action = action('route_generation', 'Video Generation', lambda: self._route_command_workspace('generation'))
         self.route_cleanup_action = action('route_cleanup', 'Clean-up / Alpha', lambda: self._route_command_workspace('cleanup'))
         self.route_export_action = action('route_export', 'Export Studio', lambda: self._route_command_workspace('export'))
-        self.route_presets_action = action('route_presets', 'Preset Produttivi', lambda: self._route_command_workspace('production_presets'))
+        self.route_presets_action = action('route_presets', 'Production Presets', lambda: self._route_command_workspace('production_presets'))
         self.route_calibration_action = action('route_calibration', 'Calibration Lab', lambda: self._route_command_workspace('calibration'))
         self.route_prompt_action = action('route_prompt', 'Prompt Builder', lambda: self._route_command_workspace('prompt_builder'))
         self.route_spritesheet_action = action('route_spritesheet', 'Sprite Sheet workspace', lambda: self._route_command_workspace('spritesheet'))
         self.route_image_action = action('route_image', 'Image Generator', lambda: self._route_command_workspace('image_generation'))
         self.route_workflow_action = action('route_workflow', 'Workflow Router', lambda: self._route_command_workspace('workflow'))
         self.route_character_action = action('route_character', 'Character Set / Layer Manager', lambda: self._route_command_workspace('character_set'))
-        self.checkpoint_action = action('checkpoint', 'Salva checkpoint impostazioni', self._save_workflow_settings_checkpoint)
-        quit_action = action('quit', 'Esci', self.close, QKeySequence.StandardKey.Quit)
+        self.checkpoint_action = action('checkpoint', 'Save Settings Checkpoint', self._save_workflow_settings_checkpoint)
+        quit_action = action('quit', 'Exit', self.close, QKeySequence.StandardKey.Quit)
 
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('File')
@@ -440,29 +441,29 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.open_video_action)
         file_menu.addAction(self.open_spritesheet_action)
         file_menu.addSeparator()
-        self.preferences_action = action('preferences', 'Preferenze…', lambda: self.theme_preferences.open_preferences())
+        self.preferences_action = action('preferences', 'Preferences…', lambda: self.theme_preferences.open_preferences())
         file_menu.addAction(self.preferences_action)
-        self.runtime_preflight_action = action('runtime_preflight', 'Verifica runtime AI…', lambda: RuntimePreflightDialog(self).exec())
+        self.runtime_preflight_action = action('runtime_preflight', 'Check AI Runtime…', lambda: RuntimePreflightDialog(self).exec())
         file_menu.addAction(self.runtime_preflight_action)
-        self.runtime_manager_action = action('runtime_manager', 'Gestione runtime AI…', lambda: self.runtime_bridge.open_manager())
+        self.runtime_manager_action = action('runtime_manager', 'AI Runtime Manager…', lambda: self.runtime_bridge.open_manager())
         file_menu.addAction(self.runtime_manager_action)
         file_menu.addSeparator()
         file_menu.addAction(quit_action)
 
-        edit_menu = menu_bar.addMenu('Modifica')
+        edit_menu = menu_bar.addMenu('Edit')
         edit_menu.addAction(self.add_frame_action)
         edit_menu.addAction(self.remove_frame_action)
         edit_menu.addSeparator()
         edit_menu.addAction(self.route_cleanup_action)
 
-        project_menu = menu_bar.addMenu('Progetto')
+        project_menu = menu_bar.addMenu('Project')
         project_menu.addAction(self.route_project_action)
         project_menu.addAction(self.route_workflow_action)
         project_menu.addAction(self.route_character_action)
         project_menu.addSeparator()
         project_menu.addAction(self.checkpoint_action)
 
-        image_menu = menu_bar.addMenu('Immagine')
+        image_menu = menu_bar.addMenu('Image')
         image_menu.addAction(self.route_image_action)
         image_menu.addAction(self.route_prompt_action)
         image_menu.addAction(self.route_cleanup_action)
@@ -487,11 +488,39 @@ class MainWindow(QMainWindow):
         presets_menu.addAction(self.route_prompt_action)
         presets_menu.addAction(self.route_calibration_action)
 
-        export_menu = menu_bar.addMenu('Esportazione')
+        export_menu = menu_bar.addMenu('Export')
         export_menu.addAction(self.export_action)
         export_menu.addAction(self.route_export_action)
 
-        toolbar = QToolBar('Comandi contestuali')
+        help_menu = menu_bar.addMenu('Help')
+        self.quick_start_action = action(
+            'help_quick_start',
+            'Quick Start…',
+            lambda: self._open_help('Quick Start'),
+            QKeySequence.StandardKey.HelpContents,
+        )
+        self.production_guide_action = action(
+            'help_production',
+            'Production Workflow…',
+            lambda: self._open_help('Production Workflow'),
+        )
+        self.local_ai_guide_action = action(
+            'help_local_ai',
+            'Local AI Setup…',
+            lambda: self._open_help('Local AI'),
+        )
+        self.about_legal_action = action(
+            'help_legal',
+            'About & Licensing…',
+            lambda: self._open_help('About & Licensing'),
+        )
+        help_menu.addAction(self.quick_start_action)
+        help_menu.addAction(self.production_guide_action)
+        help_menu.addAction(self.local_ai_guide_action)
+        help_menu.addSeparator()
+        help_menu.addAction(self.about_legal_action)
+
+        toolbar = QToolBar('Context Commands')
         toolbar.setMovable(False)
         toolbar.setObjectName('contextual-command-toolbar')
         self.command_toolbar = toolbar
@@ -511,15 +540,19 @@ class MainWindow(QMainWindow):
             toolbar.addAction(item)
             self._toolbar_command_actions[command_id] = item
         toolbar.addSeparator()
-        self.command_context_label = QLabel('Contesto: —')
+        self.command_context_label = QLabel('Context: —')
         self.command_context_label.setStyleSheet('QLabel { padding: 4px 8px; color: #aeb8c7; }')
         toolbar.addWidget(self.command_context_label)
         toolbar.addSeparator()
-        self.theme_switch_action = QAction('Tema: —', self)
-        self.theme_switch_action.setToolTip('Cambia rapidamente gradiente tab: Red → Green → Blue')
+        self.theme_switch_action = QAction('Theme: —', self)
+        self.theme_switch_action.setToolTip('Quickly cycle the tab gradient: Red → Green → Blue')
         self.theme_switch_action.triggered.connect(lambda: self.theme_preferences.cycle())
         toolbar.addAction(self.theme_switch_action)
         self.theme_switch_widget = toolbar.widgetForAction(self.theme_switch_action)
+
+    def _open_help(self, section: str = 'Quick Start') -> None:
+        dialog = HelpDialog(self, section=section)
+        dialog.exec()
 
     def _current_workspace_route(self) -> str:
         if not hasattr(self, 'workspace_tabs'):
@@ -548,7 +581,7 @@ class MainWindow(QMainWindow):
                 item.setEnabled(True)
         if hasattr(self, 'command_context_label'):
             label = TAB_SHORT_LABELS[TAB_ROUTES.index(context)] if context in TAB_ROUTES else context
-            self.command_context_label.setText(f'Contesto: {label}')
+            self.command_context_label.setText(f'Context: {label}')
 
     def _apply_workspace_tab_style(self) -> None:
         if not hasattr(self, 'workspace_tabs'):
@@ -592,18 +625,18 @@ class MainWindow(QMainWindow):
         self.video_frames_label = QLabel('—')
         self.video_duration_label = QLabel('—')
         info_layout.addRow('File', self.file_label)
-        info_layout.addRow('Risoluzione', self.video_size_label)
+        info_layout.addRow('Resolution', self.video_size_label)
         info_layout.addRow('FPS', self.video_fps_label)
-        info_layout.addRow('Fotogrammi', self.video_frames_label)
-        info_layout.addRow('Durata', self.video_duration_label)
+        info_layout.addRow('Frames', self.video_frames_label)
+        info_layout.addRow('Duration', self.video_duration_label)
         layout.addWidget(info_group)
 
-        key_group = QGroupBox('Estrazione sfondo')
+        key_group = QGroupBox('Background Extraction')
         key_layout = QVBoxLayout(key_group)
         color_row = QHBoxLayout()
-        self.color_button = QPushButton('Scegli colore')
+        self.color_button = QPushButton('Choose Color')
         self.color_button.clicked.connect(self._choose_background_color)
-        self.auto_color_button = QPushButton('Rileva angoli')
+        self.auto_color_button = QPushButton('Detect Corners')
         self.auto_color_button.clicked.connect(self._auto_detect_background)
         color_row.addWidget(self.color_button)
         color_row.addWidget(self.auto_color_button)
@@ -615,38 +648,38 @@ class MainWindow(QMainWindow):
         key_layout.addWidget(self.color_swatch)
         self._update_color_swatch()
 
-        hint = QLabel('Puoi anche cliccare direttamente sullo sfondo nella scheda Originale.')
+        hint = QLabel('You can also click directly on the background in the Original tab.')
         hint.setWordWrap(True)
         hint.setStyleSheet('color: #8f96a3;')
         key_layout.addWidget(hint)
 
         mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel('Modalità maschera'))
+        mode_row.addWidget(QLabel('Mask Mode'))
         self.keying_mode_combo = QComboBox()
-        self.keying_mode_combo.addItem('Automatica', 'auto')
-        self.keying_mode_combo.addItem('Cromatica globale', 'global')
-        self.keying_mode_combo.addItem('Connessa ai bordi', 'edge_connected')
+        self.keying_mode_combo.addItem('Automatic', 'auto')
+        self.keying_mode_combo.addItem('Global Chroma', 'global')
+        self.keying_mode_combo.addItem('Connected to Borders', 'edge_connected')
         self.keying_mode_combo.currentIndexChanged.connect(self._on_keying_mode_changed)
         mode_row.addWidget(self.keying_mode_combo, 1)
         key_layout.addLayout(mode_row)
 
-        self.background_diagnostic_label = QLabel('Diagnostica sfondo: nessun video analizzato.')
+        self.background_diagnostic_label = QLabel('Background diagnostics: no video analyzed.')
         self.background_diagnostic_label.setWordWrap(True)
         self.background_diagnostic_label.setStyleSheet(
             'QLabel { color: #f4f6f8; padding: 7px; background: #252b33; border: 1px solid #555; }'
         )
         key_layout.addWidget(self.background_diagnostic_label)
 
-        self.tolerance_slider = self._add_labeled_slider(key_layout, 'Tolleranza', 0, 100, self.chroma_settings.tolerance)
-        self.softness_slider = self._add_labeled_slider(key_layout, 'Morbidezza bordo', 0, 80, self.chroma_settings.softness)
-        self.cleanup_slider = self._add_labeled_slider(key_layout, 'Pulizia', 0, 4, self.chroma_settings.cleanup_radius)
-        self.decontam_slider = self._add_labeled_slider(key_layout, 'Decontamina bordo', 0, 100, self.chroma_settings.edge_decontamination)
+        self.tolerance_slider = self._add_labeled_slider(key_layout, 'Tolerance', 0, 100, self.chroma_settings.tolerance)
+        self.softness_slider = self._add_labeled_slider(key_layout, 'Edge Softness', 0, 80, self.chroma_settings.softness)
+        self.cleanup_slider = self._add_labeled_slider(key_layout, 'Cleanup', 0, 4, self.chroma_settings.cleanup_radius)
+        self.decontam_slider = self._add_labeled_slider(key_layout, 'Edge Decontamination', 0, 100, self.chroma_settings.edge_decontamination)
         for slider in (self.tolerance_slider, self.softness_slider, self.cleanup_slider, self.decontam_slider):
             slider.valueChanged.connect(self._on_key_settings_changed)
 
-        additional_group = QGroupBox('Colori sfondo aggiuntivi · R5e5-A')
+        additional_group = QGroupBox('Additional Background Colors · R5e5-A')
         additional_layout = QVBoxLayout(additional_group)
-        additional_hint = QLabel('Fino a 16 colori. Ogni regola può usare la tolleranza principale o una tolleranza locale.')
+        additional_hint = QLabel('Up to 16 colors. Each rule can use the main tolerance or its own local tolerance.')
         additional_hint.setWordWrap(True)
         additional_hint.setStyleSheet('color: #8f96a3;')
         additional_layout.addWidget(additional_hint)
@@ -654,17 +687,17 @@ class MainWindow(QMainWindow):
         self.additional_colors_list.setMinimumHeight(96)
         additional_layout.addWidget(self.additional_colors_list)
         additional_row_1 = QHBoxLayout()
-        add_color_button = QPushButton('+ Inserisci colore')
-        sample_color_button = QPushButton('+ Campiona dal frame')
+        add_color_button = QPushButton('+ Add Color')
+        sample_color_button = QPushButton('+ Sample from Frame')
         add_color_button.clicked.connect(lambda: self.background_rules.add_via_picker())
         sample_color_button.clicked.connect(lambda: self.background_rules.arm_sample())
         additional_row_1.addWidget(add_color_button)
         additional_row_1.addWidget(sample_color_button)
         additional_layout.addLayout(additional_row_1)
         additional_row_2 = QHBoxLayout()
-        toggle_color_button = QPushButton('Attiva / disattiva')
-        tolerance_color_button = QPushButton('Tolleranza')
-        remove_color_button = QPushButton('Rimuovi')
+        toggle_color_button = QPushButton('Enable / Disable')
+        tolerance_color_button = QPushButton('Tolerance')
+        remove_color_button = QPushButton('Remove')
         clear_colors_button = QPushButton('Svuota')
         toggle_color_button.clicked.connect(lambda: self.background_rules.toggle_selected())
         tolerance_color_button.clicked.connect(lambda: self.background_rules.set_selected_tolerance())
@@ -677,35 +710,35 @@ class MainWindow(QMainWindow):
         additional_layout.addLayout(additional_row_2)
         key_layout.addWidget(additional_group)
 
-        structural_group = QGroupBox('Rifinitura strutturale · R5e5-B')
+        structural_group = QGroupBox('Structural Refinement · R5e5-B')
         structural_form = QFormLayout(structural_group)
-        self.outer_border_checkbox = QCheckBox('Includi bordo esterno nella maschera')
+        self.outer_border_checkbox = QCheckBox('Include outer border in mask')
         self.outer_border_spin = QSpinBox()
         self.outer_border_spin.setRange(0, 256)
         self.outer_border_spin.setValue(8)
         self.outer_border_spin.setSuffix(' px')
         self.outer_border_spin.setEnabled(False)
-        self.subject_expand_checkbox = QCheckBox('Espandi sfondo verso la sagoma')
+        self.subject_expand_checkbox = QCheckBox('Expand background toward subject')
         self.subject_expand_spin = QSpinBox()
         self.subject_expand_spin.setRange(0, 16)
         self.subject_expand_spin.setValue(2)
         self.subject_expand_spin.setSuffix(' px')
         self.subject_expand_spin.setEnabled(False)
-        self.structural_diagnostic_label = QLabel('Rifinitura strutturale disattivata.')
+        self.structural_diagnostic_label = QLabel('Structural refinement disabled.')
         self.structural_diagnostic_label.setWordWrap(True)
         self.structural_diagnostic_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #252a30; border: 1px solid #4b5560; }')
         structural_form.addRow('', self.outer_border_checkbox)
-        structural_form.addRow('Spessore bordo', self.outer_border_spin)
+        structural_form.addRow('Border Thickness', self.outer_border_spin)
         structural_form.addRow('', self.subject_expand_checkbox)
-        structural_form.addRow('Mangia bordo sagoma', self.subject_expand_spin)
-        structural_form.addRow('Diagnostica', self.structural_diagnostic_label)
+        structural_form.addRow('Subject Edge Erosion', self.subject_expand_spin)
+        structural_form.addRow('Diagnostics', self.structural_diagnostic_label)
         self.outer_border_checkbox.toggled.connect(self._on_structural_mask_settings_changed)
         self.outer_border_spin.valueChanged.connect(self._on_structural_mask_settings_changed)
         self.subject_expand_checkbox.toggled.connect(self._on_structural_mask_settings_changed)
         self.subject_expand_spin.valueChanged.connect(self._on_structural_mask_settings_changed)
         key_layout.addWidget(structural_group)
 
-        profiles_group = QGroupBox('Profili alpha / chroma')
+        profiles_group = QGroupBox('Alpha / Chroma Profiles')
         profiles_group.setMinimumWidth(360)
         profiles_layout = QVBoxLayout(profiles_group)
         profiles_layout.setContentsMargins(12, 16, 12, 12)
@@ -713,13 +746,13 @@ class MainWindow(QMainWindow):
         self.chroma_profile_combo = QComboBox()
         self.chroma_profile_combo.setMinimumWidth(300)
         self.chroma_profile_combo.setMinimumHeight(30)
-        load_profile_button = QPushButton('Carica profilo')
+        load_profile_button = QPushButton('Load Profile')
         load_profile_button.setMinimumHeight(30)
         load_profile_button.clicked.connect(lambda: self.chroma_profiles.load_selected())
-        save_profile_button = QPushButton('Salva profilo corrente')
+        save_profile_button = QPushButton('Save Current Profile')
         save_profile_button.setMinimumHeight(30)
         save_profile_button.clicked.connect(lambda: self.chroma_profiles.save_current_as())
-        delete_profile_button = QPushButton('Elimina profilo')
+        delete_profile_button = QPushButton('Delete Profile')
         delete_profile_button.setMinimumHeight(30)
         delete_profile_button.clicked.connect(lambda: self.chroma_profiles.delete_selected())
         profile_buttons_row = QHBoxLayout()
@@ -732,30 +765,30 @@ class MainWindow(QMainWindow):
         key_layout.addWidget(profiles_group)
         layout.addWidget(key_group)
 
-        export_group = QGroupBox('Esportazione R1')
+        export_group = QGroupBox('R1 Export')
         export_form = QFormLayout(export_group)
         self.format_combo = QComboBox()
         self.format_combo.addItems(['PNG', 'WebP lossless'])
-        self.crop_checkbox = QCheckBox('Ritaglia sulla sagoma')
+        self.crop_checkbox = QCheckBox('Crop to Subject')
         self.crop_checkbox.setChecked(True)
         self.padding_spin = QSpinBox()
         self.padding_spin.setRange(0, 128)
         self.padding_spin.setValue(8)
-        export_form.addRow('Formato', self.format_combo)
+        export_form.addRow('Format', self.format_combo)
         export_form.addRow('', self.crop_checkbox)
-        export_form.addRow('Margine px', self.padding_spin)
+        export_form.addRow('Margin px', self.padding_spin)
         layout.addWidget(export_group)
 
-        selection_group = QGroupBox('Fotogrammi selezionati')
+        selection_group = QGroupBox('Selected Frames')
         selection_layout = QVBoxLayout(selection_group)
         self.selection_list = QListWidget()
         self.selection_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.selection_list.itemDoubleClicked.connect(lambda item: self._set_frame(int(item.data(Qt.ItemDataRole.UserRole))))
         selection_layout.addWidget(self.selection_list)
         selection_buttons = QHBoxLayout()
-        add_button = QPushButton('Aggiungi')
+        add_button = QPushButton('Add')
         add_button.clicked.connect(self._add_current_frame)
-        remove_button = QPushButton('Rimuovi')
+        remove_button = QPushButton('Remove')
         remove_button.clicked.connect(self._remove_selected_frames)
         selection_buttons.addWidget(add_button)
         selection_buttons.addWidget(remove_button)
@@ -763,12 +796,12 @@ class MainWindow(QMainWindow):
         layout.addWidget(selection_group, 1)
 
         for label, idx in (
-            ('Vai al Progetto →', 0),
-            ('Vai a Genera →', 1),
-            ('Passa al clean-up R3b →', 3),
-            ('Passa all’allineamento R2 →', 4),
-            ('Analizza e prova la selezione R3 →', 5),
-            ('Vai all’Export Studio R5e4 →', 6),
+            ('Go to Project →', 0),
+            ('Go to Generate →', 1),
+            ('Go to Clean-up R3b →', 3),
+            ('Go to R2 Alignment →', 4),
+            ('Analyze and Try R3 Selection →', 5),
+            ('Go to Export Studio R5e4 →', 6),
         ):
             b = QPushButton(label)
             b.clicked.connect(lambda checked=False, tab=idx: self.workspace_tabs.setCurrentIndex(tab))
@@ -816,7 +849,7 @@ class MainWindow(QMainWindow):
         self._refresh_command_context()
 
     def _open_video(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'Apri video', '', 'Video MP4 (*.mp4 *.m4v);;Video (*.mp4 *.m4v *.mov *.avi *.webm);;Tutti i file (*)')
+        path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', 'MP4 Video (*.mp4 *.m4v);;Video (*.mp4 *.m4v *.mov *.avi *.webm);;All Files (*)')
         if not path:
             return
         self._open_video_path(path)
@@ -824,7 +857,7 @@ class MainWindow(QMainWindow):
     def _import_generated_video(self, path: str) -> None:
         if self._open_video_path(path):
             self.workspace_tabs.setCurrentIndex(2)
-            self.statusBar().showMessage(f'Video generato importato in R1: {Path(path).name}')
+            self.statusBar().showMessage(f'Generated video imported into R1: {Path(path).name}')
 
     def _apply_opened_source(self, metadata, *, label: str, select_all: bool = False) -> None:
         self.current_frame_index = 0
@@ -858,7 +891,7 @@ class MainWindow(QMainWindow):
             )
         except Exception as exc:
             self.background_diagnostic = None
-            self.background_diagnostic_label.setText(f'Diagnostica sfondo non disponibile: {exc}')
+            self.background_diagnostic_label.setText(f'Background diagnostics unavailable: {exc}')
         self._set_frame(0)
         if select_all:
             self.cleanup_studio.set_selected_frames(self.selected_frames)
@@ -871,9 +904,9 @@ class MainWindow(QMainWindow):
         try:
             metadata = self.video.open(path)
         except VideoOpenError as exc:
-            QMessageBox.critical(self, 'Errore apertura video', str(exc))
+            QMessageBox.critical(self, 'Video Open Error', str(exc))
             return False
-        self._apply_opened_source(metadata, label=f'Video aperto: {metadata.path.name}', select_all=False)
+        self._apply_opened_source(metadata, label=f'Video opened: {metadata.path.name}', select_all=False)
         return True
 
     def _open_sequence_manifest_path(self, manifest_path: str, *, select_all: bool = False) -> bool:
@@ -882,11 +915,11 @@ class MainWindow(QMainWindow):
         try:
             metadata = self.video.open_sequence_manifest(manifest_path)
         except VideoOpenError as exc:
-            QMessageBox.critical(self, 'Errore sequenza sprite', str(exc))
+            QMessageBox.critical(self, 'Sprite Sequence Error', str(exc))
             return False
         self._apply_opened_source(
             metadata,
-            label=f'Sequenza sprite aperta: {metadata.frame_count} frame',
+            label=f'Sprite sequence opened: {metadata.frame_count} frame',
             select_all=select_all,
         )
         return True
@@ -902,19 +935,19 @@ class MainWindow(QMainWindow):
             self._save_active_group_snapshot()
             if hasattr(self, 'workflow_workspace'):
                 self.workflow_workspace.refresh_context()
-            self.statusBarMessage(f"Spritesheet importato nella pipeline: {self.video.metadata.frame_count} frame.")
+            self.statusBarMessage(f'Spritesheet imported into the pipeline: {self.video.metadata.frame_count} frame.')
 
     def _use_reference_sheet_in_generate(self, path: str) -> None:
         target = str(Path(path).resolve())
         self.generation_workspace.reference_edit.setText(target)
         self.workspace_tabs.setCurrentIndex(1)
         self._save_active_group_snapshot()
-        self.statusBarMessage(f'WAN Reference Sheet caricata in Genera: {Path(target).name}')
+        self.statusBarMessage(f'WAN Reference Sheet loaded in Generate: {Path(target).name}')
 
     def _use_generated_image_as_reference(self, path: str) -> None:
         source = Path(path).expanduser().resolve()
         if not source.is_file():
-            self.statusBarMessage('R5e9: immagine generata non disponibile.')
+            self.statusBarMessage('R5e9: generated image is not available.')
             return
         target = source
         store = self.project_workspace.project_store
@@ -937,7 +970,7 @@ class MainWindow(QMainWindow):
             self.image_generation_workspace.last_image_path = str(target.resolve())
         self.generation_workspace.reference_edit.setText(str(target.resolve()))
         self._save_active_group_snapshot()
-        self.statusBarMessage(f'R5e9: immagine caricata automaticamente come reference WAN: {target.name}')
+        self.statusBarMessage(f'R5e9: image automatically loaded as WAN reference: {target.name}')
 
     def _on_image_generation_job_finished(self, payload: dict) -> None:
         # Image jobs remain separate from Calibration Lab video jobs. Their
@@ -955,7 +988,7 @@ class MainWindow(QMainWindow):
             frame = self.video.get_frame_rgb(index)
         except VideoOpenError as exc:
             self._stop_playback()
-            QMessageBox.critical(self, 'Errore decodifica', str(exc))
+            QMessageBox.critical(self, 'Decode Error', str(exc))
             return
         self.current_frame_index = index
         self.current_frame_rgb = frame
@@ -981,7 +1014,7 @@ class MainWindow(QMainWindow):
                 rgba, mask, diagnostic = apply_chroma_key_with_diagnostics(frame, self.chroma_settings)
             checker = render_checkerboard(rgba)
         except Exception as exc:
-            self.statusBar().showMessage(f'Errore elaborazione: {exc}')
+            self.statusBar().showMessage(f'Processing error: {exc}')
             return
         self.original_preview.set_preview_pixmap(self._numpy_to_pixmap(frame), frame.shape[1], frame.shape[0])
         mask_rgb = np.repeat(mask[:, :, None], 3, axis=2)
@@ -992,16 +1025,15 @@ class MainWindow(QMainWindow):
         self.subject_preview.set_preview_pixmap(self._numpy_to_pixmap(subject_rgb), subject_rgb.shape[1], subject_rgb.shape[0])
         self.background_candidate_preview.set_preview_pixmap(self._numpy_to_pixmap(background_rgb), background_rgb.shape[1], background_rgb.shape[0])
         if self.subject_expand_checkbox.isChecked() and not diagnostic.subject_detected:
-            self.structural_diagnostic_label.setText('⚠ Sagoma centrale non rilevata in modo affidabile. Espansione verso la sagoma NON applicata.')
+            self.structural_diagnostic_label.setText('⚠ Central subject could not be detected reliably. Expansion toward the subject was NOT applied.')
             self.structural_diagnostic_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #3b3020; border: 1px solid #9b7135; }')
         elif diagnostic.subject_detected:
             self.structural_diagnostic_label.setText(
-                f'Sagoma: {diagnostic.subject_confidence} · {diagnostic.subject_reason}. '
-                f'Bordo forzato: {diagnostic.outer_border_mask_px}px · espansione: {diagnostic.subject_edge_mask_expand_px}px.'
+                f'Silhouette: {diagnostic.subject_confidence} · {diagnostic.subject_reason}. Forced border: {diagnostic.outer_border_mask_px}px · expansion: {diagnostic.subject_edge_mask_expand_px}px.'
             )
             self.structural_diagnostic_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #20382a; border: 1px solid #3d7b55; }')
         else:
-            self.structural_diagnostic_label.setText('Nessuna sagoma centrale affidabile rilevata; nessuna erosione strutturale applicata.')
+            self.structural_diagnostic_label.setText('No reliable central subject detected; no structural erosion was applied.')
             self.structural_diagnostic_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #252a30; border: 1px solid #4b5560; }')
 
 
@@ -1033,7 +1065,7 @@ class MainWindow(QMainWindow):
 
     def _choose_background_color(self) -> None:
         initial = QColor(*self.chroma_settings.background_rgb)
-        color = QColorDialog.getColor(initial, self, 'Colore dello sfondo')
+        color = QColorDialog.getColor(initial, self, 'Background Color')
         if not color.isValid():
             return
         self.chroma_settings.background_rgb = (color.red(), color.green(), color.blue())
@@ -1058,7 +1090,7 @@ class MainWindow(QMainWindow):
         self.smart_studio.mark_dirty()
         self.cleanup_studio.set_selected_frames(self.selected_frames)
         self.statusBar().showMessage(
-            f'Sfondo applicato: RGB {diagnostic.detected_rgb}; modalità consigliata {diagnostic.recommended_mode}.'
+            f'Background applied: RGB {diagnostic.detected_rgb}; recommended mode {diagnostic.recommended_mode}.'
         )
 
     def _sample_background_from_frame(self, x: int, y: int) -> None:
@@ -1075,7 +1107,7 @@ class MainWindow(QMainWindow):
         self.alignment_studio.mark_dirty()
         self.smart_studio.mark_dirty()
         self.cleanup_studio.set_selected_frames(self.selected_frames)
-        self.statusBar().showMessage(f'Colore principale campionato a ({x}, {y}): RGB {color}')
+        self.statusBar().showMessage(f'Main color sampled at ({x}, {y}): RGB {color}')
 
     def _update_color_swatch(self) -> None:
         r, g, b = self.chroma_settings.background_rgb
@@ -1131,16 +1163,13 @@ class MainWindow(QMainWindow):
         requested_text = (
             f'RGB {diagnostic.requested_rgb}'
             if diagnostic.requested_rgb is not None
-            else 'non dichiarato'
+            else 'not specified'
         )
-        mismatch_text = 'SÌ' if diagnostic.mismatch else 'no'
-        mode_text = 'connessa ai bordi' if diagnostic.recommended_mode == 'edge_connected' else 'cromatica globale'
+        mismatch_text = 'YES' if diagnostic.mismatch else 'no'
+        mode_text = 'connected to borders' if diagnostic.recommended_mode == 'edge_connected' else 'global chroma'
         distance_text = '—' if diagnostic.lab_distance is None else f'{diagnostic.lab_distance:.1f}'
         self.background_diagnostic_label.setText(
-            f'Sfondo richiesto: {requested_text}\n'
-            f'Sfondo rilevato: RGB {diagnostic.detected_rgb}\n'
-            f'Distanza colore: {distance_text} · mismatch: {mismatch_text}\n'
-            f'Uniformità angoli: {diagnostic.confidence} · modalità consigliata: {mode_text}'
+            f'Requested background: {requested_text}\nDetected background: RGB {diagnostic.detected_rgb}\nColor distance: {distance_text} · mismatch: {mismatch_text}\nCorner uniformity: {diagnostic.confidence} · recommended mode: {mode_text}'
         )
         if diagnostic.mismatch:
             self.background_diagnostic_label.setStyleSheet(
@@ -1159,12 +1188,12 @@ class MainWindow(QMainWindow):
             return
         interval_ms = max(1, int(round(1000.0 / self.video.metadata.fps)))
         self.play_timer.start(interval_ms)
-        self.play_action.setText('Pausa')
+        self.play_action.setText('Pause')
 
     def _stop_playback(self) -> None:
         self.play_timer.stop()
         if hasattr(self, 'play_action'):
-            self.play_action.setText('Riproduci')
+            self.play_action.setText('Play')
 
     def _advance_playback(self) -> None:
         if not self.video.is_open:
@@ -1185,10 +1214,10 @@ class MainWindow(QMainWindow):
             self.selected_frames.sort()
             self._refresh_selection_list()
             self._set_frame(current)
-            self.statusBar().showMessage(f'Fotogramma {current} aggiunto. La timeline resta sul frame corrente.')
+            self.statusBar().showMessage(f'Frame {current} added. The timeline remains on the current frame.')
         else:
             self._set_frame(current)
-            self.statusBar().showMessage(f'Fotogramma {current} già presente nella selezione.')
+            self.statusBar().showMessage(f'Frame {current} already present in the selection.')
 
     def _remove_selected_frames(self) -> None:
         items = self.selection_list.selectedItems()
@@ -1219,14 +1248,14 @@ class MainWindow(QMainWindow):
         if not self.video.is_open:
             return
         if not self.selected_frames:
-            QMessageBox.information(self, 'Nessun fotogramma', 'Aggiungere almeno un fotogramma alla selezione.')
+            QMessageBox.information(self, 'No Frames', 'Add at least one frame to the selection.')
             return
-        output_dir = QFileDialog.getExistingDirectory(self, 'Cartella di esportazione', str(self.video.metadata.path.parent))
+        output_dir = QFileDialog.getExistingDirectory(self, 'Export Folder', str(self.video.metadata.path.parent))
         if not output_dir:
             return
         output_format = 'png' if self.format_combo.currentIndex() == 0 else 'webp'
         export_settings = ExportSettings(output_format=output_format, crop_to_subject=self.crop_checkbox.isChecked(), padding=self.padding_spin.value(), webp_quality=95)
-        progress = QProgressDialog('Esportazione fotogrammi…', 'Annulla', 0, len(self.selected_frames), self)
+        progress = QProgressDialog('Exporting frames…', 'Cancel', 0, len(self.selected_frames), self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(0)
         progress.setValue(0)
@@ -1234,12 +1263,12 @@ class MainWindow(QMainWindow):
 
         def on_progress(position: int, total: int, frame_index: int) -> None:
             nonlocal cancelled
-            progress.setLabelText(f'Esportazione frame {frame_index} ({position}/{total})')
+            progress.setLabelText(f'Exporting frame {frame_index} ({position}/{total})')
             progress.setValue(position)
             QApplication.processEvents()
             if progress.wasCanceled():
                 cancelled = True
-                raise ExportError('Esportazione annullata dall\'utente.')
+                raise ExportError('Export cancelled by the user.')
 
         try:
             manifest = export_selected_frames(
@@ -1255,14 +1284,14 @@ class MainWindow(QMainWindow):
         except (ExportError, EmptySubjectError, VideoOpenError, OSError, ValueError) as exc:
             progress.close()
             if cancelled:
-                self.statusBar().showMessage('Esportazione annullata.')
+                self.statusBar().showMessage('Export cancelled.')
             else:
-                QMessageBox.critical(self, 'Errore esportazione', str(exc))
+                QMessageBox.critical(self, 'Export Error', str(exc))
             return
         progress.setValue(len(self.selected_frames))
         progress.close()
-        QMessageBox.information(self, 'Esportazione completata', f'Esportati {len(manifest["frames"])} fotogrammi in:\n{output_dir}\n\nCreato anche export-manifest.json.')
-        self.statusBar().showMessage('Esportazione R1 completata.')
+        QMessageBox.information(self, 'Export completed', f"Exported {len(manifest['frames'])} frames in:\n{output_dir}\n\nexport-manifest.json was also created.")
+        self.statusBar().showMessage('R1 export completed.')
 
     def _apply_smart_selection(self, indices: list[int]) -> None:
         if not self.video.is_open:
@@ -1272,7 +1301,7 @@ class MainWindow(QMainWindow):
             return
         self.selected_frames = normalized
         self._refresh_selection_list()
-        self.statusBar().showMessage(f'Selezione R1 aggiornata da R3: {len(normalized)} frame.')
+        self.statusBar().showMessage(f'R1 selection updated from R3: {len(normalized)} frame.')
 
     def _on_workspace_changed(self, index: int) -> None:
         if index == 3:
@@ -1315,15 +1344,15 @@ class MainWindow(QMainWindow):
         contiguous = np.ascontiguousarray(image_rgb)
         height, width, channels = contiguous.shape
         if channels != 3:
-            raise ValueError('La preview richiede un\'immagine RGB.')
+            raise ValueError('The preview requires an RGB image.')
         qimage = QImage(contiguous.data, width, height, contiguous.strides[0], QImage.Format.Format_RGB888).copy()
         return QPixmap.fromImage(qimage)
 
     def _build_raw_export_payload(self) -> dict:
         if not self.video.is_open:
-            raise RuntimeError("Aprire un video prima di usare l'Export Studio.")
+            raise RuntimeError('Open a video before using Export Studio.')
         if not self.selected_frames:
-            raise RuntimeError('Nessun frame selezionato in R1.')
+            raise RuntimeError('No frames selected in R1.')
         rgba_frames = []
         for frame_index in self.selected_frames:
             override = self.get_rgba_override(frame_index)
@@ -1351,12 +1380,12 @@ class MainWindow(QMainWindow):
     def _load_calibration_profile_in_generate(self, profile: dict) -> None:
         self.generation_workspace.apply_generation_profile(profile, persist_last=True)
         self.workspace_tabs.setCurrentIndex(1)
-        self.statusBarMessage('Calibration Lab: configurazione caricata nel workspace Genera.')
+        self.statusBarMessage('Calibration Lab: configuration loaded into the Generate workspace.')
 
     def _load_prompt_profile_in_generate(self, profile: dict) -> None:
         self.generation_workspace.apply_generation_profile(profile, persist_last=True)
         self.workspace_tabs.setCurrentIndex(1)
-        self.statusBarMessage('Prompt Builder R5e7: prompt applicato al workspace Genera.')
+        self.statusBarMessage('Prompt Builder R5e7: prompt applied to the Generate workspace.')
 
     def _active_group_context(self) -> dict | None:
         store = self.project_workspace.project_store
@@ -1391,13 +1420,13 @@ class MainWindow(QMainWindow):
         store = self.project_workspace.project_store
         group_id = self.project_workspace.active_group_id
         if store is None or not group_id:
-            raise RuntimeError('Nessun Project Group attivo.')
+            raise RuntimeError('No active Project Group.')
 
         # Commit the live context first so the merge starts from the latest group state.
         self._save_active_group_snapshot()
         group = store.get_group(group_id)
         if group is None:
-            raise RuntimeError('Il gruppo attivo non è più disponibile.')
+            raise RuntimeError('The active group is no longer available.')
         current_pipeline = group.get('pipeline_state') if isinstance(group.get('pipeline_state'), dict) else {}
         merged = merge_preset_into_pipeline(current_pipeline, preset, sections)
 
@@ -1484,7 +1513,7 @@ class MainWindow(QMainWindow):
 
     def _save_project_snapshot(self) -> None:
         if self.project_workspace.current_project_path is None:
-            QMessageBox.information(self, 'Nessun progetto', 'Creare o aprire un progetto prima di salvare lo snapshot.')
+            QMessageBox.information(self, 'No Project', 'Create or open a project before saving the snapshot.')
             return
         self.project_workspace.update_project_snapshot(self._capture_project_snapshot())
         self._save_active_group_snapshot()
@@ -1548,7 +1577,7 @@ class MainWindow(QMainWindow):
                     if value.ndim == 3 and value.shape[2] == 4:
                         self.rgba_overrides[index] = value.copy()
         except Exception as exc:
-            self.statusBarMessage(f'Cleanup del gruppo non ripristinato: {exc}')
+            self.statusBarMessage(f'Group clean-up state could not be restored: {exc}')
 
     def _on_active_group_changed(self, group_id: str) -> None:
         if not group_id:
@@ -1627,7 +1656,7 @@ class MainWindow(QMainWindow):
             studio_state = export_state.get('studio')
             if isinstance(studio_state, dict):
                 self.export_studio.apply_state(studio_state)
-        self.statusBarMessage(f"Contesto attivo caricato: {self.project_workspace.project_store.group_label(group_id)}")
+        self.statusBarMessage(f'Active context loaded: {self.project_workspace.project_store.group_label(group_id)}')
         if hasattr(self, 'production_presets_workspace'):
             self.production_presets_workspace.refresh_context()
         if hasattr(self, 'calibration_workspace'):
@@ -1726,7 +1755,7 @@ class MainWindow(QMainWindow):
     def _route_workflow_step(self, route: str) -> None:
         index = self._workflow_tab_routes.get(str(route))
         if index is None:
-            self.statusBarMessage(f'R5e10: route workflow non riconosciuta: {route}')
+            self.statusBarMessage(f'R5e10: unrecognized workflow route: {route}')
             return
         self.workspace_tabs.setCurrentIndex(index)
 
@@ -1758,7 +1787,7 @@ class MainWindow(QMainWindow):
         group_id = self.project_workspace.active_group_id
         store = self.project_workspace.project_store
         if not group_id or store is None:
-            QMessageBox.information(self, 'Nessun gruppo', 'Attivare un Project Group prima di salvare il checkpoint.')
+            QMessageBox.information(self, 'No Group', 'Activate a Project Group before saving the checkpoint.')
             return
         self._save_active_group_snapshot()
         group = store.get_group(group_id)
@@ -1771,19 +1800,19 @@ class MainWindow(QMainWindow):
     def _promote_current_video_to_motion_reference(self) -> None:
         workflow = self.workflow_workspace.current_workflow() if hasattr(self, 'workflow_workspace') else None
         if workflow is None or workflow.get('type') != 'full':
-            QMessageBox.information(self, 'Workflow completo richiesto', 'Questa azione appartiene al Flusso completo.')
+            QMessageBox.information(self, 'Full workflow required', 'This action belongs to the Full workflow.')
             return
         if not self.video.is_open or self.video.source_kind != 'video':
-            QMessageBox.warning(self, 'Video non disponibile', 'Generare o aprire prima il video intermedio che rappresenta il movimento.')
+            QMessageBox.warning(self, 'Video Unavailable', 'Generate or open the intermediate motion video first.')
             return
         store = self.project_workspace.project_store
         group_id = self.project_workspace.active_group_id
         if store is None or not group_id:
-            QMessageBox.warning(self, 'Nessun gruppo', 'Attivare prima un Project Group.')
+            QMessageBox.warning(self, 'No Group', 'Activate a Project Group first.')
             return
         source = Path(self.video.metadata.path).resolve()
         if not source.is_file():
-            QMessageBox.warning(self, 'Video non disponibile', 'Il video sorgente corrente non è più disponibile su disco.')
+            QMessageBox.warning(self, 'Video Unavailable', 'The current source video is no longer available on disk.')
             return
         workspace = store.group_workspace(group_id)
         motion_dir = workspace / 'motion_references'
@@ -1811,7 +1840,7 @@ class MainWindow(QMainWindow):
         self.workflow_workspace.record_motion_reference(path=str(target), promoted_from_source_video=str(source))
         self.project_workspace._refresh_view(select_group_id=group_id)
         self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['generation'])
-        self.statusBarMessage('R5e10: video intermedio promosso a motion reference; master image ripristinato per la generazione finale.')
+        self.statusBarMessage('R5e10: intermediate video promoted to motion reference; master image restored for final generation.')
 
     def _capture_app_state(self) -> dict:
         return {

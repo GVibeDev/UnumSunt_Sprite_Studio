@@ -74,7 +74,7 @@ class SmartSelectionStudio(QWidget):
         root.setContentsMargins(8, 8, 8, 8)
 
         self.state_label = QLabel(
-            "Apri un video, definisci l'intervallo e avvia l'analisi R3."
+            'Open a video, define the range, and start the R3 analysis.'
         )
         self.state_label.setWordWrap(True)
         self.state_label.setStyleSheet(
@@ -90,7 +90,7 @@ class SmartSelectionStudio(QWidget):
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 4, 0)
 
-        player_group = QGroupBox("Player dei frame selezionati")
+        player_group = QGroupBox('Selected Frame Player')
         player_layout = QVBoxLayout(player_group)
         self.player = SelectedFramesPlayer(
             frame_loader=self._frame_loader,
@@ -106,12 +106,12 @@ class SmartSelectionStudio(QWidget):
         summary_grid = QGridLayout(summary_group)
         self.summary_labels: dict[str, QLabel] = {}
         labels = (
-            ("Analizzati", "analyzed"),
+            ('Analyzed', "analyzed"),
             ("Suggeriti", "suggested"),
-            ("Quasi duplicati", "duplicates"),
+            ('Near duplicates', "duplicates"),
             ("Anomalie", "anomalies"),
-            ("Qualità loop", "loop"),
-            ("Movimento totale", "motion"),
+            ('Loop Quality', "loop"),
+            ('Total motion', "motion"),
         )
         for position, (title, key) in enumerate(labels):
             row = position // 3
@@ -136,7 +136,7 @@ class SmartSelectionStudio(QWidget):
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(4, 0, 0, 0)
 
-        settings_group = QGroupBox("Intervallo e profilo")
+        settings_group = QGroupBox('Range and Profile')
         settings_form = QFormLayout(settings_group)
 
         self.start_spin = QSpinBox()
@@ -148,7 +148,7 @@ class SmartSelectionStudio(QWidget):
         start_layout = QHBoxLayout(start_widget)
         start_layout.setContentsMargins(0, 0, 0, 0)
         start_layout.addWidget(self.start_spin, 1)
-        start_current_button = QPushButton("Frame corrente")
+        start_current_button = QPushButton('Current frame')
         start_current_button.clicked.connect(
             lambda: self.start_spin.setValue(self._current_frame_provider())
         )
@@ -158,7 +158,7 @@ class SmartSelectionStudio(QWidget):
         end_layout = QHBoxLayout(end_widget)
         end_layout.setContentsMargins(0, 0, 0, 0)
         end_layout.addWidget(self.end_spin, 1)
-        end_current_button = QPushButton("Frame corrente")
+        end_current_button = QPushButton('Current frame')
         end_current_button.clicked.connect(
             lambda: self.end_spin.setValue(self._current_frame_provider())
         )
@@ -187,28 +187,28 @@ class SmartSelectionStudio(QWidget):
         self.duplicate_sensitivity_spin.setSuffix(" %")
 
         self.avoid_anomalies_checkbox = QCheckBox(
-            "Evita anomalie forti nella proposta"
+            'Avoid strong anomalies in the proposal'
         )
         self.avoid_anomalies_checkbox.setChecked(True)
 
         settings_form.addRow("Inizio", start_widget)
         settings_form.addRow("Fine", end_widget)
         settings_form.addRow("Analizza ogni", self.sample_step_spin)
-        settings_form.addRow("Profilo", self.profile_combo)
-        settings_form.addRow("Frame desiderati", self.desired_spin)
+        settings_form.addRow('Profile', self.profile_combo)
+        settings_form.addRow('Desired frames', self.desired_spin)
         settings_form.addRow(
-            "Sensibilità duplicati",
+            'Duplicate Sensitivity',
             self.duplicate_sensitivity_spin,
         )
         settings_form.addRow("", self.avoid_anomalies_checkbox)
         right_layout.addWidget(settings_group)
 
         action_row = QHBoxLayout()
-        self.analyze_button = QPushButton("Analizza e proponi")
+        self.analyze_button = QPushButton('Analyze and Suggest')
         self.analyze_button.clicked.connect(self.analyze)
-        self.restore_button = QPushButton("Ripristina proposta")
+        self.restore_button = QPushButton('Reset Suggestion')
         self.restore_button.clicked.connect(self._restore_suggestions)
-        self.r1_button = QPushButton("Spunta selezione R1")
+        self.r1_button = QPushButton('Check R1 Selection')
         self.r1_button.clicked.connect(self._check_r1_selection)
         action_row.addWidget(self.analyze_button)
         action_row.addWidget(self.restore_button)
@@ -218,12 +218,12 @@ class SmartSelectionStudio(QWidget):
         self.table = QTableWidget(0, 7)
         self.table.setHorizontalHeaderLabels(
             [
-                "Usa",
+                'Use',
                 "Frame",
                 "Tempo",
-                "Movimento",
+                "Motion",
                 "Anomalia",
-                "Qualità",
+                'Quality',
                 "Note",
             ]
         )
@@ -250,9 +250,9 @@ class SmartSelectionStudio(QWidget):
         right_layout.addWidget(self.table, 1)
 
         bottom_row = QHBoxLayout()
-        export_report_button = QPushButton("Esporta rapporto JSON")
+        export_report_button = QPushButton('Export JSON Report')
         export_report_button.clicked.connect(self._export_report)
-        self.apply_button = QPushButton("Applica spuntati alla selezione R1")
+        self.apply_button = QPushButton('Apply Checked Frames to R1 Selection')
         self.apply_button.clicked.connect(self._apply_checked_to_r1)
         bottom_row.addWidget(export_report_button)
         bottom_row.addStretch(1)
@@ -297,7 +297,7 @@ class SmartSelectionStudio(QWidget):
             self.start_spin.setRange(0, 0)
             self.end_spin.setRange(0, 0)
             self._set_analysis_controls_enabled(False)
-            self.state_label.setText("Nessun video caricato.")
+            self.state_label.setText('No video loaded.')
             return
 
         maximum = max(0, metadata.frame_count - 1)
@@ -308,8 +308,7 @@ class SmartSelectionStudio(QWidget):
             self.end_spin.setValue(maximum)
         self._set_analysis_controls_enabled(True)
         self.mark_dirty(
-            f"Video pronto: {metadata.frame_count} frame. "
-            "Definisci l'intervallo e avvia l'analisi."
+            f'Video ready: {metadata.frame_count} frames. Define the range and start the analysis.'
         )
 
     def set_r1_selection(self, indices: list[int]) -> None:
@@ -320,7 +319,7 @@ class SmartSelectionStudio(QWidget):
         self._dirty = True
         self.state_label.setText(
             message
-            or "Parametri o chroma key modificati: ripetere l'analisi R3."
+            or 'Parameters or chroma key changed: repeat the R3 analysis.'
         )
         self.state_label.setStyleSheet(
             "QLabel { color: #f4f6f8; padding: 6px; background: #302a20; "
@@ -356,7 +355,7 @@ class SmartSelectionStudio(QWidget):
         selection = data.get('r1_selection')
         if isinstance(selection, list):
             self.set_r1_selection([int(v) for v in selection if isinstance(v, int) or str(v).isdigit()])
-        self.mark_dirty('Impostazioni R3 ripristinate dal gruppo attivo.')
+        self.mark_dirty('R3 settings restored from the active group.')
 
     def clear_project(self) -> None:
         self.player.clear()
@@ -371,8 +370,8 @@ class SmartSelectionStudio(QWidget):
         if metadata is None:
             QMessageBox.information(
                 self,
-                "Nessun video",
-                "Aprire prima un video nella scheda Estrazione R1.",
+                'No Video',
+                'Open a video in the R1 Extraction tab first.',
             )
             return
 
@@ -381,8 +380,8 @@ class SmartSelectionStudio(QWidget):
         if end < start:
             QMessageBox.warning(
                 self,
-                "Intervallo non valido",
-                "Il frame finale deve essere uguale o successivo a quello iniziale.",
+                'Invalid Range',
+                'The end frame must be equal to or later than the start frame.',
             )
             return
 
@@ -396,16 +395,14 @@ class SmartSelectionStudio(QWidget):
         if len(indices) < desired:
             QMessageBox.warning(
                 self,
-                "Campione insufficiente",
-                f"L'intervallo produce {len(indices)} frame analizzati, "
-                f"ma ne sono richiesti {desired}. Ridurre il numero desiderato "
-                "o il passo di campionamento.",
+                'Insufficient sample',
+                f"L'intervallo produce {len(indices)} frames analyzed, but required: {desired}. Reduce the requested count or the sampling step.",
             )
             return
 
         progress = QProgressDialog(
-            "Analisi intelligente dei fotogrammi…",
-            "Annulla",
+            'Analyzing frames intelligently…',
+            'Cancel',
             0,
             len(indices),
             self,
@@ -460,7 +457,7 @@ class SmartSelectionStudio(QWidget):
         except Exception as exc:
             QMessageBox.critical(
                 self,
-                "Errore analisi R3",
+                'R3 Analysis Error',
                 str(exc),
             )
             return
@@ -473,14 +470,13 @@ class SmartSelectionStudio(QWidget):
         self.player.source_combo.setCurrentIndex(0)
 
         self.state_label.setText(
-            f"Analisi completata: {len(result.features)} frame esaminati, "
-            f"{len(result.suggestions)} suggeriti per il profilo {profile}."
+            f'Analysis completed: {len(result.features)} frames examined, {len(result.suggestions)} suggested for profile {profile}.'
         )
         self.state_label.setStyleSheet(
             "QLabel { color: #f4f6f8; padding: 6px; background: #20382a; "
             "border: 1px solid #3d7b55; }"
         )
-        self.status_message.emit("Analisi R3 completata.")
+        self.status_message.emit('R3 analysis completed.')
 
     def _populate_table(self, result: SmartSelectionResult) -> None:
         self._updating_table = True
@@ -591,36 +587,36 @@ class SmartSelectionStudio(QWidget):
         if self._dirty:
             QMessageBox.information(
                 self,
-                "Analisi non aggiornata",
-                "Ripetere l'analisi R3 prima di applicare la selezione.",
+                'Analysis Out of Date',
+                'Repeat the R3 analysis before applying the selection.',
             )
             return
         checked = self._checked_indices()
         if not checked:
             QMessageBox.information(
                 self,
-                "Nessun frame",
-                "Spuntare almeno un frame prima di applicare la selezione.",
+                'No Frames',
+                'Check at least one frame before applying the selection.',
             )
             return
         self.selection_applied.emit(checked)
         self.status_message.emit(
-            f"Applicati {len(checked)} frame alla selezione R1."
+            f'Applied {len(checked)} frames to the R1 selection.'
         )
 
     def _export_report(self) -> None:
         if self._dirty:
             QMessageBox.information(
                 self,
-                "Analisi non aggiornata",
-                "Ripetere l'analisi R3 prima di esportare il rapporto.",
+                'Analysis Out of Date',
+                'Repeat the R3 analysis before exporting the report.',
             )
             return
         if self._result is None:
             QMessageBox.information(
                 self,
-                "Nessuna analisi",
-                "Eseguire prima l'analisi R3.",
+                'No Analysis',
+                "Run the R3 analysis first.",
             )
             return
         metadata = self._metadata_provider()
@@ -629,7 +625,7 @@ class SmartSelectionStudio(QWidget):
 
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Esporta rapporto analisi R3",
+            'Export R3 Analysis Report',
             str(metadata.path.with_name(metadata.path.stem + "-frame-analysis-r3.json")),
             "JSON (*.json)",
         )
@@ -663,11 +659,11 @@ class SmartSelectionStudio(QWidget):
         except OSError as exc:
             QMessageBox.critical(
                 self,
-                "Errore salvataggio",
+                'Save Error',
                 str(exc),
             )
             return
-        self.status_message.emit("Rapporto R3 esportato.")
+        self.status_message.emit('R3 report exported.')
 
     def _apply_profile_default(self) -> None:
         profile = str(self.profile_combo.currentData())

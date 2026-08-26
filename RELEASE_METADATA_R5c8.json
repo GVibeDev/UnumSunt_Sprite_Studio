@@ -1,0 +1,28 @@
+{
+  "project": "Unum Sunt Sprite Studio",
+  "version": "R5c8",
+  "windows_product_version": "5.8.0.0",
+  "milestone": "International Release UX",
+  "platform": "Windows x64",
+  "core_license": "GPL-3.0-or-later",
+  "language": "English",
+  "validated_baseline": "R5c7",
+  "automated_regression": {
+    "tests": 329,
+    "status": "passed",
+    "compileall": "passed"
+  },
+  "manual_validation": "required before public binary publication",
+  "artifacts": {
+    "setup": "UnumSunt_Sprite_Studio_R5c8_Setup_x64.exe",
+    "standalone": "UnumSunt_Sprite_Studio_R5c8_Windows_x64_Standalone.zip",
+    "source": "UnumSunt_Sprite_Studio_R5c8_Source.zip"
+  },
+  "installer": {
+    "script": "installer/UnumSuntSpriteStudio_R5c8.iss",
+    "gpl_presentation": "informational notice",
+    "notice": "OPEN_SOURCE_LICENSE_NOTICE.txt",
+    "english_only": true,
+    "app_id_preserved": "{5F2F2D9A-6C3C-4D0A-A0D4-2D9EF36D5D42}"
+  }
+}

@@ -29,7 +29,7 @@ class VideoSource:
     @property
     def metadata(self) -> VideoMetadata:
         if self._metadata is None:
-            raise VideoOpenError("Nessuna sorgente aperta.")
+            raise VideoOpenError('No source is open.')
         return self._metadata
 
     @property
@@ -50,13 +50,13 @@ class VideoSource:
         self.close()
         video_path = Path(path).expanduser().resolve()
         if not video_path.exists() or not video_path.is_file():
-            raise VideoOpenError(f"File video inesistente: {video_path}")
+            raise VideoOpenError(f'Video file does not exist: {video_path}')
 
         capture = cv2.VideoCapture(str(video_path))
         if not capture.isOpened():
             capture.release()
             raise VideoOpenError(
-                "Impossibile aprire il video. Verificare codec, integrità del file e installazione OpenCV."
+                'Unable to open the video. Check the codec, file integrity, and OpenCV installation.'
             )
 
         width = int(round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)))
@@ -66,13 +66,13 @@ class VideoSource:
 
         if width <= 0 or height <= 0:
             capture.release()
-            raise VideoOpenError("Il video non dichiara dimensioni valide.")
+            raise VideoOpenError('The video does not report valid dimensions.')
         if fps <= 0 or fps > 1000:
             capture.release()
-            raise VideoOpenError("Il video non dichiara un frame rate valido.")
+            raise VideoOpenError('The video does not report a valid frame rate.')
         if frame_count <= 0:
             capture.release()
-            raise VideoOpenError("Il video non dichiara un numero di fotogrammi valido.")
+            raise VideoOpenError('The video does not report a valid frame count.')
 
         self._capture = capture
         self._metadata = VideoMetadata(
@@ -101,29 +101,28 @@ class VideoSource:
         self.close()
         paths = [Path(value).expanduser().resolve() for value in frame_paths]
         if not paths:
-            raise VideoOpenError('La sequenza non contiene frame.')
+            raise VideoOpenError('The sequence contains no frames.')
         for path in paths:
             if not path.exists() or not path.is_file():
-                raise VideoOpenError(f'Frame sequenza inesistente: {path}')
+                raise VideoOpenError(f'Sequence frame does not exist: {path}')
         fps = float(fps)
         if fps <= 0 or fps > 1000:
-            raise VideoOpenError('FPS sequenza non valido.')
+            raise VideoOpenError('Invalid sequence FPS.')
 
         first = cv2.imread(str(paths[0]), cv2.IMREAD_UNCHANGED)
         if first is None:
-            raise VideoOpenError(f'Impossibile leggere il frame: {paths[0]}')
+            raise VideoOpenError(f'Unable to read frame: {paths[0]}')
         height, width = first.shape[:2]
         if width <= 0 or height <= 0:
-            raise VideoOpenError('Dimensioni frame sequenza non valide.')
+            raise VideoOpenError('Invalid sequence frame dimensions.')
         # The existing R1/R2/R3 pipeline requires one stable source geometry.
         for path in paths[1:]:
             image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
             if image is None:
-                raise VideoOpenError(f'Impossibile leggere il frame: {path}')
+                raise VideoOpenError(f'Unable to read frame: {path}')
             if image.shape[:2] != (height, width):
                 raise VideoOpenError(
-                    f'Frame con dimensioni incompatibili: {path.name} = {image.shape[1]}×{image.shape[0]}, '
-                    f'atteso {width}×{height}.'
+                    f'Frame with incompatible dimensions: {path.name} = {image.shape[1]}×{image.shape[0]}, expected {width}×{height}.'
                 )
 
         logical_path = Path(source_path).expanduser().resolve() if source_path is not None else paths[0]
@@ -146,7 +145,7 @@ class VideoSource:
         try:
             payload = load_sequence_manifest(manifest_path)
         except Exception as exc:
-            raise VideoOpenError(f'Manifest sequenza non valido: {exc}') from exc
+            raise VideoOpenError(f'Invalid sequence manifest: {exc}') from exc
         source_path = payload.get('source_sheet') or payload['manifest_path']
         return self.open_frame_sequence(
             payload['frame_paths'],
@@ -174,7 +173,7 @@ class VideoSource:
 
     def get_frame_rgba(self, frame_index: int) -> np.ndarray:
         if not self.is_open:
-            raise VideoOpenError("Nessuna sorgente aperta.")
+            raise VideoOpenError('No source is open.')
         metadata = self.metadata
         index = min(max(int(frame_index), 0), metadata.frame_count - 1)
         cached = self._rgba_cache.get(index)
@@ -185,7 +184,7 @@ class VideoSource:
         if self._source_kind == 'sequence':
             raw = cv2.imread(str(self._sequence_paths[index]), cv2.IMREAD_UNCHANGED)
             if raw is None:
-                raise VideoOpenError(f'Impossibile decodificare il frame importato {index}.')
+                raise VideoOpenError(f'Unable to decode imported frame {index}.')
             if raw.ndim == 2:
                 rgb = cv2.cvtColor(raw, cv2.COLOR_GRAY2RGB)
                 alpha = np.full(rgb.shape[:2] + (1,), 255, dtype=np.uint8)
@@ -197,7 +196,7 @@ class VideoSource:
                 alpha = np.full(rgb.shape[:2] + (1,), 255, dtype=np.uint8)
                 rgba = np.concatenate([rgb, alpha], axis=2)
             else:
-                raise VideoOpenError(f'Formato frame importato non supportato: {self._sequence_paths[index]}')
+                raise VideoOpenError(f'Unsupported imported frame format: {self._sequence_paths[index]}')
         else:
             rgb = self.get_frame_rgb(index)
             alpha = np.full(rgb.shape[:2] + (1,), 255, dtype=np.uint8)
@@ -207,7 +206,7 @@ class VideoSource:
 
     def get_frame_rgb(self, frame_index: int) -> np.ndarray:
         if not self.is_open:
-            raise VideoOpenError("Nessuna sorgente aperta.")
+            raise VideoOpenError('No source is open.')
 
         metadata = self.metadata
         index = min(max(int(frame_index), 0), metadata.frame_count - 1)
@@ -225,11 +224,11 @@ class VideoSource:
             return rgb
 
         if self._capture is None:
-            raise VideoOpenError("Nessun video aperto.")
+            raise VideoOpenError('No video is open.')
         self._capture.set(cv2.CAP_PROP_POS_FRAMES, index)
         ok, frame_bgr = self._capture.read()
         if not ok or frame_bgr is None:
-            raise VideoOpenError(f"Impossibile decodificare il fotogramma {index}.")
+            raise VideoOpenError(f'Unable to decode frame {index}.')
 
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         self._cache_put(self._cache, index, frame_rgb)

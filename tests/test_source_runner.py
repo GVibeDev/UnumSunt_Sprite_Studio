@@ -18,7 +18,7 @@ class SourceRunnerTests(unittest.TestCase):
         self.assertIn('run_windows.ps1', self.batch)
 
     def test_source_runner_recreates_incompatible_venv(self):
-        self.assertIn(".venv usa un Python non supportato o e corrotto", self.script)
+        self.assertIn(".venv uses an unsupported or corrupted Python runtime", self.script)
         self.assertIn('Remove-Item -Recurse -Force $venv', self.script)
 
     def test_source_runner_uses_resolved_venv_python_for_pip_and_main(self):

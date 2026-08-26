@@ -55,12 +55,12 @@ class SelectedFramesPlayer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         source_row = QHBoxLayout()
-        source_row.addWidget(QLabel("Sequenza"))
+        source_row.addWidget(QLabel("Sequence"))
         self.source_combo = QComboBox()
         self.source_combo.addItems(
             [
-                "Frame spuntati R3",
-                "Selezione manuale R1",
+                'R3 checked frames',
+                'Manual R1 Selection',
             ]
         )
         self.source_combo.currentIndexChanged.connect(
@@ -75,12 +75,12 @@ class SelectedFramesPlayer(QWidget):
 
         transport = QHBoxLayout()
         self.previous_button = QPushButton("⏮")
-        self.previous_button.setToolTip("Frame precedente")
+        self.previous_button.setToolTip('Previous frame')
         self.previous_button.clicked.connect(self.previous_frame)
-        self.play_button = QPushButton("▶ Riproduci")
+        self.play_button = QPushButton("▶ Play")
         self.play_button.clicked.connect(self.toggle_playback)
         self.next_button = QPushButton("⏭")
-        self.next_button.setToolTip("Frame successivo")
+        self.next_button.setToolTip('Next Frame')
         self.next_button.clicked.connect(self.next_frame)
         self.loop_checkbox = QCheckBox("Loop")
         self.loop_checkbox.setChecked(True)
@@ -93,7 +93,7 @@ class SelectedFramesPlayer(QWidget):
         layout.addLayout(transport)
 
         speed_row = QHBoxLayout()
-        speed_row.addWidget(QLabel("Velocità"))
+        speed_row.addWidget(QLabel('Speed'))
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setRange(1, 30)
         self.speed_slider.setValue(10)
@@ -113,7 +113,7 @@ class SelectedFramesPlayer(QWidget):
         )
         layout.addWidget(self.position_slider)
 
-        self.frame_label = QLabel("Nessun frame nella sequenza")
+        self.frame_label = QLabel('No frames in sequence')
         self.frame_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.frame_label)
 
@@ -137,8 +137,8 @@ class SelectedFramesPlayer(QWidget):
         self._r3_indices.clear()
         self._cache.clear()
         self._position = 0
-        self.preview.clear_preview("Nessun video caricato")
-        self.frame_label.setText("Nessun frame nella sequenza")
+        self.preview.clear_preview('No video loaded')
+        self.frame_label.setText('No frames in sequence')
         self._refresh_controls()
 
     def current_indices(self) -> list[int]:
@@ -175,8 +175,8 @@ class SelectedFramesPlayer(QWidget):
         try:
             preview_rgb = self._load_preview(int(frame_index))
         except Exception as exc:
-            self.preview.clear_preview("Errore preview")
-            self.frame_label.setText(f"Errore frame {frame_index}: {exc}")
+            self.preview.clear_preview('Preview Error')
+            self.frame_label.setText(f'Frame Error {frame_index}: {exc}')
             self.status_message.emit(str(exc))
             return
         self.preview.set_preview_pixmap(
@@ -184,7 +184,7 @@ class SelectedFramesPlayer(QWidget):
             preview_rgb.shape[1],
             preview_rgb.shape[0],
         )
-        self.frame_label.setText(f"Frame {int(frame_index)} · anteprima singola")
+        self.frame_label.setText(f'Frame {int(frame_index)} · single preview')
         self.frame_requested.emit(int(frame_index))
 
     def toggle_playback(self) -> None:
@@ -194,11 +194,11 @@ class SelectedFramesPlayer(QWidget):
         if not self.current_indices():
             return
         self.timer.start(self._interval_ms())
-        self.play_button.setText("■ Pausa")
+        self.play_button.setText("■ Pause")
 
     def stop(self) -> None:
         self.timer.stop()
-        self.play_button.setText("▶ Riproduci")
+        self.play_button.setText("▶ Play")
 
     def previous_frame(self) -> None:
         indices = self.current_indices()
@@ -274,16 +274,16 @@ class SelectedFramesPlayer(QWidget):
         self._refresh_controls()
         frame_index = self.current_frame_index()
         if frame_index is None:
-            self.preview.clear_preview("Nessun frame nella sequenza")
-            self.frame_label.setText("Nessun frame nella sequenza")
+            self.preview.clear_preview('No frames in sequence')
+            self.frame_label.setText('No frames in sequence')
             return
 
         try:
             preview_rgb = self._load_preview(frame_index)
         except Exception as exc:
             self.stop()
-            self.preview.clear_preview("Errore preview")
-            self.frame_label.setText(f"Errore frame {frame_index}: {exc}")
+            self.preview.clear_preview('Preview Error')
+            self.frame_label.setText(f'Frame Error {frame_index}: {exc}')
             self.status_message.emit(str(exc))
             return
 
@@ -338,7 +338,7 @@ class SelectedFramesPlayer(QWidget):
         contiguous = np.ascontiguousarray(image_rgb)
         height, width, channels = contiguous.shape
         if channels != 3:
-            raise ValueError("La preview richiede un'immagine RGB.")
+            raise ValueError('The preview requires an RGB image.')
         qimage = QImage(
             contiguous.data,
             width,

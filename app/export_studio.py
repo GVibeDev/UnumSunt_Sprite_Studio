@@ -60,70 +60,69 @@ class ExportStudio(QWidget):
         layout = QVBoxLayout(content)
 
         intro = QLabel(
-            'R5e4 Export Studio — maschera finale di produzione. Consente di esportare frame singoli e sprite sheet '\
-            'a partire dalla selezione R1 o dai frame allineati R2, con layout, scala finale e sfondo modulabili.'
+            'R5e4 Export Studio — final production output. Export individual frames and sprite sheets from the R1 selection or aligned R2 frames, with configurable layout, final scale, and background.'
         )
         intro.setWordWrap(True)
         intro.setStyleSheet('QLabel { color: #f4f6f8; padding: 10px; background: #24313a; border: 1px solid #536b78; }')
         layout.addWidget(intro)
 
-        profiles_group = QGroupBox('Profili export')
+        profiles_group = QGroupBox('Export Profiles')
         profiles_form = QFormLayout(profiles_group)
         self.export_profile_combo = QComboBox()
         profile_actions = QWidget()
         profile_row = QHBoxLayout(profile_actions)
         profile_row.setContentsMargins(0, 0, 0, 0)
-        load_button = QPushButton('Carica')
-        save_button = QPushButton('Salva corrente')
-        delete_button = QPushButton('Elimina')
+        load_button = QPushButton('Load')
+        save_button = QPushButton('Save Current')
+        delete_button = QPushButton('Delete')
         load_button.clicked.connect(self._load_selected_export_profile)
         save_button.clicked.connect(self._save_current_export_profile_as)
         delete_button.clicked.connect(self._delete_selected_export_profile)
         profile_row.addWidget(load_button)
         profile_row.addWidget(delete_button)
         profile_row.addWidget(save_button)
-        profiles_form.addRow('Profilo', self.export_profile_combo)
+        profiles_form.addRow('Profile', self.export_profile_combo)
         profiles_form.addRow('', profile_actions)
         layout.addWidget(profiles_group)
 
-        source_group = QGroupBox('Sorgente e destinazione')
+        source_group = QGroupBox('Source and Destination')
         source_form = QFormLayout(source_group)
         self.source_combo = QComboBox()
-        self.source_combo.addItem('Frame selezionati R1 (raw/chroma)', 'raw')
-        self.source_combo.addItem('Frame allineati R2', 'aligned')
+        self.source_combo.addItem('R1 selected frames (raw/chroma)', 'raw')
+        self.source_combo.addItem('R2 aligned frames', 'aligned')
         self.base_name_edit = QLineEdit('walk-se')
         self.output_format_combo = QComboBox(); self.output_format_combo.addItems(['PNG', 'WebP lossless'])
-        self.output_path_label = QLabel('La cartella viene chiesta al momento dell’export')
+        self.output_path_label = QLabel('The folder is selected when you export')
         self.output_path_label.setWordWrap(True)
-        source_form.addRow('Sorgente', self.source_combo)
-        source_form.addRow('Nome base output', self.base_name_edit)
-        source_form.addRow('Formato', self.output_format_combo)
-        source_form.addRow('Destinazione', self.output_path_label)
+        source_form.addRow('Source', self.source_combo)
+        source_form.addRow('Output base name', self.base_name_edit)
+        source_form.addRow('Format', self.output_format_combo)
+        source_form.addRow('Destination', self.output_path_label)
         layout.addWidget(source_group)
 
-        product_group = QGroupBox('Prodotti da generare')
+        product_group = QGroupBox('Outputs to Generate')
         product_form = QFormLayout(product_group)
-        self.include_frames_checkbox = QCheckBox('Esporta frame singoli')
+        self.include_frames_checkbox = QCheckBox('Export Individual Frames')
         self.include_frames_checkbox.setChecked(True)
-        self.include_sheet_checkbox = QCheckBox('Esporta sprite sheet')
+        self.include_sheet_checkbox = QCheckBox('Export Sprite Sheet')
         self.include_sheet_checkbox.setChecked(True)
-        self.sheet_layout_combo = QComboBox(); self.sheet_layout_combo.addItems(['In linea', 'Galleria / Griglia', 'Verticale'])
+        self.sheet_layout_combo = QComboBox(); self.sheet_layout_combo.addItems(['Inline', 'Gallery / Grid', 'Vertical'])
         self.sheet_columns_spin = QSpinBox(); self.sheet_columns_spin.setRange(1, 64); self.sheet_columns_spin.setValue(8)
         self.sheet_padding_spin = QSpinBox(); self.sheet_padding_spin.setRange(0, 128); self.sheet_padding_spin.setValue(0)
         product_form.addRow('', self.include_frames_checkbox)
         product_form.addRow('', self.include_sheet_checkbox)
         product_form.addRow('Layout sheet', self.sheet_layout_combo)
-        product_form.addRow('Colonne griglia', self.sheet_columns_spin)
+        product_form.addRow('Grid Columns', self.sheet_columns_spin)
         product_form.addRow('Spaziatura', self.sheet_padding_spin)
         layout.addWidget(product_group)
 
-        transform_group = QGroupBox('Risoluzione finale e sfondo')
+        transform_group = QGroupBox('Final Resolution and Background')
         transform_form = QFormLayout(transform_group)
         self.scale_factor_spin = QSpinBox(); self.scale_factor_spin.setRange(1, 8); self.scale_factor_spin.setValue(1)
         self.background_mode_combo = QComboBox()
-        self.background_mode_combo.addItem('Trasparente', 'transparent')
+        self.background_mode_combo.addItem('Transparent', 'transparent')
         self.background_mode_combo.addItem('Pieno', 'solid')
-        self.background_button = QPushButton('Scegli colore')
+        self.background_button = QPushButton('Choose Color')
         self.background_swatch = QLabel('')
         self.background_swatch.setFixedWidth(48)
         self.background_button.clicked.connect(self._pick_background_color)
@@ -133,14 +132,14 @@ class ExportStudio(QWidget):
         color_layout.addWidget(self.background_button)
         color_layout.addWidget(self.background_swatch)
         color_layout.addStretch(1)
-        transform_form.addRow('Scala finale', self.scale_factor_spin)
-        transform_form.addRow('Sfondo', self.background_mode_combo)
-        transform_form.addRow('Colore sfondo', color_row)
+        transform_form.addRow('Final scale', self.scale_factor_spin)
+        transform_form.addRow('Background', self.background_mode_combo)
+        transform_form.addRow('Background Color', color_row)
         layout.addWidget(transform_group)
         self._update_background_swatch()
 
         action_row = QHBoxLayout()
-        export_button = QPushButton('Esporta pacchetto finale')
+        export_button = QPushButton('Export Final Package')
         export_button.clicked.connect(self._export_package)
         action_row.addWidget(export_button)
         action_row.addStretch(1)
@@ -162,7 +161,7 @@ class ExportStudio(QWidget):
         self.background_swatch.setStyleSheet(f'QLabel {{ color: #f4f6f8; background: rgb({r}, {g}, {b}); border: 1px solid #777; }}')
 
     def _pick_background_color(self) -> None:
-        color = QColorDialog.getColor(QColor(*self.background_rgb), self, 'Colore sfondo export')
+        color = QColorDialog.getColor(QColor(*self.background_rgb), self, 'Export Background Color')
         if not color.isValid():
             return
         self.background_rgb = (color.red(), color.green(), color.blue())
@@ -226,13 +225,13 @@ class ExportStudio(QWidget):
             self._apply_export_profile_data(data, persist_last=False)
 
     def _save_current_export_profile_as(self) -> None:
-        name, ok = QInputDialog.getText(self, 'Salva profilo export', 'Nome profilo:')
+        name, ok = QInputDialog.getText(self, 'Save Export Profile', 'Profile name:')
         if not ok or not name.strip():
             return
         normalized = name.strip()
         self.profile_store.set_profile('export', normalized, self._capture_export_profile_data())
         self._refresh_export_profiles_combo(normalized)
-        self.status_message.emit(f'Profilo export salvato: {normalized}')
+        self.status_message.emit(f'Export profile saved: {normalized}')
 
     def _load_selected_export_profile(self) -> None:
         name = self.export_profile_combo.currentText().strip()
@@ -240,22 +239,22 @@ class ExportStudio(QWidget):
             return
         data = self.profile_store.get_profile('export', name)
         if data is None:
-            QMessageBox.information(self, 'Profilo non trovato', 'Il profilo export selezionato non è disponibile.')
+            QMessageBox.information(self, 'Profile Not Found', 'The selected export profile is not available.')
             self._refresh_export_profiles_combo()
             return
         self._apply_export_profile_data(data)
-        self.status_message.emit(f'Profilo export caricato: {name}')
+        self.status_message.emit(f'Export profile loaded: {name}')
 
     def _delete_selected_export_profile(self) -> None:
         name = self.export_profile_combo.currentText().strip()
         if not name:
             return
-        answer = QMessageBox.question(self, 'Elimina profilo export', f'Eliminare il profilo "{name}"?')
+        answer = QMessageBox.question(self, 'Delete Export Profile', f'Delete profile "{name}"?')
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.profile_store.delete_profile('export', name)
         self._refresh_export_profiles_combo()
-        self.status_message.emit(f'Profilo export eliminato: {name}')
+        self.status_message.emit(f'Export profile deleted: {name}')
 
     def snapshot_state(self) -> dict:
         return self._capture_export_profile_data()
@@ -269,14 +268,14 @@ class ExportStudio(QWidget):
         try:
             source_payload = self._raw_frames_provider() if source_mode == 'raw' else self._aligned_frames_provider()
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore sorgente export', str(exc))
+            QMessageBox.critical(self, 'Export Source Error', str(exc))
             return
         rgba_frames = source_payload.get('rgba_frames')
         if not isinstance(rgba_frames, list) or not rgba_frames:
-            QMessageBox.information(self, 'Nessun frame', 'La sorgente selezionata non ha frame esportabili.')
+            QMessageBox.information(self, 'No Frames', 'The selected source has no exportable frames.')
             return
         suggested_dir = source_payload.get('suggested_output_dir') or source_payload.get('source_dir') or str(Path.home())
-        output_dir = QFileDialog.getExistingDirectory(self, 'Cartella export finale', str(suggested_dir))
+        output_dir = QFileDialog.getExistingDirectory(self, 'Final Export Folder', str(suggested_dir))
         if not output_dir:
             return
         layout_map = {0: 'horizontal', 1: 'grid', 2: 'vertical'}
@@ -300,13 +299,13 @@ class ExportStudio(QWidget):
                 metadata=source_payload.get('metadata', {}),
             )
         except ExportError as exc:
-            QMessageBox.critical(self, 'Errore export finale', str(exc))
+            QMessageBox.critical(self, 'Final Export Error', str(exc))
             return
-        message = [f'Esportati {manifest["frame_count"]} frame.']
+        message = [f"Exported {manifest['frame_count']} frame."]
         if manifest.get('sheet'):
             sheet = manifest['sheet']
             message.append(f"Sprite sheet: {sheet['layout']} · {sheet['columns']}×{sheet['rows']} · {sheet['width']}×{sheet['height']} px")
         message.append(f'Output in:\n{output_dir}')
-        QMessageBox.information(self, 'Export finale completato', '\n'.join(message))
+        QMessageBox.information(self, 'Final export completed', '\n'.join(message))
         self.export_completed.emit({'output_directory': str(output_dir), 'manifest': manifest})
-        self.status_message.emit('R5e4 Export Studio: esportazione completata.')
+        self.status_message.emit('R5e4 Export Studio: export completed.')

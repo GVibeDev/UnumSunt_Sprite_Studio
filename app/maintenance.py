@@ -145,7 +145,7 @@ class MaintenanceManager:
             str(ckpts or ""),
         ))
         if state.ownership == "external":
-            report.warnings.append("Runtime esterno/adottato: repair e delete distruttivi sono disabilitati.")
+            report.warnings.append('External/adopted runtime: destructive repair and delete operations are disabled.')
         return report
 
     def repair_managed_runtime(self, *, accept_anaconda_tos: bool = False) -> MaintenanceReport:
@@ -158,7 +158,7 @@ class MaintenanceManager:
             report.status = "protected"
             report.actions.append(MaintenanceAction(
                 "runtime.repair", "skipped",
-                "Runtime esterno/adottato: nessuna modifica eseguita.",
+                'External/adopted runtime: no changes made.',
             ))
             return report
 
@@ -180,7 +180,7 @@ class MaintenanceManager:
         report.model_root = result.model_root
         report.actions.append(MaintenanceAction(
             "runtime.repair", result.status,
-            "Runtime base riparato/aggiornato; checkpoint esistenti preservati.",
+            'Base runtime repaired/updated; existing checkpoints preserved.',
         ))
         report.status = "ok" if result.status in {"ready", "warning"} else result.status
         return report
@@ -200,7 +200,7 @@ class MaintenanceManager:
 
         if state.ownership == "external" and (remove_managed_runtime or remove_managed_models):
             report.warnings.append(
-                "Runtime esterno/adottato protetto: nessuna cartella WanGP o modello esterno è stata cancellata."
+                'External/adopted runtime protected: no external WanGP folder or model was deleted.'
             )
             if remove_managed_runtime:
                 report.actions.append(MaintenanceAction("runtime.remove", "protected", state.runtime_root))
@@ -213,7 +213,7 @@ class MaintenanceManager:
 
             if remove_managed_models:
                 if ckpts_root is None or not _safe_managed_target(ckpts_root):
-                    raise MaintenanceError(f"Percorso checkpoint non sicuro: {ckpts_root}")
+                    raise MaintenanceError(f'Unsafe checkpoint path: {ckpts_root}')
                 reused_records = {
                     model_id: record for model_id, record in state.models.items()
                     if isinstance(record, dict) and str(record.get("ownership", "")).lower() in {"reused", "external"}
@@ -237,7 +237,7 @@ class MaintenanceManager:
                             ckpts_resolved = ckpts_root.resolve()
                             candidate_resolved.relative_to(ckpts_resolved)
                         except Exception:
-                            report.warnings.append(f"Checkpoint gestito fuori dalla root attesa, preservato: {candidate}")
+                            report.warnings.append(f'Managed checkpoint outside the expected root, preserved: {candidate}')
                             continue
                         if candidate.is_file():
                             candidate.unlink()
@@ -247,7 +247,7 @@ class MaintenanceManager:
                         "models.remove", "removed_partial" if removed_any else "preserved", str(ckpts_root)
                     ))
                     report.warnings.append(
-                        "Checkpoint preesistenti/riutilizzati rilevati: la cartella wangp_ckpts è stata preservata e sono stati rimossi solo i modelli esplicitamente gestiti."
+                        'Pre-existing/reused checkpoints detected: the wangp_ckpts folder was preserved and only explicitly managed models were removed.'
                     )
                 else:
                     removed = _remove_if_exists(ckpts_root)
@@ -258,7 +258,7 @@ class MaintenanceManager:
 
             if remove_managed_runtime:
                 if runtime_root is None or not _safe_managed_target(runtime_root):
-                    raise MaintenanceError(f"Percorso runtime non sicuro: {runtime_root}")
+                    raise MaintenanceError(f'Unsafe runtime path: {runtime_root}')
                 removed = _remove_if_exists(runtime_root)
                 report.actions.append(MaintenanceAction(
                     "runtime.remove", "removed" if removed else "already_missing", str(runtime_root)
@@ -272,7 +272,7 @@ class MaintenanceManager:
                 state.env_root = ""
                 state.wangp_root = ""
         elif remove_managed_runtime or remove_managed_models:
-            report.warnings.append("Nessun runtime gestito registrato: nulla da rimuovere.")
+            report.warnings.append('No managed runtime registered: nothing to remove.')
 
         if remove_user_data:
             self._purge_user_data(
@@ -333,13 +333,13 @@ class MaintenanceManager:
             try:
                 target.unlink(missing_ok=True)
             except OSError as exc:
-                report.warnings.append(f"Impossibile rimuovere {target}: {exc}")
+                report.warnings.append(f'Unable to remove {target}: {exc}')
                 continue
             report.actions.append(MaintenanceAction(
                 "userdata.config", "removed" if existed else "already_missing", str(target)
             ))
 
         if preserve_runtime:
-            report.warnings.append("Runtime gestito preservato durante la pulizia dei dati applicativi.")
+            report.warnings.append('Managed runtime preserved while cleaning application data.')
         if preserve_models:
-            report.warnings.append("Checkpoint gestiti preservati durante la pulizia dei dati applicativi.")
+            report.warnings.append('Managed checkpoints preserved while cleaning application data.')

@@ -13,8 +13,8 @@ from app.version import APP_VERSION, WINDOWS_PRODUCT_VERSION
 
 class R5c7ReleaseHardeningTests(unittest.TestCase):
     def test_version_identity_is_r5c7(self):
-        self.assertEqual(APP_VERSION, "R5c7")
-        self.assertEqual(WINDOWS_PRODUCT_VERSION, "5.7.0.0")
+        self.assertEqual(APP_VERSION, "R5c8")
+        self.assertEqual(WINDOWS_PRODUCT_VERSION, "5.8.0.0")
 
     def test_wangp_and_krea_revisions_are_immutable(self):
         manifest = load_runtime_components_manifest()

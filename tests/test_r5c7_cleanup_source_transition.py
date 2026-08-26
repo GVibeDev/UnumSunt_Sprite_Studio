@@ -16,7 +16,7 @@ class R5c7CleanupSourceTransitionTests(unittest.TestCase):
     def test_cleanup_has_explicit_source_transition_quiesce(self):
         self.assertIn('def prepare_source_change(self) -> None:', self.cleanup)
         self.assertIn('self._source_transition = True', self.cleanup)
-        self.assertIn("self.info_label.setText('Cambio sorgente in corso…')", self.cleanup)
+        self.assertIn("self.info_label.setText('Switching source…')", self.cleanup)
 
     def test_current_item_handler_does_not_repopulate_its_own_list(self):
         start = self.cleanup.index('def _on_frame_item_changed')

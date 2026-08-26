@@ -42,7 +42,7 @@ class BrandingIntegrationTests(unittest.TestCase):
 
     def test_installer_uses_branded_setup_assets(self):
         root = Path(__file__).resolve().parents[1]
-        iss = (root / 'installer' / 'UnumSuntSpriteStudio_R5c7.iss').read_text(encoding='utf-8')
+        iss = (root / 'installer' / 'UnumSuntSpriteStudio_R5c8.iss').read_text(encoding='utf-8')
         self.assertIn('SetupIconFile=..\\assets\\branding\\app_icon.ico', iss)
         self.assertIn(f'WizardImageFile=..\\assets\\branding\\{INSTALLER_WIZARD_NAME}', iss)
         self.assertIn(f'WizardSmallImageFile=..\\assets\\branding\\{INSTALLER_WIZARD_SMALL_NAME}', iss)

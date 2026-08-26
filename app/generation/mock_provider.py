@@ -41,18 +41,18 @@ class MockVideoProvider(VideoGeneratorProvider):
     def validate_request(self, request: GenerationRequest) -> None:
         if request.task != "image_to_video":
             raise InvalidGenerationRequestError(
-                "Il mock R5b supporta soltanto image_to_video."
+                'The R5b mock supports image_to_video only.'
             )
         if request.width < 96 or request.height < 96:
             raise InvalidGenerationRequestError(
-                "La risoluzione minima del mock è 96×96."
+                'The minimum mock resolution is 96×96.'
             )
         if request.frames < 4 or request.frames > 600:
             raise InvalidGenerationRequestError(
-                "Il numero di frame deve essere compreso tra 4 e 600."
+                'The frame count must be between 4 and 600.'
             )
         if request.fps <= 0 or request.fps > 120:
-            raise InvalidGenerationRequestError("FPS non validi.")
+            raise InvalidGenerationRequestError('Invalid FPS.')
 
     def run(
         self,
@@ -61,13 +61,13 @@ class MockVideoProvider(VideoGeneratorProvider):
     ) -> GenerationResult:
         self.validate_request(request)
         context.progress_callback(
-            GenerationProgress("validating", 0.03, "Validazione richiesta mock")
+            GenerationProgress("validating", 0.03, 'Validating mock request')
         )
         self._check_cancel(context)
 
         reference_rgba = self._load_reference(request.reference_image)
         context.progress_callback(
-            GenerationProgress("preprocessing", 0.10, "Preparazione immagine di riferimento")
+            GenerationProgress("preprocessing", 0.10, 'Preparing reference image')
         )
         time.sleep(0.08)
         self._check_cancel(context)
@@ -82,7 +82,7 @@ class MockVideoProvider(VideoGeneratorProvider):
         if not writer.isOpened():
             writer.release()
             raise OutputNotFoundError(
-                "OpenCV non è riuscito ad aprire il writer MP4V."
+                'OpenCV could not open the MP4V writer.'
             )
 
         rng = np.random.default_rng(int(request.seed))
@@ -104,7 +104,7 @@ class MockVideoProvider(VideoGeneratorProvider):
                     GenerationProgress(
                         state="denoising",
                         fraction=fraction,
-                        message=f"Simulazione frame {index + 1} di {request.frames}",
+                        message=f'Simulating frame {index + 1} di {request.frames}',
                         current_step=index + 1,
                         total_steps=request.frames,
                     )
@@ -115,12 +115,12 @@ class MockVideoProvider(VideoGeneratorProvider):
 
         self._check_cancel(context)
         context.progress_callback(
-            GenerationProgress("decoding", 0.91, "Finalizzazione video simulato")
+            GenerationProgress("decoding", 0.91, 'Finalizing simulated video')
         )
         time.sleep(0.08)
 
         if not output_path.exists() or output_path.stat().st_size <= 0:
-            raise OutputNotFoundError("Il mock non ha prodotto un MP4 valido.")
+            raise OutputNotFoundError('The mock did not produce a valid MP4.')
 
         manifest = {
             "schema": "unum-sunt-generation-manifest-v1",
@@ -145,7 +145,7 @@ class MockVideoProvider(VideoGeneratorProvider):
             encoding="utf-8",
         )
         context.progress_callback(
-            GenerationProgress("saving", 0.98, "Salvataggio manifest")
+            GenerationProgress("saving", 0.98, "Saving manifest")
         )
         time.sleep(0.05)
 
@@ -162,7 +162,7 @@ class MockVideoProvider(VideoGeneratorProvider):
     @staticmethod
     def _check_cancel(context: GenerationJobContext) -> None:
         if context.cancel_event.is_set():
-            raise GenerationCancelledError("Generazione annullata dall'utente.")
+            raise GenerationCancelledError('Generation cancelled by the user.')
 
     @staticmethod
     def _load_reference(path_value: str | None) -> np.ndarray | None:

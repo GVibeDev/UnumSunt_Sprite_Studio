@@ -226,7 +226,7 @@ class AlignmentCanvas(QWidget):
     @staticmethod
     def _rgba_to_qimage(rgba: np.ndarray) -> QImage:
         if rgba.ndim != 3 or rgba.shape[2] != 4:
-            raise ValueError("È richiesta un'immagine RGBA.")
+            raise ValueError('An RGBA image is required.')
         contiguous = np.ascontiguousarray(rgba)
         height, width, _ = contiguous.shape
         return QImage(

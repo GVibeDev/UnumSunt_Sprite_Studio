@@ -91,11 +91,11 @@ def estimate_ground_pivot(
     lower_band_fraction: float = 0.10,
 ) -> tuple[float, float]:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ValueError('È richiesta un\'immagine RGBA.')
+        raise ValueError('An RGBA image is required.')
     alpha = rgba[:, :, 3]
     ys, xs = np.nonzero(alpha > max(0, min(255, int(alpha_threshold))))
     if len(xs) == 0:
-        raise ValueError('La sagoma non contiene pixel opachi.')
+        raise ValueError('The subject mask contains no opaque pixels.')
     bottom_y = int(round(float(np.quantile(ys, 0.997))))
     bottom_y = min(bottom_y, int(ys.max()))
     band_height = max(2, int(round(rgba.shape[0] * lower_band_fraction)))
@@ -121,11 +121,11 @@ def estimate_geometric_anchor(
     robust_interior_weight: bool = True,
 ) -> tuple[float, float]:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ValueError('È richiesta un\'immagine RGBA.')
+        raise ValueError('An RGBA image is required.')
     alpha = rgba[:, :, 3].astype(np.float32)
     mask = alpha > alpha_threshold
     if not np.any(mask):
-        raise ValueError('La sagoma non contiene pixel opachi.')
+        raise ValueError('The subject mask contains no opaque pixels.')
     top_frac, bottom_frac = vertical_slice
     top_frac = float(np.clip(top_frac, 0.0, 1.0))
     bottom_frac = float(np.clip(bottom_frac, top_frac, 1.0))
@@ -171,13 +171,13 @@ def estimate_anchor_by_mode(rgba: np.ndarray, mode: str) -> tuple[float, float]:
         return estimate_geometric_anchor(rgba, vertical_slice=(0.0, 1.0), robust_interior_weight=True)
     if key == 'upper_body':
         return estimate_geometric_anchor(rgba, vertical_slice=(0.0, 0.45), robust_interior_weight=True)
-    raise ValueError(f'Modalità ancora non supportata: {mode}')
+    raise ValueError(f'Mode not supported yet: {mode}')
 
 
 def calculate_shared_fit_scale(subjects: Mapping[int, SubjectFrame], states: Mapping[int, FrameAlignmentState], settings: AlignmentSettings) -> float:
     settings.validate()
     if not subjects:
-        raise ValueError('Nessun fotogramma preparato.')
+        raise ValueError('No frames prepared.')
     available_left = max(1e-6, settings.canvas_pivot_x - settings.margin)
     available_right = max(1e-6, settings.canvas_width - settings.canvas_pivot_x - settings.margin)
     available_top = max(1e-6, settings.canvas_pivot_y - settings.margin)
@@ -196,16 +196,16 @@ def calculate_shared_fit_scale(subjects: Mapping[int, SubjectFrame], states: Map
         if top_extent > 0: ratios.append(available_top / top_extent)
         if bottom_extent > 0: ratios.append(available_bottom / bottom_extent)
     if not ratios:
-        raise ValueError('Impossibile calcolare la scala condivisa.')
+        raise ValueError('Unable to calculate the shared scale.')
     return float(np.clip(min(ratios), 0.005, 64.0))
 
 
 @perf_instrument('alignment.resize_rgba_alpha_aware')
 def resize_rgba_alpha_aware(rgba: np.ndarray, scale: float) -> np.ndarray:
     if rgba.ndim != 3 or rgba.shape[2] != 4 or rgba.dtype != np.uint8:
-        raise ValueError('È richiesta un\'immagine RGBA uint8.')
+        raise ValueError('An RGBA uint8 image is required.')
     if scale <= 0:
-        raise ValueError('La scala deve essere positiva.')
+        raise ValueError('Scale must be positive.')
     source_h, source_w = rgba.shape[:2]
     target_w = max(1, int(round(source_w * scale)))
     target_h = max(1, int(round(source_h * scale)))
@@ -266,12 +266,12 @@ def render_aligned_frame(subject: SubjectFrame, state: FrameAlignmentState, sett
 def create_spritesheet(frames: Iterable[np.ndarray], layout: str = 'horizontal', columns: int = 8, padding: int = 0) -> tuple[np.ndarray, list[dict], int, int]:
     frame_list = [np.asarray(frame) for frame in frames]
     if not frame_list:
-        raise ValueError('Nessun frame per lo sprite sheet.')
+        raise ValueError('No frames available for the sprite sheet.')
     first_shape = frame_list[0].shape
     if len(first_shape) != 3 or first_shape[2] != 4:
-        raise ValueError('I frame devono essere RGBA.')
+        raise ValueError('Frames must be RGBA.')
     if any(frame.shape != first_shape for frame in frame_list):
-        raise ValueError('Tutti i frame devono avere le stesse dimensioni.')
+        raise ValueError('All frames must have the same dimensions.')
     frame_h, frame_w = first_shape[:2]
     count = len(frame_list)
     layout_key = layout.lower().strip()
@@ -283,7 +283,7 @@ def create_spritesheet(frames: Iterable[np.ndarray], layout: str = 'horizontal',
     elif layout_key == 'grid':
         column_count = max(1, min(count, int(columns))); row_count = int(ceil(count / column_count))
     else:
-        raise ValueError(f'Layout sprite sheet non supportato: {layout}')
+        raise ValueError(f'Unsupported sprite sheet layout: {layout}')
     sheet_w = column_count * frame_w + max(0, column_count - 1) * gap
     sheet_h = row_count * frame_h + max(0, row_count - 1) * gap
     sheet = np.zeros((sheet_h, sheet_w, 4), dtype=np.uint8)
@@ -300,7 +300,7 @@ def create_spritesheet(frames: Iterable[np.ndarray], layout: str = 'horizontal',
 
 def alpha_bounding_box(rgba: np.ndarray, threshold: int = 8) -> tuple[int, int, int, int] | None:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ValueError('È richiesta un\'immagine RGBA.')
+        raise ValueError('An RGBA image is required.')
     ys, xs = np.nonzero(rgba[:, :, 3] > threshold)
     if len(xs) == 0:
         return None

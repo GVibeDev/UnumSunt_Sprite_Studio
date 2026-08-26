@@ -4,10 +4,10 @@ cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_setup_windows.ps1" %*
 if errorlevel 1 (
   echo.
-  echo BUILD SETUP R5c7 FALLITA.
+  echo R5c8 SETUP BUILD FAILED.
   pause
   exit /b 1
 )
 echo.
-echo Build Setup R5c7 completata.
+echo R5c8 Setup build completed.
 pause

@@ -15,7 +15,7 @@ class ProviderRegistry:
     def register(self, provider: MediaGeneratorProvider) -> None:
         provider_id = provider.provider_id.strip()
         if not provider_id:
-            raise ValueError("Il provider deve dichiarare un provider_id.")
+            raise ValueError('The provider must declare a provider_id.')
         self._providers[provider_id] = provider
 
     def get(self, provider_id: str) -> MediaGeneratorProvider:
@@ -23,7 +23,7 @@ class ProviderRegistry:
             return self._providers[provider_id]
         except KeyError as exc:
             raise ProviderUnavailableError(
-                f"Provider non registrato: {provider_id}"
+                f'Unregistered provider: {provider_id}'
             ) from exc
 
     def list(self) -> list[MediaGeneratorProvider]:

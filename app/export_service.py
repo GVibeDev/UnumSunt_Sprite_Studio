@@ -40,7 +40,7 @@ def save_rgba_image(
             method=6,
         )
     else:
-        raise ExportError(f"Formato non supportato: {output_format}")
+        raise ExportError(f'Unsupported format: {output_format}')
 
     return path
 
@@ -52,12 +52,12 @@ def apply_background_to_rgba(
     background_rgb: tuple[int, int, int] = (0, 0, 0),
 ) -> np.ndarray:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ExportError('È richiesta un\'immagine RGBA.')
+        raise ExportError('An RGBA image is required.')
     mode_key = mode.lower().strip()
     if mode_key == 'transparent':
         return rgba.copy()
     if mode_key != 'solid':
-        raise ExportError(f'Modalità sfondo non supportata: {mode}')
+        raise ExportError(f'Unsupported background mode: {mode}')
     alpha = rgba[:, :, 3:4].astype(np.float32) / 255.0
     fg = rgba[:, :, :3].astype(np.float32)
     bg = np.zeros_like(fg) + np.array(background_rgb, dtype=np.float32)
@@ -70,10 +70,10 @@ def apply_background_to_rgba(
 
 def scale_rgba_nearest(rgba: np.ndarray, factor: int = 1) -> np.ndarray:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ExportError('È richiesta un\'immagine RGBA.')
+        raise ExportError('An RGBA image is required.')
     factor = int(factor)
     if factor < 1 or factor > 16:
-        raise ExportError('Il fattore di scala deve essere compreso tra 1 e 16.')
+        raise ExportError('The scale factor must be between 1 and 16.')
     if factor == 1:
         return rgba.copy()
     return np.repeat(np.repeat(rgba, factor, axis=0), factor, axis=1)
@@ -98,18 +98,18 @@ def export_rgba_bundle(
     metadata: dict | None = None,
 ) -> dict:
     if not rgba_frames:
-        raise ExportError('Nessun frame RGBA da esportare.')
+        raise ExportError('No RGBA frames to export.')
     normalized_frames = [np.asarray(frame).copy() for frame in rgba_frames]
     first_shape = normalized_frames[0].shape
     if len(first_shape) != 3 or first_shape[2] != 4:
-        raise ExportError('I frame devono essere RGBA.')
+        raise ExportError('Frames must be RGBA.')
     if any(frame.shape != first_shape for frame in normalized_frames):
-        raise ExportError('Tutti i frame devono avere la stessa dimensione per l\'export finale.')
+        raise ExportError('All frames must have the same dimensions for final export.')
     output_dir = Path(output_directory).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     ext = output_format.lower().strip()
     if ext not in {'png', 'webp'}:
-        raise ExportError(f'Formato non supportato: {output_format}')
+        raise ExportError(f'Unsupported format: {output_format}')
     processed_frames = [
         scale_rgba_nearest(apply_background_to_rgba(frame, mode=background_mode, background_rgb=background_rgb), factor=scale_factor)
         for frame in normalized_frames
@@ -181,7 +181,7 @@ def export_selected_frames(
 ) -> dict:
     indices = sorted(set(int(index) for index in frame_indices))
     if not indices:
-        raise ExportError("Nessun fotogramma selezionato.")
+        raise ExportError('No frames selected.')
 
     output_dir = Path(output_directory).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -192,7 +192,7 @@ def export_selected_frames(
 
     for position, frame_index in enumerate(indices, start=1):
         if frame_index < 0 or frame_index >= video_metadata.frame_count:
-            raise ExportError(f"Indice fotogramma fuori intervallo: {frame_index}")
+            raise ExportError(f'Frame index out of range: {frame_index}')
 
         override = rgba_override_provider(frame_index) if rgba_override_provider is not None else None
         if override is not None:

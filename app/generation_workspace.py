@@ -86,8 +86,7 @@ class GenerationWorkspace(QWidget):
         root.setContentsMargins(10, 10, 10, 10)
 
         banner = QLabel(
-            'R5e12 — Generazione consolidata: contratto WanGP invariato, pannelli organizzati per attività e '
-            'campi responsivi per evitare compressioni. Frame 4n+1 e contratto FPS restano invariati.'
+            'R5e12 — Consolidated generation: the WanGP contract is unchanged, panels are organized by task, and fields remain responsive to avoid compression. The 4n+1 frame rule and FPS contract are unchanged.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet(
@@ -102,7 +101,7 @@ class GenerationWorkspace(QWidget):
         request_layout = QVBoxLayout(request_panel)
         request_layout.setContentsMargins(0, 0, 6, 0)
 
-        profiles_group = QGroupBox('Profili generazione')
+        profiles_group = QGroupBox('Generation Profiles')
         profiles_form = QFormLayout(profiles_group)
         self._configure_form_layout(profiles_form)
         self.generation_profile_combo = QComboBox()
@@ -110,16 +109,16 @@ class GenerationWorkspace(QWidget):
         profiles_actions = QWidget()
         profiles_actions_layout = QHBoxLayout(profiles_actions)
         profiles_actions_layout.setContentsMargins(0, 0, 0, 0)
-        self.load_generation_profile_button = QPushButton('Carica')
+        self.load_generation_profile_button = QPushButton('Load')
         self.load_generation_profile_button.clicked.connect(self._load_selected_generation_profile)
-        self.save_generation_profile_button = QPushButton('Salva corrente')
+        self.save_generation_profile_button = QPushButton('Save Current')
         self.save_generation_profile_button.clicked.connect(self._save_current_generation_profile_as)
-        self.delete_generation_profile_button = QPushButton('Elimina')
+        self.delete_generation_profile_button = QPushButton('Delete')
         self.delete_generation_profile_button.clicked.connect(self._delete_selected_generation_profile)
         profiles_actions_layout.addWidget(self.load_generation_profile_button)
         profiles_actions_layout.addWidget(self.delete_generation_profile_button)
         profiles_actions_layout.addWidget(self.save_generation_profile_button)
-        profiles_form.addRow('Profilo', self.generation_profile_combo)
+        profiles_form.addRow('Profile', self.generation_profile_combo)
         profiles_form.addRow('', profiles_actions)
         self.profiles_group = profiles_group
 
@@ -137,8 +136,8 @@ class GenerationWorkspace(QWidget):
         self.privacy_label.setWordWrap(True)
         self.privacy_label.setStyleSheet('color: #8fc9a4;')
         provider_form.addRow('Rendering engine', self.provider_combo)
-        provider_form.addRow('Modello', self.model_combo)
-        provider_form.addRow('Capacità', self.capabilities_label)
+        provider_form.addRow('Model', self.model_combo)
+        provider_form.addRow('Capabilities', self.capabilities_label)
         provider_form.addRow('Privacy', self.privacy_label)
         self.provider_group = provider_group
 
@@ -149,15 +148,15 @@ class GenerationWorkspace(QWidget):
         self.wangp_edit, wangp_row = self._path_row(self._choose_wangp_script)
         self.template_edit, template_row = self._path_row(self._choose_template)
         self.working_dir_edit, working_row = self._path_row(self._choose_working_directory, directory=True)
-        self.strict_python_checkbox = QCheckBox('Richiedi Python 3.11.x')
+        self.strict_python_checkbox = QCheckBox('Require Python 3.11.x')
         self.strict_python_checkbox.setChecked(True)
-        self.require_template_checkbox = QCheckBox('Richiedi template JSON WanGP')
+        self.require_template_checkbox = QCheckBox('Require WanGP JSON template')
         self.require_template_checkbox.setChecked(True)
         self.verbose_spin = QSpinBox(); self.verbose_spin.setRange(0, 5); self.verbose_spin.setValue(2)
         runtime_actions = QWidget()
         runtime_actions_layout = QHBoxLayout(runtime_actions)
         runtime_actions_layout.setContentsMargins(0, 0, 0, 0)
-        self.save_runtime_button = QPushButton('Salva configurazione')
+        self.save_runtime_button = QPushButton('Save Configuration')
         self.save_runtime_button.clicked.connect(self._save_local_config)
         self.health_button = QPushButton('Health check')
         self.health_button.clicked.connect(self._run_health_check)
@@ -172,14 +171,14 @@ class GenerationWorkspace(QWidget):
         runtime_form.addRow('Python executable', python_row)
         runtime_form.addRow('WanGP wgp.py', wangp_row)
         runtime_form.addRow('Settings template', template_row)
-        runtime_form.addRow('WanGP root (cartella di wgp.py)', working_row)
+        runtime_form.addRow('WanGP root (folder containing wgp.py)', working_row)
         runtime_form.addRow('Verbose', self.verbose_spin)
         runtime_form.addRow('', self.strict_python_checkbox)
         runtime_form.addRow('', self.require_template_checkbox)
         runtime_form.addRow('', runtime_actions)
         runtime_form.addRow('Report', self.health_report)
 
-        inputs_group = QGroupBox('Input e prompt')
+        inputs_group = QGroupBox('Input and Prompt')
         inputs_form = QFormLayout(inputs_group)
         self._configure_form_layout(inputs_form)
         self.reference_edit, reference_row = self._path_row(self._choose_reference)
@@ -192,7 +191,7 @@ class GenerationWorkspace(QWidget):
             'camera movement, scene cuts, changing identity, background objects'
         )
         self.negative_prompt.setFixedHeight(66)
-        self.background_button = QPushButton('Scegli colore richiesto')
+        self.background_button = QPushButton('Choose Requested Color')
         self.background_button.clicked.connect(self._choose_requested_background)
         self.background_swatch = QFrame()
         self.background_swatch.setMinimumHeight(28)
@@ -205,12 +204,12 @@ class GenerationWorkspace(QWidget):
         self._update_requested_background_swatch()
         inputs_form.addRow('Reference image', reference_row)
         inputs_form.addRow('Motion reference', motion_row)
-        inputs_form.addRow('Sfondo richiesto', background_row)
+        inputs_form.addRow('Requested Background', background_row)
         inputs_form.addRow('Positive prompt', self.positive_prompt)
         inputs_form.addRow('Negative prompt', self.negative_prompt)
         self.inputs_group = inputs_group
 
-        settings_group = QGroupBox('Generation settings · contratto nativo WanGP')
+        settings_group = QGroupBox('Generation settings · native WanGP contract')
         settings_form = QFormLayout(settings_group)
         self._configure_form_layout(settings_form)
         self.seed_spin = QSpinBox(); self.seed_spin.setRange(0, 2_147_483_647); self.seed_spin.setValue(18274)
@@ -225,24 +224,24 @@ class GenerationWorkspace(QWidget):
         self.frames_spin.setSingleStep(4)
         self.effective_frames_label = QLabel('49')
         self.fps_spin = QDoubleSpinBox(); self.fps_spin.setRange(1.0, 120.0); self.fps_spin.setDecimals(3); self.fps_spin.setValue(24.0)
-        self.effective_fps_label = QLabel('24 fps · richiesta')
+        self.effective_fps_label = QLabel('24 fps · requested')
         self.effective_fps_label.setWordWrap(True)
         self.steps_spin = QSpinBox(); self.steps_spin.setRange(1, 200); self.steps_spin.setValue(20)
         self.contract_preview = QPlainTextEdit()
         self.contract_preview.setReadOnly(True)
         self.contract_preview.setMaximumHeight(150)
-        self.contract_preview.setPlaceholderText('Riepilogo del job WanGP previsto')
+        self.contract_preview.setPlaceholderText('Planned WanGP Job Summary')
         settings_form.addRow('Seed', self.seed_spin)
-        settings_form.addRow('Classe risoluzione', self.resolution_class_combo)
-        settings_form.addRow('Rapporto', self.aspect_ratio_combo)
-        settings_form.addRow('Dimensione WanGP', self.effective_resolution_label)
-        settings_form.addRow('Origine risoluzioni', self.resolution_source_label)
-        settings_form.addRow('Frame richiesti', self.frames_spin)
-        settings_form.addRow('Frame eseguiti', self.effective_frames_label)
-        settings_form.addRow('FPS richiesti', self.fps_spin)
-        settings_form.addRow('FPS previsti', self.effective_fps_label)
+        settings_form.addRow('Resolution class', self.resolution_class_combo)
+        settings_form.addRow('Aspect Ratio', self.aspect_ratio_combo)
+        settings_form.addRow('WanGP Size', self.effective_resolution_label)
+        settings_form.addRow('Resolution source', self.resolution_source_label)
+        settings_form.addRow('Requested frames', self.frames_spin)
+        settings_form.addRow('Executed frames', self.effective_frames_label)
+        settings_form.addRow('Requested FPS', self.fps_spin)
+        settings_form.addRow('Expected FPS', self.effective_fps_label)
         settings_form.addRow('Steps', self.steps_spin)
-        settings_form.addRow('Riepilogo', self.contract_preview)
+        settings_form.addRow('Summary', self.contract_preview)
         self.settings_group = settings_group
 
         self.resolution_class_combo.currentIndexChanged.connect(self._on_resolution_class_changed)
@@ -268,11 +267,11 @@ class GenerationWorkspace(QWidget):
         self.steps_spin.valueChanged.connect(self._remember_current_generation_profile)
 
         actions = QHBoxLayout()
-        self.validate_button = QPushButton('Valida')
+        self.validate_button = QPushButton('Validate')
         self.validate_button.clicked.connect(self._validate_request)
-        self.generate_button = QPushButton('Genera')
+        self.generate_button = QPushButton('Generate')
         self.generate_button.clicked.connect(self._submit_job)
-        self.cancel_button = QPushButton('Annulla')
+        self.cancel_button = QPushButton('Cancel')
         self.cancel_button.clicked.connect(self._cancel_job)
         self.cancel_button.setEnabled(False)
         actions.addWidget(self.validate_button)
@@ -310,9 +309,9 @@ class GenerationWorkspace(QWidget):
             scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             return scroll
 
-        self.request_tabs.addTab(scroll_page(generation_page), 'Generazione')
-        self.request_tabs.addTab(scroll_page(runtime_page), 'Runtime WAN')
-        self.request_tabs.addTab(scroll_page(profiles_page), 'Profili')
+        self.request_tabs.addTab(scroll_page(generation_page), 'Generation')
+        self.request_tabs.addTab(scroll_page(runtime_page), 'WAN Runtime')
+        self.request_tabs.addTab(scroll_page(profiles_page), 'Profiles')
         request_layout.addWidget(self.request_tabs, 1)
         splitter.addWidget(request_panel)
 
@@ -320,19 +319,19 @@ class GenerationWorkspace(QWidget):
         status_layout = QVBoxLayout(status_panel)
         status_layout.setContentsMargins(6, 0, 0, 0)
 
-        status_group = QGroupBox('Job corrente')
+        status_group = QGroupBox('Current job')
         status_form = QFormLayout(status_group)
         self._configure_form_layout(status_form)
         self.job_id_label = QLabel('—')
         self.state_label = QLabel('idle')
-        self.message_label = QLabel('Nessun job avviato')
+        self.message_label = QLabel('No Job Started')
         self.message_label.setWordWrap(True)
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 1000)
         self.progress_bar.setValue(0)
         status_form.addRow('Job ID', self.job_id_label)
-        status_form.addRow('Stato', self.state_label)
-        status_form.addRow('Dettaglio', self.message_label)
+        status_form.addRow('Status', self.state_label)
+        status_form.addRow('Details', self.message_label)
         status_form.addRow('Progresso', self.progress_bar)
         self.executed_contract_label = QLabel('—')
         self.executed_contract_label.setWordWrap(True)
@@ -343,10 +342,10 @@ class GenerationWorkspace(QWidget):
         output_layout = QVBoxLayout(output_group)
         self.output_path_label = QLabel('—')
         self.output_path_label.setWordWrap(True)
-        self.open_output_button = QPushButton('Apri cartella job')
+        self.open_output_button = QPushButton('Open Job Folder')
         self.open_output_button.clicked.connect(self._open_job_folder)
         self.open_output_button.setEnabled(False)
-        self.import_button = QPushButton('Importa MP4 in Estrazione R1')
+        self.import_button = QPushButton('Import MP4 into R1 Extraction')
         self.import_button.clicked.connect(self._import_result)
         self.import_button.setEnabled(False)
         output_layout.addWidget(self.output_path_label)
@@ -354,10 +353,10 @@ class GenerationWorkspace(QWidget):
         output_layout.addWidget(self.import_button)
         self.output_group = output_group
 
-        history_group = QGroupBox('Cronologia sessione')
+        history_group = QGroupBox('Session history')
         history_layout = QVBoxLayout(history_group)
         self.history_table = QTableWidget(0, 5)
-        self.history_table.setHorizontalHeaderLabels(['Job', 'Provider', 'Stato', 'Progresso', 'Output'])
+        self.history_table.setHorizontalHeaderLabels(['Job', 'Provider', 'Status', 'Progresso', 'Output'])
         self.history_table.verticalHeader().setVisible(False)
         self.history_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         header = self.history_table.horizontalHeader()
@@ -382,7 +381,7 @@ class GenerationWorkspace(QWidget):
         history_page_layout.setContentsMargins(4, 8, 4, 4)
         history_page_layout.addWidget(self.history_group, 1)
         self.status_tabs.addTab(job_page, 'Job / Output')
-        self.status_tabs.addTab(history_page, 'Cronologia')
+        self.status_tabs.addTab(history_page, 'History')
         status_layout.addWidget(self.status_tabs, 1)
 
         splitter.addWidget(status_panel)
@@ -406,7 +405,7 @@ class GenerationWorkspace(QWidget):
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         edit = QLineEdit()
-        button = QPushButton('Sfoglia…')
+        button = QPushButton('Browse…')
         button.clicked.connect(callback)
         layout.addWidget(edit, 1)
         layout.addWidget(button)
@@ -416,15 +415,15 @@ class GenerationWorkspace(QWidget):
         if directory:
             path = QFileDialog.getExistingDirectory(self, title, edit.text().strip())
         else:
-            path, _ = QFileDialog.getOpenFileName(self, title, edit.text().strip(), file_filter or 'Tutti i file (*)')
+            path, _ = QFileDialog.getOpenFileName(self, title, edit.text().strip(), file_filter or 'All Files (*)')
         if path:
             edit.setText(path)
 
     def _choose_python(self) -> None:
-        self._choose_path(self.python_edit, 'Seleziona interprete Python 3.11', 'Python (python.exe python);;Tutti i file (*)')
+        self._choose_path(self.python_edit, 'Select Python 3.11 Interpreter', 'Python (python.exe python);;All Files (*)')
 
     def _choose_wangp_script(self) -> None:
-        self._choose_path(self.wangp_edit, 'Seleziona wgp.py', 'Python (*.py);;Tutti i file (*)')
+        self._choose_path(self.wangp_edit, 'Select wgp.py', 'Python (*.py);;All Files (*)')
         script_text = self.wangp_edit.text().strip()
         if script_text:
             script_path = Path(script_text)
@@ -433,18 +432,18 @@ class GenerationWorkspace(QWidget):
         self._reload_wan_resolution_options()
 
     def _choose_template(self) -> None:
-        self._choose_path(self.template_edit, 'Seleziona template JSON WanGP', 'JSON (*.json);;Tutti i file (*)')
+        self._choose_path(self.template_edit, 'Select WanGP JSON Template', 'JSON (*.json);;All Files (*)')
         self._reload_wan_resolution_options()
 
     def _choose_working_directory(self) -> None:
-        self._choose_path(self.working_dir_edit, 'Seleziona cartella WanGP', directory=True)
+        self._choose_path(self.working_dir_edit, 'Select WanGP Folder', directory=True)
         self._reload_wan_resolution_options()
 
     def _choose_reference(self) -> None:
-        self._choose_path(self.reference_edit, 'Seleziona immagine di riferimento', 'Immagini (*.png *.webp *.jpg *.jpeg);;Tutti i file (*)')
+        self._choose_path(self.reference_edit, 'Select Reference Image', 'Images (*.png *.webp *.jpg *.jpeg);;All Files (*)')
 
     def _choose_motion_reference(self) -> None:
-        self._choose_path(self.motion_edit, 'Seleziona video motion reference', 'Video (*.mp4 *.m4v *.mov *.avi *.webm);;Tutti i file (*)')
+        self._choose_path(self.motion_edit, 'Select Motion Reference Video', 'Video (*.mp4 *.m4v *.mov *.avi *.webm);;All Files (*)')
         self._update_generation_contract()
 
     def _resolved_wangp_root(self) -> Path | None:
@@ -522,7 +521,7 @@ class GenerationWorkspace(QWidget):
         aspect_ratio = str(self.aspect_ratio_combo.currentData() or '')
         option = option_for_selection(self._resolution_options, resolution_class, aspect_ratio)
         if option is None:
-            raise ValueError('Nessuna risoluzione WanGP valida selezionata.')
+            raise ValueError('No valid WanGP resolution selected.')
         return option
 
     def _probe_motion_fps(self) -> float | None:
@@ -586,7 +585,7 @@ class GenerationWorkspace(QWidget):
         )
         source = str(resolution.get('source', 'builtin'))
         if source == 'builtin':
-            source_text = 'tabella R5b1c integrata'
+            source_text = 'built-in R5b1c table'
         elif source.endswith('resolutions.json'):
             source_text = f'WanGP resolutions.json: {source}'
         else:
@@ -594,19 +593,19 @@ class GenerationWorkspace(QWidget):
         self.resolution_source_label.setText(source_text)
         self.effective_frames_label.setText(
             str(frames['effective']) if frames['effective'] == frames['requested']
-            else f"{frames['effective']} · normalizzati da {frames['requested']}"
+            else f"{frames['effective']} · normalized from {frames['requested']}"
         )
         if fps['effective_fps'] is None:
-            fps_text = 'da control video · non ancora rilevabile'
+            fps_text = 'from control video · not detectable yet'
         else:
             fps_text = f"{fps['effective_fps']:.3f} fps · {fps['source']}"
         self.effective_fps_label.setText(fps_text)
         self.contract_preview.setPlainText(
             '\n'.join([
-                f"Risoluzione: {resolution['resolution_class']} · {resolution['aspect_ratio']} → {resolution['value']}",
-                f"Frame: richiesti {frames['requested']} → eseguiti {frames['effective']} ({frames['rule']})",
-                f"FPS: richiesti {fps['requested_fps']:.3f} → previsti {fps_text}",
-                f"force_fps preset: {fps['force_fps'] or '(non impostato)'}",
+                f"Resolution: {resolution['resolution_class']} · {resolution['aspect_ratio']} → {resolution['value']}",
+                f"Frames: requested {frames['requested']} → executed {frames['effective']} ({frames['rule']})",
+                f"FPS: requested {fps['requested_fps']:.3f} → expected {fps_text}",
+                f"force_fps preset: {fps['force_fps'] or '(not set)'}",
                 f"Steps: {contract['steps']}",
             ])
         )
@@ -623,7 +622,7 @@ class GenerationWorkspace(QWidget):
     def save_generation_profile(self, name: str, data: dict) -> None:
         normalized = str(name).strip()
         if not normalized:
-            raise ValueError('Il nome del profilo generazione non può essere vuoto.')
+            raise ValueError('The generation profile name cannot be empty.')
         self.profile_store.set_profile('generation', normalized, dict(data))
         self._refresh_generation_profiles_combo(normalized)
 
@@ -706,7 +705,7 @@ class GenerationWorkspace(QWidget):
 
     def _save_current_generation_profile_as(self) -> None:
         from PySide6.QtWidgets import QInputDialog
-        name, ok = QInputDialog.getText(self, 'Salva profilo generazione', 'Nome profilo:')
+        name, ok = QInputDialog.getText(self, 'Save Generation Profile', 'Profile name:')
         if not ok:
             return
         normalized = name.strip()
@@ -714,7 +713,7 @@ class GenerationWorkspace(QWidget):
             return
         self.profile_store.set_profile('generation', normalized, self._capture_generation_profile_data())
         self._refresh_generation_profiles_combo(normalized)
-        self.status_message.emit(f'Profilo generazione salvato: {normalized}')
+        self.status_message.emit(f'Generation profile saved: {normalized}')
 
     def _load_selected_generation_profile(self) -> None:
         name = self.generation_profile_combo.currentText().strip()
@@ -722,22 +721,22 @@ class GenerationWorkspace(QWidget):
             return
         data = self.profile_store.get_profile('generation', name)
         if data is None:
-            QMessageBox.information(self, 'Profilo non trovato', 'Il profilo selezionato non è disponibile.')
+            QMessageBox.information(self, 'Profile Not Found', 'The selected profile is not available.')
             self._refresh_generation_profiles_combo()
             return
         self._apply_generation_profile_data(data, persist_last=True)
-        self.status_message.emit(f'Profilo generazione caricato: {name}')
+        self.status_message.emit(f'Generation profile loaded: {name}')
 
     def _delete_selected_generation_profile(self) -> None:
         name = self.generation_profile_combo.currentText().strip()
         if not name:
             return
-        answer = QMessageBox.question(self, 'Elimina profilo', f'Eliminare il profilo "{name}"?')
+        answer = QMessageBox.question(self, 'Delete Profile', f'Delete profile "{name}"?')
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.profile_store.delete_profile('generation', name)
         self._refresh_generation_profiles_combo()
-        self.status_message.emit(f'Profilo generazione eliminato: {name}')
+        self.status_message.emit(f'Generation profile deleted: {name}')
 
     def snapshot_state(self) -> dict:
         # Runtime bridge configuration has its own canonical persistence in
@@ -784,7 +783,7 @@ class GenerationWorkspace(QWidget):
         self.local_provider.update_config(self.local_config)
         self._load_local_config_into_ui()
         self._reload_wan_resolution_options()
-        self.status_message.emit('Configurazione runtime WanGP ricaricata dal Runtime Manager.')
+        self.status_message.emit('WanGP runtime configuration reloaded from Runtime Manager.')
 
     def _save_local_config(self) -> None:
         self.local_config = self._config_from_ui()
@@ -802,7 +801,7 @@ class GenerationWorkspace(QWidget):
             self.local_provider.update_config(self.local_config)
 
         path = self.local_config.save()
-        detail = f'Configurazione WanGP salvata: {path}'
+        detail = f'WanGP configuration saved: {path}'
         if warning:
             detail += f' — {warning}'
         self.status_message.emit(detail)
@@ -813,7 +812,7 @@ class GenerationWorkspace(QWidget):
         report = self.local_provider.health_check()
         self.health_report.setPlainText(report.summary())
         if report.available:
-            QMessageBox.information(self, 'Health check', 'Il bridge WanGP è pronto.')
+            QMessageBox.information(self, 'Health check', 'The WanGP bridge is ready.')
         else:
             QMessageBox.warning(self, 'Health check', report.summary())
 
@@ -822,19 +821,19 @@ class GenerationWorkspace(QWidget):
         provider = self.registry.get(provider_id)
         caps = provider.get_capabilities()
         enabled = [name for name, value in caps.to_dict().items() if value]
-        self.capabilities_label.setText(', '.join(enabled) or 'nessuna')
+        self.capabilities_label.setText(', '.join(enabled) or 'none')
         self.model_combo.clear()
         is_local = provider_id == 'local_wangp'
         self.runtime_group.setVisible(is_local)
         self.motion_edit.setEnabled(caps.motion_reference)
         if is_local:
-            self.model_combo.addItem('Modello definito dal preset WanGP', 'wangp_template_model')
+            self.model_combo.addItem('Model defined by the WanGP preset', 'wangp_template_model')
             self.privacy_label.setText('Local — reference files remain on this computer.')
-            self.generate_button.setText('Genera con WanGP')
+            self.generate_button.setText('Generate with WanGP')
         else:
             self.model_combo.addItem('Mock Sprite Video v1', 'mock_sprite_video_v1')
-            self.privacy_label.setText('Local mock — nessun file viene caricato all’esterno.')
-            self.generate_button.setText('Genera mock')
+            self.privacy_label.setText('Local mock — no files are uploaded externally.')
+            self.generate_button.setText('Generate Mock')
 
     def _build_request(self, *, dry_run: bool = False) -> GenerationRequest:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
@@ -875,7 +874,7 @@ class GenerationWorkspace(QWidget):
         )
 
     def _choose_requested_background(self) -> None:
-        color = QColorDialog.getColor(QColor(*self.requested_background_rgb), self, 'Colore di sfondo richiesto')
+        color = QColorDialog.getColor(QColor(*self.requested_background_rgb), self, 'Requested Background Color')
         if not color.isValid():
             return
         self.requested_background_rgb = (color.red(), color.green(), color.blue())
@@ -895,19 +894,16 @@ class GenerationWorkspace(QWidget):
             request = self._build_request()
             self.registry.get(request.provider).validate_request(request)
         except Exception as exc:
-            QMessageBox.warning(self, 'Richiesta non valida', str(exc))
+            QMessageBox.warning(self, 'Invalid Request', str(exc))
             return
         contract = request.metadata.get('wan_contract', {})
         resolution = contract.get('resolution', {})
         frames = contract.get('frames', {})
         fps = contract.get('fps', {})
         detail = (
-            f"La richiesta è compatibile con {self.registry.get(request.provider).display_name}.\n\n"
-            f"Risoluzione eseguita: {resolution.get('value', f'{request.width}x{request.height}')}\n"
-            f"Frame: {frames.get('requested', request.frames)} richiesti → {request.frames} eseguiti\n"
-            f"FPS previsti: {fps.get('effective_fps')} · origine {fps.get('source', 'request')}"
+            f"The request is compatible with {self.registry.get(request.provider).display_name}.\n\nResolved request: {resolution.get('value', f'{request.width}x{request.height}')}\nFrame: {frames.get('requested', request.frames)} requested → {request.frames} executed\nExpected FPS: {fps.get('effective_fps')} · source {fps.get('source', 'request')}"
         )
-        QMessageBox.information(self, 'Validazione completata', detail)
+        QMessageBox.information(self, 'Validation completed', detail)
 
     def _submit_dry_run(self) -> None:
         if str(self.provider_combo.currentData()) != 'local_wangp':
@@ -924,14 +920,14 @@ class GenerationWorkspace(QWidget):
         if self.current_job_id:
             snapshot = self.manager.get_snapshot(self.current_job_id)
             if snapshot and snapshot.state not in {'completed', 'failed', 'cancelled'}:
-                QMessageBox.information(self, 'Job attivo', 'Attendere o annullare il job corrente.')
+                QMessageBox.information(self, 'Active job', 'Wait for or cancel the current job.')
                 return
         try:
             request = self._build_request(dry_run=dry_run)
             self.current_job_id = self.manager.submit(request)
             self.job_started.emit(self.current_job_id)
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore avvio job', str(exc))
+            QMessageBox.critical(self, 'Job Start Error', str(exc))
             return
         self.last_video_path = None
         self.job_id_label.setText(self.current_job_id)
@@ -942,7 +938,7 @@ class GenerationWorkspace(QWidget):
         self.import_button.setEnabled(False)
         self.open_output_button.setEnabled(True)
         self.poll_timer.start()
-        self.status_message.emit(f'Job avviato: {self.current_job_id}')
+        self.status_message.emit(f'Job started: {self.current_job_id}')
         self._refresh_history()
 
     def _cancel_job(self) -> None:
@@ -977,13 +973,12 @@ class GenerationWorkspace(QWidget):
                 actual_fps = metadata.get('actual_fps', metadata.get('fps'))
                 requested_frames = metadata.get('requested_frames', '—')
                 self.executed_contract_label.setText(
-                    f"Output reale: {actual_width}x{actual_height} · {actual_frames} frame · {actual_fps} fps "
-                    f"| frame richiesti: {requested_frames}"
+                    f'Actual output: {actual_width}x{actual_height} · {actual_frames} frame · {actual_fps} fps | requested frames: {requested_frames}'
                 )
-                self.status_message.emit(f'Generazione completata: {snapshot.provider}')
+                self.status_message.emit(f'Generation completed: {snapshot.provider}')
             elif snapshot.result and snapshot.result.metadata.get('dry_run') and snapshot.state == 'completed':
-                self.status_message.emit('Dry-run WanGP completato con successo.')
-                self.message_label.setText('Dry-run completato: job e runtime accettati.')
+                self.status_message.emit('WanGP dry-run completed successfully.')
+                self.message_label.setText('Dry-run completed: job and runtime accepted.')
             elif snapshot.result:
                 self.status_message.emit(snapshot.result.error_message or snapshot.state)
             self.job_finished.emit(snapshot.to_dict())
@@ -1014,7 +1009,7 @@ class GenerationWorkspace(QWidget):
             return
         path = Path(self.last_video_path)
         if not path.exists() or path.stat().st_size <= 0:
-            QMessageBox.critical(self, 'Output mancante', 'Il file video non è disponibile.')
+            QMessageBox.critical(self, 'Missing Output', 'The video file is not available.')
             return
         self.video_ready.emit(str(path))
 

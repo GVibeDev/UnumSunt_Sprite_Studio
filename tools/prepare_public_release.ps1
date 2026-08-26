@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $Root
-$Version = 'R5c7'
+$Version = 'R5c8'
 $PublicDir = Join-Path $Root "release\public\$Version"
 
 function Write-Section([string]$Text) {
@@ -17,16 +17,16 @@ function Write-Section([string]$Text) {
 
 function Require-File([string]$Path, [string]$Label) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw "$Label non trovato: $Path"
+        throw "$Label not found: $Path"
     }
 }
 
-Write-Section 'Unum Sunt Sprite Studio R5c7 - Public Release Preparation'
+Write-Section 'Unum Sunt Sprite Studio R5c8 - Public Release Preparation'
 
 $requiredSource = @(
-    'LICENSE', 'THIRD_PARTY_NOTICES.txt', 'KREA_SAFETY_AND_USE.txt',
-    'GPL_DISTRIBUTION_CHECKLIST.txt', 'RELEASE_NOTES_R5c7.md',
-    'SECURITY.md', 'SOURCE_MANIFEST.json'
+    'LICENSE', 'OPEN_SOURCE_LICENSE_NOTICE.txt', 'THIRD_PARTY_NOTICES.txt', 'KREA_SAFETY_AND_USE.txt',
+    'GPL_DISTRIBUTION_CHECKLIST.txt', 'RELEASE_NOTES_R5c8.md', 'PUBLIC_RELEASE_CHECKLIST_R5c8.md',
+    'RELEASE_METADATA_R5c8.json', 'SECURITY.md', 'SOURCE_MANIFEST_R5c8.json'
 )
 foreach ($rel in $requiredSource) { Require-File (Join-Path $Root $rel) $rel }
 
@@ -35,17 +35,17 @@ if (-not $SkipTests) {
     $buildPython = Join-Path $Root '.build-venv\Scripts\python.exe'
     if (Test-Path -LiteralPath $buildPython) {
         & $buildPython -m unittest discover -s tests -p 'test_*.py'
-        if ($LASTEXITCODE -ne 0) { throw 'Regression suite fallita.' }
+        if ($LASTEXITCODE -ne 0) { throw 'Regression suite failed.' }
         & $buildPython -m compileall app main.py
-        if ($LASTEXITCODE -ne 0) { throw 'compileall fallito.' }
+        if ($LASTEXITCODE -ne 0) { throw 'compileall failed.' }
     }
     else {
         $py = Get-Command py.exe -ErrorAction SilentlyContinue
-        if (-not $py) { throw '.build-venv assente e py.exe non disponibile.' }
+        if (-not $py) { throw '.build-venv is missing and py.exe is unavailable.' }
         & $py.Source -3.13-64 -m unittest discover -s tests -p 'test_*.py'
-        if ($LASTEXITCODE -ne 0) { throw 'Regression suite fallita.' }
+        if ($LASTEXITCODE -ne 0) { throw 'Regression suite failed.' }
         & $py.Source -3.13-64 -m compileall app main.py
-        if ($LASTEXITCODE -ne 0) { throw 'compileall fallito.' }
+        if ($LASTEXITCODE -ne 0) { throw 'compileall failed.' }
     }
 }
 
@@ -54,14 +54,14 @@ if (-not $SkipBuild) {
     $args = @()
     if ($SkipTests) { $args += '-SkipTests' }
     & (Join-Path $Root 'build_setup_windows.ps1') @args
-    if ($LASTEXITCODE -ne 0) { throw 'Build Setup R5c7 fallita.' }
+    if ($LASTEXITCODE -ne 0) { throw 'R5c8 Setup build failed.' }
 }
 
-$setup = Join-Path $Root 'release\installer\UnumSunt_Sprite_Studio_R5c7_Setup_x64.exe'
-$setupSha = Join-Path $Root 'release\installer\UnumSunt_Sprite_Studio_R5c7_Setup_x64_SHA256.txt'
-$standalone = Join-Path $Root 'release\UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone.zip'
-$standaloneSha = Join-Path $Root 'release\UnumSunt_Sprite_Studio_R5c7_Windows_x64_Standalone_SHA256.txt'
-Require-File $setup 'Setup R5c7'
+$setup = Join-Path $Root 'release\installer\UnumSunt_Sprite_Studio_R5c8_Setup_x64.exe'
+$setupSha = Join-Path $Root 'release\installer\UnumSunt_Sprite_Studio_R5c8_Setup_x64_SHA256.txt'
+$standalone = Join-Path $Root 'release\UnumSunt_Sprite_Studio_R5c8_Windows_x64_Standalone.zip'
+$standaloneSha = Join-Path $Root 'release\UnumSunt_Sprite_Studio_R5c8_Windows_x64_Standalone_SHA256.txt'
+Require-File $setup 'Setup R5c8'
 Require-File $setupSha 'Setup SHA-256'
 Require-File $standalone 'Standalone ZIP'
 Require-File $standaloneSha 'Standalone SHA-256'
@@ -69,28 +69,28 @@ Require-File $standaloneSha 'Standalone SHA-256'
 Write-Section 'Git source identity'
 $git = Get-Command git.exe -ErrorAction SilentlyContinue
 $gitCommit = $null
-$sourceZip = Join-Path $PublicDir 'UnumSunt_Sprite_Studio_R5c7_Source.zip'
+$sourceZip = Join-Path $PublicDir 'UnumSunt_Sprite_Studio_R5c8_Source.zip'
 New-Item -ItemType Directory -Force $PublicDir | Out-Null
 Remove-Item -Force $sourceZip -ErrorAction SilentlyContinue
 
 if ($git -and (Test-Path -LiteralPath (Join-Path $Root '.git'))) {
     $dirty = @(& $git.Source status --porcelain)
     if ($dirty.Count -gt 0 -and -not $AllowDirtySource) {
-        Write-Host 'Working tree non pulito:' -ForegroundColor Yellow
+        Write-Host 'Working tree is not clean:' -ForegroundColor Yellow
         $dirty | ForEach-Object { Write-Host "  $_" }
-        throw 'Committare la finalizzazione R5c7 prima di creare il Corresponding Source, oppure usare -AllowDirtySource solo per una prova locale.'
+        throw 'Commit the R5c8 finalization before creating the Corresponding Source, or use -AllowDirtySource only for a local test.'
     }
     $gitCommit = (& $git.Source rev-parse HEAD).Trim()
     if (-not $AllowDirtySource) {
-        & $git.Source archive --format=zip --prefix='UnumSunt_Sprite_Studio_R5c7/' -o $sourceZip HEAD
-        if ($LASTEXITCODE -ne 0) { throw 'git archive fallito.' }
+        & $git.Source archive --format=zip --prefix='UnumSunt_Sprite_Studio_R5c8/' -o $sourceZip HEAD
+        if ($LASTEXITCODE -ne 0) { throw 'git archive failed.' }
     }
 }
 
 if (-not (Test-Path -LiteralPath $sourceZip)) {
     # Fallback for a source tree that is not a Git checkout, or a deliberate dirty-tree test.
-    $stageRoot = Join-Path $env:TEMP ("UnumSunt_R5c7_Source_" + [guid]::NewGuid().ToString('N'))
-    $stage = Join-Path $stageRoot 'UnumSunt_Sprite_Studio_R5c7'
+    $stageRoot = Join-Path $env:TEMP ("UnumSunt_R5c8_Source_" + [guid]::NewGuid().ToString('N'))
+    $stage = Join-Path $stageRoot 'UnumSunt_Sprite_Studio_R5c8'
     New-Item -ItemType Directory -Force $stage | Out-Null
     $excludeDirs = @('.git','.venv','.build-venv','dist','build','release','__pycache__','.pytest_cache','ai_runtime','models','ckpts','WanGP','generation_jobs','logs')
     $excludeExt = @('.exe','.msi','.apk','.aab','.safetensors','.gguf','.ckpt','.pt','.pth','.onnx','.pyc')
@@ -111,25 +111,29 @@ if (-not (Test-Path -LiteralPath $sourceZip)) {
 Write-Section 'Assembling public artifact folder'
 $copyFiles = @(
     $setup, $setupSha, $standalone, $standaloneSha,
-    (Join-Path $Root 'RELEASE_NOTES_R5c7.md'),
+    (Join-Path $Root 'RELEASE_NOTES_R5c8.md'),
+    (Join-Path $Root 'PUBLIC_RELEASE_CHECKLIST_R5c8.md'),
+    (Join-Path $Root 'RELEASE_METADATA_R5c8.json'),
+    (Join-Path $Root 'SOURCE_MANIFEST_R5c8.json'),
     (Join-Path $Root 'LICENSE'),
+    (Join-Path $Root 'OPEN_SOURCE_LICENSE_NOTICE.txt'),
     (Join-Path $Root 'THIRD_PARTY_NOTICES.txt'),
     (Join-Path $Root 'KREA_SAFETY_AND_USE.txt')
 )
 foreach ($src in $copyFiles) { Copy-Item -Force -LiteralPath $src -Destination $PublicDir }
 
 $sourceHash = (Get-FileHash -Algorithm SHA256 $sourceZip).Hash.ToLowerInvariant()
-$sourceSha = Join-Path $PublicDir 'UnumSunt_Sprite_Studio_R5c7_Source_SHA256.txt'
-"$sourceHash  UnumSunt_Sprite_Studio_R5c7_Source.zip" | Set-Content -Encoding ascii $sourceSha
+$sourceSha = Join-Path $PublicDir 'UnumSunt_Sprite_Studio_R5c8_Source_SHA256.txt'
+"$sourceHash  UnumSunt_Sprite_Studio_R5c8_Source.zip" | Set-Content -Encoding ascii $sourceSha
 
 # Verify source archive contains the GPL payload.
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::OpenRead($sourceZip)
 try {
     $entries = @($zip.Entries | ForEach-Object { $_.FullName })
-    foreach ($required in @('LICENSE','THIRD_PARTY_NOTICES.txt','RELEASE_NOTES_R5c7.md')) {
-        if (-not ($entries -contains "UnumSunt_Sprite_Studio_R5c7/$required")) {
-            throw "Corresponding Source incompleto: manca $required"
+    foreach ($required in @('LICENSE','OPEN_SOURCE_LICENSE_NOTICE.txt','THIRD_PARTY_NOTICES.txt','RELEASE_NOTES_R5c8.md')) {
+        if (-not ($entries -contains "UnumSunt_Sprite_Studio_R5c8/$required")) {
+            throw "Corresponding Source is incomplete: missing $required"
         }
     }
 }
@@ -152,7 +156,7 @@ $manifest = [ordered]@{
         [ordered]@{ file = (Split-Path $sourceZip -Leaf); sha256 = $sourceHash; role = 'GPL Corresponding Source' }
     )
 }
-$manifestPath = Join-Path $PublicDir 'RELEASE_MANIFEST_R5c7.json'
+$manifestPath = Join-Path $PublicDir 'RELEASE_MANIFEST_R5c8.json'
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $manifestPath
 
 Write-Host ''
@@ -163,4 +167,4 @@ Write-Host "Standalone SHA-256: $standaloneHash"
 Write-Host "Source SHA-256:     $sourceHash"
 if ($gitCommit) { Write-Host "Git commit:          $gitCommit" }
 Write-Host ''
-Write-Host 'Nessun upload e nessun tag Git sono stati eseguiti automaticamente.'
+Write-Host 'No upload and no Git tag were performed automatically.'

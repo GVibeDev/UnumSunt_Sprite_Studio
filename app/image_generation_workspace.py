@@ -74,8 +74,7 @@ class ImageGenerationWorkspace(QWidget):
         root.setContentsMargins(10, 10, 10, 10)
 
         banner = QLabel(
-            'R5e9 — Local Image Generation Provider. Il core resta indipendente dal runtime AI: '
-            'la generazione immagine usa provider separati e produce PNG + manifest normalizzati.'
+            'R5e9 — Local Image Generation Provider. The Core remains independent from the AI runtime: image generation uses separate providers and produces normalized PNG files + manifests.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet('QLabel { color: #f4f6f8; padding: 9px; background: #253246; border: 1px solid #486b96; }')
@@ -88,7 +87,7 @@ class ImageGenerationWorkspace(QWidget):
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 6, 0)
 
-        provider_group = QGroupBox('Provider immagine')
+        provider_group = QGroupBox('Image Provider')
         provider_form = QFormLayout(provider_group)
         self.provider_combo = QComboBox()
         for provider in self.registry.list():
@@ -104,10 +103,10 @@ class ImageGenerationWorkspace(QWidget):
         provider_form.addRow('Provider', self.provider_combo)
         provider_form.addRow('Task', self.task_combo)
         provider_form.addRow('Model label', self.model_edit)
-        provider_form.addRow('Capacità', self.capabilities_label)
+        provider_form.addRow('Capabilities', self.capabilities_label)
         left_layout.addWidget(provider_group)
 
-        input_group = QGroupBox('Master e prompt')
+        input_group = QGroupBox('Master and Prompt')
         input_form = QFormLayout(input_group)
         self.reference_edit, reference_row = self._path_row(self._choose_reference)
         self.positive_prompt = QPlainTextEdit('full body character concept, clean silhouette, fixed neutral composition')
@@ -119,7 +118,7 @@ class ImageGenerationWorkspace(QWidget):
         input_form.addRow('Negative', self.negative_prompt)
         left_layout.addWidget(input_group)
 
-        generation_group = QGroupBox('Parametri immagine')
+        generation_group = QGroupBox('Image Parameters')
         generation_form = QFormLayout(generation_group)
         self.seed_spin = QSpinBox(); self.seed_spin.setRange(0, 2_147_483_647); self.seed_spin.setValue(18274)
         self.width_spin = QSpinBox(); self.width_spin.setRange(64, 4096); self.width_spin.setSingleStep(64); self.width_spin.setValue(1024)
@@ -146,8 +145,7 @@ class ImageGenerationWorkspace(QWidget):
         self.memory_profile_combo.addItem('4 — LowRAM / LowVRAM', '4')
         self.memory_profile_combo.addItem('5 — VeryLowRAM / LowVRAM', '5')
         self.memory_profile_combo.setToolTip(
-            'Profilo memoria/offloading passato a WanGP come --profile. '
-            'In caso di CUDA OOM prova prima il profilo 5, poi il 4.'
+            'Memory/offloading profile passed to WanGP as --profile. If CUDA runs out of memory, try profile 5 first, then profile 4.'
         )
 
         self.reserved_ram_spin = QDoubleSpinBox()
@@ -157,15 +155,14 @@ class ImageGenerationWorkspace(QWidget):
         self.reserved_ram_spin.setValue(0.0)
         self.reserved_ram_spin.setSpecialValueText('Auto')
         self.reserved_ram_spin.setToolTip(
-            'Valore opzionale per --perc-reserved-mem-max. 0.00 = non forzare. '
-            'Per un test conservativo usare 0.20.'
+            'Optional value for --perc-reserved-mem-max. 0.00 = do not force. For a conservative test, use 0.20.'
         )
 
         actions = QWidget()
         actions_layout = QHBoxLayout(actions); actions_layout.setContentsMargins(0, 0, 0, 0)
-        save_button = QPushButton('Salva runtime'); save_button.clicked.connect(self._save_config)
+        save_button = QPushButton('Save Runtime'); save_button.clicked.connect(self._save_config)
         health_button = QPushButton('Health check'); health_button.clicked.connect(self._health_check)
-        inherit_button = QPushButton('Eredita runtime video'); inherit_button.clicked.connect(self._inherit_video_runtime)
+        inherit_button = QPushButton('Inherit Video Runtime'); inherit_button.clicked.connect(self._inherit_video_runtime)
         actions_layout.addWidget(save_button); actions_layout.addWidget(health_button); actions_layout.addWidget(inherit_button)
         self.health_report = QPlainTextEdit(); self.health_report.setReadOnly(True); self.health_report.setMaximumHeight(130)
         runtime_form.addRow('Python 3.11', python_row)
@@ -178,26 +175,24 @@ class ImageGenerationWorkspace(QWidget):
         runtime_form.addRow('Report', self.health_report)
         left_layout.addWidget(self.runtime_group)
 
-        self.krea_compliance_group = QGroupBox('Krea 2 · licenza e revisione manuale')
+        self.krea_compliance_group = QGroupBox('Krea 2 · License and Manual Review')
         krea_layout = QVBoxLayout(self.krea_compliance_group)
         krea_notice = QLabel(
-            'Krea 2 resta un componente separatamente licenziato. Per il provider Krea, '
-            'la generazione richiede conferma preventiva e l’output deve essere revisionato '
-            'prima di essere promosso come reference WAN.'
+            'Krea 2 remains a separately licensed component. For the Krea provider, generation requires prior confirmation and the output must be reviewed before it can be promoted as a WAN reference.'
         )
         krea_notice.setWordWrap(True)
         self.krea_prompt_attestation = QCheckBox(
-            'Confermo che prompt e uso previsto rispettano Krea 2 Community License e AUP.'
+            'I confirm that the prompt and intended use comply with the Krea 2 Community License and AUP.'
         )
         self.krea_output_review = QCheckBox(
-            'Ho revisionato l’output generato e lo considero conforme prima dell’uso nella pipeline.'
+            'I have reviewed the generated output and consider it compliant before using it in the pipeline.'
         )
         self.krea_output_review.setEnabled(False)
         self.krea_output_review.toggled.connect(self._on_krea_review_toggled)
         krea_links = QHBoxLayout()
-        krea_license_button = QPushButton('Apri licenza Krea 2')
+        krea_license_button = QPushButton('Open Krea 2 License')
         krea_license_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(KREA_LICENSE_URL)))
-        krea_aup_button = QPushButton('Apri AUP Krea 2')
+        krea_aup_button = QPushButton('Open Krea 2 AUP')
         krea_aup_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(KREA_AUP_URL)))
         krea_links.addWidget(krea_license_button)
         krea_links.addWidget(krea_aup_button)
@@ -210,11 +205,11 @@ class ImageGenerationWorkspace(QWidget):
         self.template_edit.textChanged.connect(self._refresh_krea_compliance_ui)
 
         generate_row = QHBoxLayout()
-        self.validate_button = QPushButton('Valida')
+        self.validate_button = QPushButton('Validate')
         self.validate_button.clicked.connect(self._validate)
-        self.generate_button = QPushButton('Genera immagine')
+        self.generate_button = QPushButton('Generate Image')
         self.generate_button.clicked.connect(self._generate)
-        self.cancel_button = QPushButton('Annulla')
+        self.cancel_button = QPushButton('Cancel')
         self.cancel_button.clicked.connect(self._cancel)
         self.cancel_button.setEnabled(False)
         generate_row.addWidget(self.validate_button)
@@ -227,30 +222,30 @@ class ImageGenerationWorkspace(QWidget):
         right = QWidget()
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(6, 0, 0, 0)
-        status_group = QGroupBox('Job immagine')
+        status_group = QGroupBox('Image Job')
         status_form = QFormLayout(status_group)
         self.job_label = QLabel('—')
         self.state_label = QLabel('idle')
-        self.message_label = QLabel('Nessun job avviato'); self.message_label.setWordWrap(True)
+        self.message_label = QLabel('No Job Started'); self.message_label.setWordWrap(True)
         self.progress = QProgressBar(); self.progress.setRange(0, 1000)
         status_form.addRow('Job', self.job_label)
-        status_form.addRow('Stato', self.state_label)
-        status_form.addRow('Dettaglio', self.message_label)
+        status_form.addRow('Status', self.state_label)
+        status_form.addRow('Details', self.message_label)
         status_form.addRow('Progresso', self.progress)
         right_layout.addWidget(status_group)
 
-        preview_group = QGroupBox('Output normalizzato')
+        preview_group = QGroupBox('Normalized output')
         preview_layout = QVBoxLayout(preview_group)
-        self.preview = QLabel('Nessuna immagine generata')
+        self.preview = QLabel('No Image Generated')
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview.setMinimumSize(420, 420)
         self.preview.setStyleSheet('QLabel { color: #f4f6f8; background: #17191d; border: 1px solid #444; }')
         self.output_label = QLabel('—'); self.output_label.setWordWrap(True)
         output_actions = QHBoxLayout()
-        self.use_reference_button = QPushButton('Usa come reference WAN')
+        self.use_reference_button = QPushButton('Use as WAN Reference')
         self.use_reference_button.clicked.connect(self._emit_image_ready)
         self.use_reference_button.setEnabled(False)
-        self.open_folder_button = QPushButton('Apri cartella job')
+        self.open_folder_button = QPushButton('Open Job Folder')
         self.open_folder_button.clicked.connect(self._open_folder)
         self.open_folder_button.setEnabled(False)
         output_actions.addWidget(self.use_reference_button)
@@ -278,22 +273,22 @@ class ImageGenerationWorkspace(QWidget):
         return edit, row
 
     def _choose_reference(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'Seleziona master image', '', 'Immagini (*.png *.webp *.jpg *.jpeg);;Tutti i file (*)')
+        path, _ = QFileDialog.getOpenFileName(self, 'Select Master Image', '', 'Images (*.png *.webp *.jpg *.jpeg);;All Files (*)')
         if path:
             self.reference_edit.setText(path)
 
     def _choose_python(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'Python WanGP', '', 'Eseguibili (*.exe);;Tutti i file (*)')
+        path, _ = QFileDialog.getOpenFileName(self, 'Python WanGP', '', 'Executables (*.exe);;All Files (*)')
         if path:
             self.python_edit.setText(path)
 
     def _choose_wangp(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'WanGP wgp.py', '', 'Python (*.py);;Tutti i file (*)')
+        path, _ = QFileDialog.getOpenFileName(self, 'WanGP wgp.py', '', 'Python (*.py);;All Files (*)')
         if path:
             self.wangp_edit.setText(path)
 
     def _choose_template(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'Preset/settings immagine WanGP', '', 'JSON (*.json);;Tutti i file (*)')
+        path, _ = QFileDialog.getOpenFileName(self, 'WanGP image preset/settings', '', 'JSON (*.json);;All Files (*)')
         if path:
             self.template_edit.setText(path)
 
@@ -360,13 +355,13 @@ class ImageGenerationWorkspace(QWidget):
             self.use_reference_button.setEnabled(False)
             QMessageBox.warning(
                 self,
-                'Revisione Krea 2',
-                'Impossibile registrare la revisione manuale; l’output non viene promosso nella pipeline.'
+                'Krea 2 revision',
+                'The manual review could not be recorded; the output will not be promoted into the pipeline.'
                 + (f'\n\n{error}' if error else ''),
             )
             return
         self.use_reference_button.setEnabled(True)
-        self.status_message.emit(f'Revisione Krea registrata: {record.name}')
+        self.status_message.emit(f'Krea review recorded: {record.name}')
 
     def _refresh_task(self, *_args) -> None:
         self.reference_edit.setEnabled(str(self.task_combo.currentData()) == 'image_to_image')
@@ -399,13 +394,13 @@ class ImageGenerationWorkspace(QWidget):
         self.local_config = LocalWanGPImageConfig.load()
         self.local_provider.update_config(self.local_config)
         self._load_config()
-        self.status_message.emit('Configurazione runtime WanGP Image ricaricata dal Runtime Manager.')
+        self.status_message.emit('WanGP Image runtime configuration reloaded from Runtime Manager.')
 
     def _save_config(self) -> None:
         self.local_config = self._config_from_ui()
         self.local_config.save()
         self.local_provider.update_config(self.local_config)
-        self.status_message.emit('Configurazione WanGP Image salvata.')
+        self.status_message.emit('WanGP Image configuration saved.')
 
     def _inherit_video_runtime(self) -> None:
         inherited = LocalWanGPImageConfig.from_video_config(LocalWanGPConfig.load())
@@ -416,7 +411,7 @@ class ImageGenerationWorkspace(QWidget):
         self.local_config = inherited
         self._load_config()
         self.local_provider.update_config(inherited)
-        self.status_message.emit('Runtime Python/WanGP ereditato dalla configurazione video.')
+        self.status_message.emit('Python/WanGP runtime inherited from the video configuration.')
 
     def _health_check(self) -> None:
         self.local_config = self._config_from_ui()
@@ -465,9 +460,9 @@ class ImageGenerationWorkspace(QWidget):
             request = self._request()
             self.registry.get(request.provider).validate_request(request)
         except Exception as exc:
-            QMessageBox.warning(self, 'Validazione immagine', str(exc))
+            QMessageBox.warning(self, 'Image Validation', str(exc))
             return
-        self.status_message.emit('R5e9: richiesta immagine valida.')
+        self.status_message.emit('R5e9: valid image request.')
 
     def _generate(self) -> None:
         if self.current_job_id:
@@ -476,9 +471,8 @@ class ImageGenerationWorkspace(QWidget):
         if requires_krea_review and not self.krea_prompt_attestation.isChecked():
             QMessageBox.warning(
                 self,
-                'Krea 2 · conferma richiesta',
-                'Prima della generazione Krea conferma che prompt e uso previsto rispettano '
-                'la Krea 2 Community License e la relativa Acceptable Use Policy.',
+                'Krea 2 · Confirmation Required',
+                'Before Krea generation, confirm that the prompt and intended use comply with the Krea 2 Community License and its Acceptable Use Policy.',
             )
             return
         if str(self.provider_combo.currentData()) == 'local_wangp_image':
@@ -488,7 +482,7 @@ class ImageGenerationWorkspace(QWidget):
             request = self._request()
             job_id = self.manager.submit(request)
         except Exception as exc:
-            QMessageBox.critical(self, 'Generazione immagine', str(exc))
+            QMessageBox.critical(self, 'Image Generation', str(exc))
             return
         self.current_job_id = job_id
         self.current_job_requires_krea_review = requires_krea_review
@@ -498,7 +492,7 @@ class ImageGenerationWorkspace(QWidget):
         self.use_reference_button.setEnabled(False)
         self.job_label.setText(job_id)
         self.state_label.setText('queued')
-        self.message_label.setText('Job immagine in coda')
+        self.message_label.setText('Image job queued')
         self.progress.setValue(0)
         self.generate_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
@@ -534,11 +528,11 @@ class ImageGenerationWorkspace(QWidget):
                 self.krea_output_review.setEnabled(True)
                 self._set_krea_review_checked(False)
                 self.status_message.emit(
-                    f'Immagine Krea generata: {Path(self.last_image_path).name}. Revisione manuale richiesta prima della reference WAN.'
+                    f'Krea image generated: {Path(self.last_image_path).name}. Manual review required before WAN reference use.'
                 )
             else:
                 self.use_reference_button.setEnabled(True)
-                self.status_message.emit(f'Immagine generata: {Path(self.last_image_path).name}')
+                self.status_message.emit(f'Image generated: {Path(self.last_image_path).name}')
                 # Non-Krea providers retain the original R5e9 immediate hand-off contract.
                 self.image_ready.emit(self.last_image_path)
         elif result is not None and result.error_message:
@@ -552,13 +546,13 @@ class ImageGenerationWorkspace(QWidget):
     def _show_preview(self, path: str) -> None:
         pixmap = QPixmap(path)
         if pixmap.isNull():
-            self.preview.setText('Preview non disponibile')
+            self.preview.setText('Preview Unavailable')
             return
         self.preview.setPixmap(pixmap.scaled(self.preview.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
     def _cancel(self) -> None:
         if self.current_job_id and self.manager.cancel(self.current_job_id):
-            self.message_label.setText('Annullamento richiesto…')
+            self.message_label.setText('Cancellation requested…')
 
     def _emit_image_ready(self) -> None:
         if not self.last_image_path or not Path(self.last_image_path).is_file():
@@ -566,8 +560,8 @@ class ImageGenerationWorkspace(QWidget):
         if self.last_image_requires_krea_review and not self.krea_output_review.isChecked():
             QMessageBox.warning(
                 self,
-                'Revisione Krea 2 richiesta',
-                'Revisiona l’output Krea e conferma la relativa casella prima di usarlo come reference WAN.',
+                'Krea 2 review required',
+                'Review the Krea output and confirm the corresponding checkbox before using it as a WAN reference.',
             )
             return
         self.image_ready.emit(self.last_image_path)
@@ -591,7 +585,7 @@ class ImageGenerationWorkspace(QWidget):
         self.krea_output_review.setEnabled(False)
         self.output_label.setText('—')
         self.preview.setPixmap(QPixmap())
-        self.preview.setText('Nessuna immagine generata')
+        self.preview.setText('No Image Generated')
         self.use_reference_button.setEnabled(False)
         self.open_folder_button.setEnabled(False)
         self.apply_state(default)

@@ -140,7 +140,7 @@ class RuntimeBridgeBindingHotfixTests(unittest.TestCase):
             wrong.parent.mkdir(parents=True)
             wrong.write_bytes(b'')
             installer = RuntimeInstaller(RuntimePreflightConfig(str(runtime), str(models)))
-            with self.assertRaisesRegex(Exception, 'ambiente dedicato'):
+            with self.assertRaisesRegex(Exception, 'dedicated environment'):
                 installer._validate_bridge_python(wrong)
 
     def test_generation_workspace_does_not_persist_runtime_config_in_app_state(self):

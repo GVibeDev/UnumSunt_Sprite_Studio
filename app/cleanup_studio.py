@@ -81,7 +81,7 @@ class CleanupStudio(QWidget):
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
-        self.info_label = QLabel('Seleziona frame in R1 per rifinire alpha e piccoli difetti.')
+        self.info_label = QLabel('Select frames in R1 to refine alpha and small defects.')
         self.info_label.setWordWrap(True)
         self.info_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 6px; background: #302a20; border: 1px solid #74643f; }')
         root.addWidget(self.info_label)
@@ -109,11 +109,11 @@ class CleanupStudio(QWidget):
         left_layout.addWidget(scroll, 1)
 
         nav_row = QHBoxLayout()
-        prev_button = QPushButton('◀ Frame precedente')
+        prev_button = QPushButton('◀ Previous Frame')
         prev_button.clicked.connect(lambda: self._select_relative(-1))
-        next_button = QPushButton('Frame successivo ▶')
+        next_button = QPushButton('Next Frame ▶')
         next_button.clicked.connect(lambda: self._select_relative(1))
-        self.current_label = QLabel('Nessun frame')
+        self.current_label = QLabel('No Frames')
         self.current_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         nav_row.addWidget(prev_button)
         nav_row.addWidget(self.current_label, 1)
@@ -137,12 +137,12 @@ class CleanupStudio(QWidget):
         self.remove_islands_spin = QSpinBox(); self.remove_islands_spin.setRange(0, 512); self.remove_islands_spin.setValue(2)
         self.fill_holes_spin = QSpinBox(); self.fill_holes_spin.setRange(0, 512); self.fill_holes_spin.setValue(2)
         self.tighten_radius_spin = QSpinBox(); self.tighten_radius_spin.setRange(0, 6); self.tighten_radius_spin.setValue(0)
-        cleanup_form.addRow('Rimuovi isole < px', self.remove_islands_spin)
-        cleanup_form.addRow('Riempi buchi ≤ px', self.fill_holes_spin)
-        cleanup_form.addRow('Stringi bordo', self.tighten_radius_spin)
-        current_button = QPushButton('Applica clean-up al frame corrente')
+        cleanup_form.addRow('Remove islands < px', self.remove_islands_spin)
+        cleanup_form.addRow('Fill Holes ≤ px', self.fill_holes_spin)
+        cleanup_form.addRow('Tighten Edge', self.tighten_radius_spin)
+        current_button = QPushButton('Apply clean-up to current frame')
         current_button.clicked.connect(self._apply_cleanup_current)
-        selection_button = QPushButton('Applica clean-up ai frame selezionati')
+        selection_button = QPushButton('Apply clean-up to selected frames')
         selection_button.clicked.connect(self._apply_cleanup_selected)
         cleanup_form.addRow('', current_button)
         cleanup_form.addRow('', selection_button)
@@ -150,16 +150,16 @@ class CleanupStudio(QWidget):
 
         paint_group = QGroupBox('Pixel painter')
         paint_form = QFormLayout(paint_group)
-        self.brush_mode_combo = QComboBox(); self.brush_mode_combo.addItem('Cancella alpha', 'erase'); self.brush_mode_combo.addItem('Ripristina alpha', 'restore')
+        self.brush_mode_combo = QComboBox(); self.brush_mode_combo.addItem('Erase Alpha', 'erase'); self.brush_mode_combo.addItem('Restore Alpha', 'restore')
         self.brush_size_spin = QSpinBox(); self.brush_size_spin.setRange(1, 12); self.brush_size_spin.setValue(1)
         self.zoom_spin = QSpinBox(); self.zoom_spin.setRange(2, 24); self.zoom_spin.setValue(8)
-        self.grid_checkbox = QCheckBox('Griglia pixel'); self.grid_checkbox.setChecked(True)
-        self.alpha_only_checkbox = QCheckBox('Mostra alpha su scacchiera')
-        undo_button = QPushButton('Annulla'); undo_button.clicked.connect(self._undo)
+        self.grid_checkbox = QCheckBox('Pixel Grid'); self.grid_checkbox.setChecked(True)
+        self.alpha_only_checkbox = QCheckBox('Show Alpha on Checkerboard')
+        undo_button = QPushButton('Cancel'); undo_button.clicked.connect(self._undo)
         redo_button = QPushButton('Ripeti'); redo_button.clicked.connect(self._redo)
-        reset_button = QPushButton('Ripristina frame'); reset_button.clicked.connect(self._reset_current)
-        paint_form.addRow('Modalità pennello', self.brush_mode_combo)
-        paint_form.addRow('Raggio pennello', self.brush_size_spin)
+        reset_button = QPushButton('Restore Frame'); reset_button.clicked.connect(self._reset_current)
+        paint_form.addRow('Brush Mode', self.brush_mode_combo)
+        paint_form.addRow('Brush Radius', self.brush_size_spin)
         paint_form.addRow('Zoom', self.zoom_spin)
         paint_form.addRow('', self.grid_checkbox)
         paint_form.addRow('', self.alpha_only_checkbox)
@@ -168,32 +168,32 @@ class CleanupStudio(QWidget):
         paint_form.addRow('', reset_button)
         right_layout.addWidget(paint_group)
 
-        selection_group = QGroupBox('Selezioni e propagazione · R5e5-D')
+        selection_group = QGroupBox('Selections and Propagation · R5e5-D')
         selection_form = QFormLayout(selection_group)
         self.tool_combo = QComboBox()
-        self.tool_combo.addItem('Pennello', 'brush')
-        self.tool_combo.addItem('Selezione rettangolare', 'rectangle')
-        self.tool_combo.addItem('Lasso poligonale', 'polygon')
-        self.selection_info_label = QLabel('Nessuna selezione')
+        self.tool_combo.addItem('Brush', 'brush')
+        self.tool_combo.addItem('Rectangular Selection', 'rectangle')
+        self.tool_combo.addItem('Polygon Lasso', 'polygon')
+        self.selection_info_label = QLabel('No Selection')
         self.selection_info_label.setWordWrap(True)
-        delete_selection_button = QPushButton('Cancella selezione (frame corrente)')
+        delete_selection_button = QPushButton('Clear Selection (Current Frame)')
         delete_selection_button.clicked.connect(self._delete_selection_current)
-        propagate_selection_button = QPushButton('Propaga ai frame selezionati')
+        propagate_selection_button = QPushButton('Propagate to selected frames')
         propagate_selection_button.clicked.connect(self._delete_selection_selected)
-        clear_selection_button = QPushButton('Annulla selezione')
+        clear_selection_button = QPushButton('Cancel Selection')
         clear_selection_button.clicked.connect(self._clear_selection)
         selection_form.addRow('Strumento', self.tool_combo)
-        selection_form.addRow('Stato', self.selection_info_label)
+        selection_form.addRow('Status', self.selection_info_label)
         selection_form.addRow('', delete_selection_button)
         selection_form.addRow('', propagate_selection_button)
         selection_form.addRow('', clear_selection_button)
-        selection_help = QLabel('Rettangolo: trascina. Lasso: click sui vertici, doppio click o Invio per chiudere. Del cancella il frame corrente; il pulsante di propagazione applica la stessa selezione a tutti i frame selezionati come singola transazione.')
+        selection_help = QLabel('Rectangle: drag. Lasso: click vertices, double-click or press Enter to close. Del clears the current frame; the propagation button applies the same selection to all selected frames as one transaction.')
         selection_help.setWordWrap(True)
         selection_help.setStyleSheet('color: #9198a5;')
         selection_form.addRow('', selection_help)
         right_layout.addWidget(selection_group)
 
-        note = QLabel('Ritocco pensato per micro-difetti: residui di sfondo, buchi, pixel sporchi o piccoli inglobamenti.')
+        note = QLabel('Touch-up is intended for small defects: background residue, holes, dirty pixels, or minor inclusions.')
         note.setWordWrap(True)
         note.setStyleSheet('color: #9198a5;')
         right_layout.addWidget(note)
@@ -248,8 +248,8 @@ class CleanupStudio(QWidget):
             self.frame_list.clear()
             self.frame_list.setCurrentItem(None)
         self.canvas.set_image(None)
-        self.current_label.setText('Nessun frame')
-        self.info_label.setText('Cambio sorgente in corso…')
+        self.current_label.setText('No Frames')
+        self.info_label.setText('Switching source…')
         self._set_enabled(False)
 
     def _set_enabled(self, enabled: bool) -> None:
@@ -282,7 +282,7 @@ class CleanupStudio(QWidget):
         if enabled:
             target = previous if previous in self._selected_indices else self._selected_indices[0]
             self._set_current_frame(target, emit_request=False)
-            self.info_label.setText(f'{len(self._selected_indices)} frame disponibili per il clean-up.')
+            self.info_label.setText(f'{len(self._selected_indices)} frames available for clean-up.')
         else:
             self._show_missing_or_empty_source(missing_source=metadata is None)
 
@@ -290,12 +290,12 @@ class CleanupStudio(QWidget):
         self._current_frame_index = None
         self._clear_selection()
         self.canvas.set_image(None)
-        self.current_label.setText('Nessun frame')
+        self.current_label.setText('No Frames')
         self._set_enabled(False)
         if missing_source:
-            self.info_label.setText('Nessuna sorgente video aperta. Apri o importa una sorgente prima del clean-up.')
+            self.info_label.setText('No video source is open. Open or import a source before clean-up.')
         else:
-            self.info_label.setText('Seleziona frame in R1 per rifinire alpha e piccoli difetti.')
+            self.info_label.setText('Select frames in R1 to refine alpha and small defects.')
 
     def _selected_rgba(self, frame_index: int) -> np.ndarray:
         existing = self._override_getter(frame_index)
@@ -423,9 +423,9 @@ class CleanupStudio(QWidget):
         mode = str(self.tool_combo.currentData())
         self.canvas.set_tool_mode(mode)
         if mode == 'brush':
-            self.selection_info_label.setText('Pennello attivo')
+            self.selection_info_label.setText('Brush active')
         elif self._selection_mask is None:
-            self.selection_info_label.setText('Nessuna selezione')
+            self.selection_info_label.setText('No Selection')
 
     def _selection_shape(self) -> tuple[int, int] | None:
         if self._current_frame_index is None:
@@ -440,7 +440,7 @@ class CleanupStudio(QWidget):
         h, w = shape
         self._selection_mask = rectangle_selection_mask(h, w, x0, y0, x1, y1)
         self._selection_kind = 'rectangle'
-        self.selection_info_label.setText(f'Rettangolo · {int(np.count_nonzero(self._selection_mask))} px selezionati')
+        self.selection_info_label.setText(f'Rectangle · {int(np.count_nonzero(self._selection_mask))} px selected')
 
     def _on_polygon_selected(self, points: object) -> None:
         shape = self._selection_shape()
@@ -457,16 +457,16 @@ class CleanupStudio(QWidget):
         h, w = shape
         self._selection_mask = polygon_selection_mask(h, w, normalized)
         self._selection_kind = 'polygon'
-        self.selection_info_label.setText(f'Lasso poligonale · {int(np.count_nonzero(self._selection_mask))} px selezionati')
+        self.selection_info_label.setText(f'Polygon Lasso · {int(np.count_nonzero(self._selection_mask))} px selected')
 
     def _clear_selection_state(self) -> None:
         self._selection_mask = None
         self._selection_kind = None
         if hasattr(self, 'selection_info_label'):
             if hasattr(self, 'tool_combo') and str(self.tool_combo.currentData()) == 'brush':
-                self.selection_info_label.setText('Pennello attivo')
+                self.selection_info_label.setText('Brush active')
             else:
-                self.selection_info_label.setText('Nessuna selezione')
+                self.selection_info_label.setText('No Selection')
 
     def _clear_selection(self) -> None:
         self._clear_selection_state()
@@ -474,7 +474,7 @@ class CleanupStudio(QWidget):
 
     def _validated_selection_mask(self) -> np.ndarray | None:
         if self._selection_mask is None or not np.any(self._selection_mask):
-            self.status_message.emit('Nessuna selezione valida da cancellare.')
+            self.status_message.emit('There is no valid selection to clear.')
             return None
         return self._selection_mask
 
@@ -488,8 +488,8 @@ class CleanupStudio(QWidget):
         if not selection_mask_matches_rgba(rgba, selection):
             QMessageBox.warning(
                 self,
-                'Selezione incompatibile',
-                'La selezione non coincide con le dimensioni del frame sorgente. Operazione annullata.',
+                'Incompatible Selection',
+                'The selection does not match the source frame dimensions. Operation canceled.',
             )
             self._clear_selection()
             return
@@ -501,7 +501,7 @@ class CleanupStudio(QWidget):
         )
         selected_pixels = int(np.count_nonzero(selection))
         self._refresh_current_preview()
-        self.status_message.emit(f'Cancellati {selected_pixels} pixel dalla selezione del frame {self._current_frame_index}.')
+        self.status_message.emit(f'Cleared {selected_pixels} pixels from the selection on frame {self._current_frame_index}.')
 
     def _delete_selection_selected(self) -> None:
         selection = self._validated_selection_mask()
@@ -520,8 +520,8 @@ class CleanupStudio(QWidget):
             details = ', '.join(f'{idx}: {shape[1]}×{shape[0]}' for idx, shape in shapes.items())
             QMessageBox.warning(
                 self,
-                'Frame incompatibili',
-                'La propagazione richiede che tutti i frame selezionati abbiano la stessa dimensione della selezione.\n\n' + details,
+                'Incompatible Frames',
+                'Propagation requires all selected frames to have the same dimensions as the selection.\n\n' + details,
             )
             return
         edited_batch = erase_alpha_selection_batch(rgba_by_frame, selection)
@@ -535,7 +535,7 @@ class CleanupStudio(QWidget):
         selected_pixels = int(np.count_nonzero(selection))
         self._refresh_current_preview()
         self.status_message.emit(
-            f'Selezione propagata a {len(self._selected_indices)} frame come singola transazione ({selected_pixels} px per frame).',
+            f'Selection propagated to {len(self._selected_indices)} frames as a single transaction ({selected_pixels} px per frame).',
         )
 
     def _cleanup_settings_current(self) -> AlphaCleanupSettings:
@@ -556,7 +556,7 @@ class CleanupStudio(QWidget):
             after[frame_index] = apply_alpha_cleanup(rgba, settings)
         self._commit_transaction(label=f'cleanup_auto:{len(indices)}', before=before, after=after)
         self._refresh_current_preview()
-        self.status_message.emit(f'Clean-up applicato a {len(indices)} frame.')
+        self.status_message.emit(f'Clean-up applied to {len(indices)} frame.')
 
     def _apply_cleanup_current(self) -> None:
         if self._current_frame_index is None:
@@ -649,7 +649,7 @@ class CleanupStudio(QWidget):
         # The cleanup canvas is already current through ROI updates. The single
         # overrides_changed emission above refreshes dependent R1/R2/R3 previews once.
         self.current_label.setText(f'Frame {frame_index}')
-        self.status_message.emit(f'Pennellata applicata al frame {frame_index} · {dabs} campioni · 1 transazione Undo.')
+        self.status_message.emit(f'Brush stroke applied to frame {frame_index} · {dabs} samples · 1 Undo transaction.')
 
     def _undo(self) -> None:
         if not self._history:
@@ -658,7 +658,7 @@ class CleanupStudio(QWidget):
         self._apply_transaction_state(transaction['before'])
         self._history_redo.append(transaction)
         self._refresh_current_preview()
-        self.status_message.emit(f"Annullata transazione: {transaction['label']}")
+        self.status_message.emit(f"Undid transaction: {transaction['label']}")
 
     def _redo(self) -> None:
         if not self._history_redo:
@@ -667,7 +667,7 @@ class CleanupStudio(QWidget):
         self._apply_transaction_state(transaction['after'])
         self._history.append(transaction)
         self._refresh_current_preview()
-        self.status_message.emit(f"Ripetuta transazione: {transaction['label']}")
+        self.status_message.emit(f"Redid transaction: {transaction['label']}")
 
     def _reset_current(self) -> None:
         if self._current_frame_index is None:
@@ -678,4 +678,4 @@ class CleanupStudio(QWidget):
             after={self._current_frame_index: None},
         )
         self._refresh_current_preview()
-        self.status_message.emit('Frame corrente ripristinato al chroma key originale.')
+        self.status_message.emit('Current frame restored to the original chroma key.')

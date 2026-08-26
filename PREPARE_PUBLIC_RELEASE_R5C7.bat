@@ -1,8 +1,5 @@
 @echo off
-setlocal
-cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\prepare_public_release.ps1" %*
-set "RC=%ERRORLEVEL%"
-if not "%RC%"=="0" echo.
-if not "%RC%"=="0" echo PUBLIC RELEASE PREPARATION FAILED - exit code %RC%
-exit /b %RC%
+echo This helper belongs to the frozen R5c7 release line.
+echo The current source tree is R5c8. Use PREPARE_PUBLIC_RELEASE_R5C8.bat.
+pause
+exit /b 2

@@ -446,7 +446,7 @@ class LocalWanGPBridgeTests(unittest.TestCase):
             self.assertIsNotNone(warning)
             report = provider.health_check()
             self.assertTrue(report.available, report.summary())
-            self.assertTrue(any('corretta automaticamente' in item for item in report.warnings))
+            self.assertTrue(any('automatically corrected' in item for item in report.warnings))
 
     def test_standard_wangp_layout_requires_settings_marker(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -513,7 +513,7 @@ class LocalWanGPBridgeTests(unittest.TestCase):
             self.assertTrue(result.metadata['dry_run'])
             provider_payload = json.loads((root / 'provider_settings.json').read_text(encoding='utf-8'))
             self.assertEqual(Path(provider_payload['resolved_working_directory']), repo)
-            self.assertIn('corretta automaticamente', provider_payload['working_directory_warning'])
+            self.assertIn('automatically corrected', provider_payload['working_directory_warning'])
 
 
 

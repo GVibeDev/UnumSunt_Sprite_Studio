@@ -212,10 +212,10 @@ class WanGPJobAdapter:
                 template = json.loads(template_path.read_text(encoding='utf-8'))
             except Exception as exc:
                 raise InvalidGenerationRequestError(
-                    f'Il template WanGP non è un JSON valido: {exc}'
+                    f'The WanGP template is not valid JSON: {exc}'
                 ) from exc
             if not isinstance(template, dict):
-                raise InvalidGenerationRequestError('Il template WanGP deve contenere un oggetto JSON.')
+                raise InvalidGenerationRequestError('The WanGP template must contain a JSON object.')
             payload = self._replace(template, request, paths)
             if self.is_official_settings_payload(payload):
                 payload = self._bind_official_settings(payload, request, paths)
@@ -336,7 +336,7 @@ class WanGPJobAdapter:
             'num_inference_steps': int(request.steps),
         }
         mismatches = [
-            f'{key}: atteso {expected_value!r}, trovato {payload.get(key)!r}'
+            f'{key}: expected {expected_value!r}, found {payload.get(key)!r}'
             for key, expected_value in expected.items()
             if payload.get(key) != expected_value
         ]
@@ -347,16 +347,16 @@ class WanGPJobAdapter:
             image_values = attachment if isinstance(attachment, list) else [attachment]
             if reference_image and str(reference_image) not in [str(value) for value in image_values if value]:
                 mismatches.append(
-                    f'{attachment_key}: immagine di riferimento non collegata al job WanGP'
+                    f'{attachment_key}: reference image not attached to the WanGP job'
                 )
 
         motion_video = paths.get('motion_video')
         if motion_video and str(payload.get('video_guide', '')) != str(motion_video):
-            mismatches.append('video_guide: motion reference non collegato al job WanGP')
+            mismatches.append('video_guide: motion reference not attached to the WanGP job')
 
         if mismatches:
             raise InvalidGenerationRequestError(
-                'Binding del template WanGP incompleto: ' + '; '.join(mismatches)
+                'Incomplete WanGP template binding: ' + '; '.join(mismatches)
             )
 
     def binding_report(
@@ -388,11 +388,10 @@ class WanGPJobAdapter:
             if paths.get('motion_video'):
                 report['bound_fields'].append('video_guide')
             report['notes'].append(
-                'FPS non sovrascritto: WanGP mantiene force_fps del preset '
-                '(per Animate il valore control usa il frame rate del video guida).'
+                'FPS not overridden: WanGP keeps force_fps from the preset (for Animate, the control value uses the guide video frame rate).'
             )
             report['notes'].append(
-                'Il modello/checkpoint resta quello definito dal preset WanGP.'
+                'The model/checkpoint remains the one defined by the WanGP preset.'
             )
         return report
 
@@ -453,8 +452,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 return configured, None
             if configured:
                 return script_directory, (
-                    f'Working directory configurata non disponibile ({configured}); '
-                    f'uso la cartella dello script: {script_directory}'
+                    f'Configured working directory is unavailable ({configured}); using the script folder: {script_directory}'
                 )
             return script_directory, None
 
@@ -465,9 +463,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
         if (script_directory / marker).is_file():
             if configured and configured != script_directory:
                 return script_directory, (
-                    f'Working directory corretta automaticamente da {configured} '
-                    f'a {script_directory}: WanGP richiede {marker.as_posix()} '
-                    'relativo alla propria root.'
+                    f'Working directory automatically corrected from {configured} to {script_directory}: WanGP requires {marker.as_posix()} relative to its own root.'
                 )
             return script_directory, None
 
@@ -493,35 +489,35 @@ class LocalWanGPProvider(VideoGeneratorProvider):
 
         python_path = Path(self.config.python_executable).expanduser() if self.config.python_executable else None
         python_ok = bool(python_path and python_path.is_file())
-        checks.append(HealthCheckItem('Python executable', python_ok, str(python_path) if python_path else 'non configurato'))
+        checks.append(HealthCheckItem('Python executable', python_ok, str(python_path) if python_path else 'not configured'))
 
         script_path = Path(self.config.wangp_script).expanduser() if self.config.wangp_script else None
         script_ok = bool(script_path and script_path.is_file())
-        checks.append(HealthCheckItem('WanGP wgp.py', script_ok, str(script_path) if script_path else 'non configurato'))
+        checks.append(HealthCheckItem('WanGP wgp.py', script_ok, str(script_path) if script_path else 'not configured'))
 
         template_ok = True
         if self.config.require_template:
             template_path = Path(self.config.settings_template).expanduser() if self.config.settings_template else None
             template_ok = bool(template_path and template_path.is_file())
-            template_detail = str(template_path) if template_path else 'non configurato'
+            template_detail = str(template_path) if template_path else 'not configured'
             if template_ok and template_path is not None:
                 try:
                     template_payload = json.loads(template_path.read_text(encoding='utf-8'))
                     if not isinstance(template_payload, dict):
-                        raise ValueError('root JSON non oggetto')
+                        raise ValueError('JSON root is not an object')
                     if self.uses_standard_wangp_layout() and not self.adapter.is_official_settings_payload(template_payload):
                         template_ok = False
-                        template_detail += ' · non è un settings export ufficiale WanGP (manca model_type/model_filename/settings_version)'
+                        template_detail += ' · this is not an official WanGP settings export (model_type/model_filename/settings_version is missing)'
                 except Exception as exc:
                     template_ok = False
-                    template_detail += f' · JSON non valido: {exc}'
+                    template_detail += f' · invalid JSON: {exc}'
             checks.append(HealthCheckItem('WanGP settings template', template_ok, template_detail))
         elif self.config.settings_template:
             template_path = Path(self.config.settings_template).expanduser()
             template_ok = template_path.is_file()
             checks.append(HealthCheckItem('WanGP settings template', template_ok, str(template_path)))
         else:
-            warnings.append('Nessun template configurato: verrà usato il payload adapter generico, destinato soprattutto a test e integrazione.')
+            warnings.append('No template configured: the generic payload adapter will be used, intended mainly for testing and integration.')
 
         working_directory, working_warning = self.resolve_working_directory()
         working_ok = working_directory.is_dir()
@@ -529,7 +525,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
             HealthCheckItem(
                 'WanGP runtime directory',
                 working_ok,
-                str(working_directory) if working_ok else f'cartella non trovata: {working_directory}',
+                str(working_directory) if working_ok else f'folder not found: {working_directory}',
             )
         )
         if working_warning:
@@ -543,7 +539,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 HealthCheckItem(
                     'WanGP models/_settings.json',
                     runtime_layout_ok,
-                    str(settings_marker) if runtime_layout_ok else f'file non trovato: {settings_marker}',
+                    str(settings_marker) if runtime_layout_ok else f'file not found: {settings_marker}',
                 )
             )
 
@@ -564,9 +560,9 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 checks.append(HealthCheckItem('Python launch', version_ok, detail))
                 if version_ok and self.config.strict_python_311 and not python_version.startswith('3.11.'):
                     version_ok = False
-                    checks[-1] = HealthCheckItem('Python launch', False, f'{python_version}; richiesto Python 3.11.x')
+                    checks[-1] = HealthCheckItem('Python launch', False, f'{python_version}; Python 3.11.x required')
                 elif version_ok and not python_version.startswith('3.11.'):
-                    warnings.append(f'Python {python_version} accettato solo perché il controllo 3.11 rigido è disattivato.')
+                    warnings.append(f'Python {python_version} accepted only because strict Python 3.11 checking is disabled.')
             except Exception as exc:
                 checks.append(HealthCheckItem('Python launch', False, str(exc)))
 
@@ -586,14 +582,13 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 gpu_compat_ok = torch_probe.available and torch_probe.cuda_available and torch_probe.default_device_compatible
                 checks.append(HealthCheckItem('GPU ↔ PyTorch compatibility', gpu_compat_ok, torch_probe.detail()))
             if torch_probe.available and not torch_probe.cuda_available:
-                warnings.append('PyTorch è importabile ma torch.cuda.is_available() è False. Verificare driver e runtime CUDA.')
+                warnings.append('PyTorch can be imported, but torch.cuda.is_available() is False. Check the driver and CUDA runtime.')
             elif gpu_compat_required and torch_probe.available and torch_probe.cuda_available and not torch_probe.default_device_compatible:
                 warnings.append(
-                    'La GPU predefinita non è inclusa nelle architetture CUDA compilate nella wheel PyTorch installata. '
-                    "La generazione locale viene bloccata prima dell'avvio di WanGP."
+                    'The default GPU is not included in the CUDA architectures compiled into the installed PyTorch wheel. Local generation is blocked before WanGP starts.'
                 )
         elif python_ok and version_ok and not torch_required:
-            warnings.append('Controllo PyTorch/GPU omesso per runtime development/mock: il runtime AI reale resta separato dal Core/build environment.')
+            warnings.append('PyTorch/GPU check skipped for development/mock runtime: the real AI runtime remains separate from the Core/build environment.')
 
         available = (
             python_ok
@@ -615,26 +610,26 @@ class LocalWanGPProvider(VideoGeneratorProvider):
 
     def validate_request(self, request: GenerationRequest) -> None:
         if request.task != 'image_to_video':
-            raise InvalidGenerationRequestError('Il bridge locale supporta image_to_video.')
+            raise InvalidGenerationRequestError('The local bridge supports image_to_video.')
         if not request.reference_image:
-            raise InvalidGenerationRequestError('Il provider locale richiede un’immagine di riferimento.')
+            raise InvalidGenerationRequestError('The local provider requires a reference image.')
         reference = Path(request.reference_image).expanduser()
         if not reference.is_file():
-            raise InvalidGenerationRequestError(f'Immagine di riferimento non trovata: {reference}')
+            raise InvalidGenerationRequestError(f'Reference image not found: {reference}')
         motion = Path(request.motion_video).expanduser() if request.motion_video else None
         if motion is not None and not motion.is_file():
-            raise InvalidGenerationRequestError(f'Motion reference non trovata: {motion}')
+            raise InvalidGenerationRequestError(f'Motion reference not found: {motion}')
         if request.width <= 0 or request.height <= 0 or request.frames <= 0 or request.fps <= 0:
-            raise InvalidGenerationRequestError('Dimensioni, frame e FPS devono essere positivi.')
+            raise InvalidGenerationRequestError('Dimensions, frame count, and FPS must be positive.')
         contract = request.metadata.get('wan_contract')
         if isinstance(contract, dict):
             if request.width % 16 != 0 or request.height % 16 != 0:
                 raise InvalidGenerationRequestError(
-                    'Le dimensioni WanGP contrattualizzate devono essere multipli di 16.'
+                    'The contracted WanGP dimensions must be multiples of 16.'
                 )
             if request.frames < 1 or (request.frames - 1) % 4 != 0:
                 raise InvalidGenerationRequestError(
-                    'Il numero di frame WanGP contrattualizzato deve rispettare la forma 4n+1.'
+                    'The contracted WanGP frame count must follow the 4n+1 form.'
                 )
         report = self.health_check()
         if not report.available:
@@ -656,7 +651,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
     def run(self, request: GenerationRequest, context: GenerationJobContext) -> GenerationResult:
         self.validate_request(request)
         self._check_cancel(context)
-        context.progress_callback(GenerationProgress('validating', 0.02, 'Validazione runtime WanGP'))
+        context.progress_callback(GenerationProgress('validating', 0.02, 'WanGP runtime validation'))
 
         copied_paths = self._copy_inputs(request, context)
         copied_paths['output_directory'] = str(context.output_directory.resolve())
@@ -682,14 +677,14 @@ class LocalWanGPProvider(VideoGeneratorProvider):
         )
 
         dry_run = bool(request.metadata.get('dry_run'))
-        context.progress_callback(GenerationProgress('starting', 0.04, 'Avvio processo WanGP esterno'))
+        context.progress_callback(GenerationProgress('starting', 0.04, 'Starting external WanGP process'))
         return_code = self._run_process(
             settings_path=settings_path,
             context=context,
             dry_run=dry_run,
         )
         if return_code != 0:
-            raise ProcessCrashError(f'WanGP terminato con codice {return_code}. Consultare logs/stderr.log.')
+            raise ProcessCrashError(f'WanGP exited with code {return_code}. See logs/stderr.log.')
 
         if dry_run:
             manifest = {
@@ -729,7 +724,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 },
             )
 
-        context.progress_callback(GenerationProgress('saving', 0.97, 'Ricerca output video WanGP'))
+        context.progress_callback(GenerationProgress('saving', 0.97, 'Searching for WanGP video output'))
         output_path = self._find_output_video(context.output_directory)
         metadata = self._validate_video(output_path)
         actual_width = metadata.get('width')
@@ -798,7 +793,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
             json.dumps(manifest, indent=2, ensure_ascii=False),
             encoding='utf-8',
         )
-        context.progress_callback(GenerationProgress('saving', 0.995, 'Output WanGP validato'))
+        context.progress_callback(GenerationProgress('saving', 0.995, 'WanGP output validated'))
         return GenerationResult(
             job_id=request.job_id,
             state='completed',
@@ -860,9 +855,9 @@ class LocalWanGPProvider(VideoGeneratorProvider):
                 creationflags=creationflags,
             )
         except FileNotFoundError as exc:
-            raise PythonEnvironmentBrokenError(f'Impossibile avviare il runtime: {exc}') from exc
+            raise PythonEnvironmentBrokenError(f'Unable to start the runtime: {exc}') from exc
         except OSError as exc:
-            raise ProcessCrashError(f'Avvio processo WanGP fallito: {exc}') from exc
+            raise ProcessCrashError(f'Failed to start WanGP process: {exc}') from exc
 
         queue: Queue[tuple[str, str | None]] = Queue()
 
@@ -892,10 +887,10 @@ class LocalWanGPProvider(VideoGeneratorProvider):
             while process.poll() is None or active_streams:
                 if context.cancel_event.is_set():
                     self._terminate_process(process)
-                    raise GenerationCancelledError('Generazione WanGP annullata dall’utente.')
+                    raise GenerationCancelledError('WanGP generation cancelled by the user.')
                 if self.config.process_timeout_seconds > 0 and time.monotonic() - start_time > self.config.process_timeout_seconds:
                     self._terminate_process(process)
-                    raise ProcessCrashError('Timeout del processo WanGP.')
+                    raise ProcessCrashError('WanGP process timed out.')
                 try:
                     source, line = queue.get(timeout=0.10)
                 except Empty:
@@ -936,7 +931,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
             detail = ' | '.join(diagnostic_lines[-10:])
             suffix = f': {detail}' if detail else ''
             raise ProcessCrashError(
-                f'WanGP terminato con codice {return_code}{suffix}'
+                f'WanGP exited with code {return_code}{suffix}'
             )
         return return_code
 
@@ -961,7 +956,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
             if path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS and path.stat().st_size > 0
         ]
         if not candidates:
-            raise OutputNotFoundError('WanGP non ha prodotto alcun file video nella cartella output.')
+            raise OutputNotFoundError('WanGP did not produce any video file in the output folder.')
         return max(candidates, key=lambda path: (path.stat().st_mtime_ns, path.stat().st_size))
 
     @staticmethod
@@ -970,7 +965,7 @@ class LocalWanGPProvider(VideoGeneratorProvider):
         try:
             metadata = source.open(path)
         except VideoOpenError as exc:
-            raise OutputNotFoundError(f'Il file prodotto non è un video leggibile: {exc}') from exc
+            raise OutputNotFoundError(f'The produced file is not a readable video: {exc}') from exc
         finally:
             source.close()
         return {
@@ -985,4 +980,4 @@ class LocalWanGPProvider(VideoGeneratorProvider):
     @staticmethod
     def _check_cancel(context: GenerationJobContext) -> None:
         if context.cancel_event.is_set():
-            raise GenerationCancelledError('Generazione annullata dall’utente.')
+            raise GenerationCancelledError('Generation cancelled by the user.')

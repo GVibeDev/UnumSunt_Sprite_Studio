@@ -8,14 +8,13 @@ from app.ui_theme import TAB_THEMES, THEME_ORDER, normalize_theme_name
 class PreferencesDialog(QDialog):
     def __init__(self, parent=None, *, tab_theme: str = 'red') -> None:
         super().__init__(parent)
-        self.setWindowTitle('Preferenze')
+        self.setWindowTitle('Preferences')
         self.setModal(True)
         self.resize(430, 180)
 
         root = QVBoxLayout(self)
         intro = QLabel(
-            'Aspetto delle 14 tab principali. Il testo diventa progressivamente più chiaro; '
-            'lo sfondo segue il gradiente inverso per conservarne il contrasto.'
+            'Appearance of the 14 main tabs. Text becomes progressively lighter while the background follows the inverse gradient to preserve contrast.'
         )
         intro.setWordWrap(True)
         root.addWidget(intro)
@@ -27,7 +26,7 @@ class PreferencesDialog(QDialog):
         normalized = normalize_theme_name(tab_theme)
         combo_index = self.theme_combo.findData(normalized)
         self.theme_combo.setCurrentIndex(max(0, combo_index))
-        form.addRow('Gradiente tab', self.theme_combo)
+        form.addRow('Tab gradient', self.theme_combo)
         root.addLayout(form)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)

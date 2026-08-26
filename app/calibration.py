@@ -243,35 +243,35 @@ def parse_variant_value(field: str, raw_value: str) -> Any:
     if field in {'steps', 'frames', 'seed'}:
         value = int(raw)
         if field in {'steps', 'frames'} and value <= 0:
-            raise ValueError(f'{field} deve essere positivo.')
+            raise ValueError(f'{field} must be positive.')
         if field == 'seed' and value < 0:
-            raise ValueError('seed non può essere negativo.')
+            raise ValueError('seed cannot be negative.')
         return value
     if field == 'fps':
         value = float(raw)
         if value <= 0:
-            raise ValueError('fps deve essere positivo.')
+            raise ValueError('fps must be positive.')
         return value
     if field in {'resolution_class', 'aspect_ratio', 'positive_prompt', 'negative_prompt'}:
         if not raw:
-            raise ValueError(f'{field} non può essere vuoto.')
+            raise ValueError(f'{field} cannot be empty.')
         return raw
-    raise ValueError(f'Parametro non supportato: {field}')
+    raise ValueError(f'Unsupported parameter: {field}')
 
 
 def build_single_parameter_variant(profile: dict[str, Any], field: str, value: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     if field not in VARIANT_FIELDS:
-        raise ValueError(f'Parametro non supportato: {field}')
+        raise ValueError(f'Unsupported parameter: {field}')
     result = deepcopy(profile)
     old_value = result.get(field)
     result[field] = deepcopy(value)
     differences = compare_generation_profiles(profile, result)
     if not differences:
-        raise ValueError('La variante non modifica alcun parametro.')
+        raise ValueError('The variant does not change any parameter.')
     if set(differences) != {field}:
-        raise ValueError('La variante deve modificare esattamente un parametro.')
+        raise ValueError('The variant must change exactly one parameter.')
     if field != 'seed' and result.get('seed') != profile.get('seed'):
-        raise ValueError('Il seed deve restare invariato nelle varianti non-seed.')
+        raise ValueError('The seed must remain unchanged in non-seed variants.')
     return result, {'field': field, 'before': old_value, 'after': value, 'seed_preserved': field == 'seed' or result.get('seed') == profile.get('seed')}
 
 
@@ -287,9 +287,9 @@ def run_summary(run: dict[str, Any]) -> str:
         actual = f"{result.get('actual_width')}×{result.get('actual_height')} / {result.get('actual_frames') or '—'}f / {result.get('actual_fps') or '—'}fps"
     return '\n'.join([
         f"Run: {normalized['id']}",
-        f"Job: {normalized.get('source_job_id') or 'snapshot manuale'}",
+        f"Job: {normalized.get('source_job_id') or 'manual snapshot'}",
         f"Config: seed {profile.get('seed', '—')} · {profile.get('resolution_class', '—')} {profile.get('aspect_ratio', '')} · {profile.get('frames', '—')}f · {profile.get('fps', '—')}fps · {profile.get('steps', '—')} steps",
-        f"Output reale: {actual}",
+        f'Actual output: {actual}',
         f"Tempo job: {duration_text}",
-        f"Valutazione: {evaluation.get('rating', 0)}/5 · {evaluation.get('verdict', 'unrated')} · frame utili {evaluation.get('usable_frames', 0)}",
+        f"Rating: {evaluation.get('rating', 0)}/5 · {evaluation.get('verdict', 'unrated')} · usable frames {evaluation.get('usable_frames', 0)}",
     ])

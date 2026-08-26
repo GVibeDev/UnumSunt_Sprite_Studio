@@ -1,5 +1,5 @@
 UNUM SUNT SPRITE STUDIO — THIRD-PARTY NOTICES
-Release line: R5c7
+Release line: R5c8
 Prepared: 2026-08-17
 
 1. PROJECT LICENSE SCOPE
@@ -60,7 +60,7 @@ The following components are not relicensed under the Sprite Studio GPL.
 
 WanGP / Wan2GP
   Upstream project: deepbeepmeep/Wan2GP
-  Managed R5c7 revision: 6e35b37e309ccebeed193ef53cdff66fb973b693
+  Managed R5c8 revision: 6e35b37e309ccebeed193ef53cdff66fb973b693
   Managed version hint: 12.53
   License at that revision: WanGP Community License 2.0.
 

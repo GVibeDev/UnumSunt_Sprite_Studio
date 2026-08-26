@@ -58,19 +58,18 @@ class WorkflowWorkspace(QWidget):
         title.setStyleSheet('font-size: 20px; font-weight: 700;')
         root.addWidget(title)
         intro = QLabel(
-            'Sprite Studio organizza gli strumenti già validati in tre percorsi produttivi. '
-            'Il workflow non blocca i dati: registra il percorso del Project Group e guida verso il prossimo step.'
+            'Sprite Studio organizes the validated tools into three production routes. A workflow does not lock your data: it records the Project Group route and guides you toward the next step.'
         )
         intro.setWordWrap(True)
         root.addWidget(intro)
 
-        choose_group = QGroupBox('Workflow del Project Group attivo')
+        choose_group = QGroupBox('Active Project Group Workflow')
         choose_layout = QVBoxLayout(choose_group)
         row = QHBoxLayout()
         self.workflow_combo = QComboBox()
         for workflow_type, definition in WORKFLOW_DEFINITIONS.items():
             self.workflow_combo.addItem(definition['title'], workflow_type)
-        self.apply_workflow_button = QPushButton('Imposta / cambia workflow')
+        self.apply_workflow_button = QPushButton('Set / Change Workflow')
         self.apply_workflow_button.clicked.connect(self._apply_workflow)
         row.addWidget(self.workflow_combo, 1)
         row.addWidget(self.apply_workflow_button)
@@ -79,14 +78,14 @@ class WorkflowWorkspace(QWidget):
         self.workflow_description.setWordWrap(True)
         self.workflow_description.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #252a30; border: 1px solid #4b5560; }')
         choose_layout.addWidget(self.workflow_description)
-        self.guided_tabs_checkbox = QCheckBox('Vista guidata: mostra soltanto i workspace pertinenti al workflow')
+        self.guided_tabs_checkbox = QCheckBox('Guided View: show only workspaces relevant to the workflow')
         self.guided_tabs_checkbox.toggled.connect(self._guided_tabs_toggled)
         choose_layout.addWidget(self.guided_tabs_checkbox)
         root.addWidget(choose_group)
 
-        steps_group = QGroupBox('Percorso operativo')
+        steps_group = QGroupBox('Production Route')
         steps_layout = QVBoxLayout(steps_group)
-        self.group_label = QLabel('Nessun Project Group attivo.')
+        self.group_label = QLabel('No active Project Group.')
         self.group_label.setWordWrap(True)
         self.group_label.setStyleSheet('font-weight: 600;')
         steps_layout.addWidget(self.group_label)
@@ -95,13 +94,13 @@ class WorkflowWorkspace(QWidget):
         steps_layout.addWidget(self.step_list, 1)
 
         actions = QHBoxLayout()
-        self.open_step_button = QPushButton('Apri step')
+        self.open_step_button = QPushButton('Open Step')
         self.open_step_button.clicked.connect(self._open_step)
-        self.complete_button = QPushButton('Segna completato')
+        self.complete_button = QPushButton('Mark Complete')
         self.complete_button.clicked.connect(lambda: self._set_selected_step('complete'))
-        self.pending_button = QPushButton('Riapri step')
+        self.pending_button = QPushButton('Reopen Step')
         self.pending_button.clicked.connect(lambda: self._set_selected_step('pending'))
-        self.skip_button = QPushButton('Salta step')
+        self.skip_button = QPushButton('Skip Step')
         self.skip_button.clicked.connect(lambda: self._set_selected_step('skipped'))
         actions.addWidget(self.open_step_button)
         actions.addWidget(self.complete_button)
@@ -110,9 +109,9 @@ class WorkflowWorkspace(QWidget):
         steps_layout.addLayout(actions)
 
         special = QHBoxLayout()
-        self.checkpoint_button = QPushButton('Salva checkpoint impostazioni')
+        self.checkpoint_button = QPushButton('Save Settings Checkpoint')
         self.checkpoint_button.clicked.connect(self.settings_checkpoint_requested.emit)
-        self.motion_reference_button = QPushButton('Usa video corrente come riferimento movimento')
+        self.motion_reference_button = QPushButton('Use Current Video as Motion Reference')
         self.motion_reference_button.clicked.connect(self.motion_reference_requested.emit)
         special.addWidget(self.checkpoint_button)
         special.addWidget(self.motion_reference_button)
@@ -159,15 +158,15 @@ class WorkflowWorkspace(QWidget):
     def _apply_workflow(self) -> None:
         store, group_id, group = self._store_and_group()
         if store is None or not group_id or group is None:
-            QMessageBox.information(self, 'Nessun gruppo', 'Attivare prima un Project Group di direzione.')
+            QMessageBox.information(self, 'No Group', 'Activate a Direction Project Group first.')
             return
         workflow_type = str(self.workflow_combo.currentData())
         existing = self.current_workflow()
         if existing and existing.get('type') != workflow_type:
             answer = QMessageBox.question(
                 self,
-                'Cambia workflow',
-                'Cambiare workflow conserva asset e pipeline ma azzera il progresso guidato specifico del workflow. Continuare?',
+                'Change Workflow',
+                'Changing workflow preserves assets and pipeline data but resets workflow-specific guided progress. Continue?',
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -176,7 +175,7 @@ class WorkflowWorkspace(QWidget):
         else:
             state = new_workflow_state(workflow_type)
         store.set_group_workflow(group_id, state)
-        self.status_message.emit(f'Workflow impostato: {workflow_definition(workflow_type)["title"]}')
+        self.status_message.emit(f"Workflow set: {workflow_definition(workflow_type)['title']}")
         self.refresh_context()
         self.guided_tabs_changed.emit(bool(state.get('guided_tabs', False)))
 
@@ -193,7 +192,7 @@ class WorkflowWorkspace(QWidget):
         workflow['guided_tabs'] = bool(checked)
         self._save_workflow(workflow)
         self.guided_tabs_changed.emit(bool(checked))
-        self.status_message.emit('Vista guidata aggiornata.')
+        self.status_message.emit('Guided View updated.')
 
     def _selected_step_id(self) -> str | None:
         item = self.step_list.currentItem()
@@ -249,16 +248,16 @@ class WorkflowWorkspace(QWidget):
             return
         step = definition['steps'][position]
         hints = {
-            'video_generation': 'Apri Genera, verifica reference image e motion reference già pronti, quindi lancia WAN.',
-            'image_generation': 'Apri Image Generator. Genera il master da prompt: R5e9 lo caricherà automaticamente come reference WAN.',
-            'spritesheet_import': 'Apri Sprite Sheet. Importa/decomponi l’animazione desiderata e prepara i frame o la reference sheet necessaria.',
-            'motion_reference': 'Dopo aver generato il video intermedio che rappresenta il movimento, torna qui e usa “Usa video corrente come riferimento movimento”. Il master R5e9 viene ripristinato come reference finale.',
-            'final_video_generation': 'In Genera devono essere presenti il master image e il video di movimento. Lancia la generazione finale.',
-            'frame_selection': 'In Estrazione R1 scegli i frame utili. Smart Selection resta disponibile come supporto.',
-            'cleanup': 'Applica chroma/alpha, clean-up manuale e propagazione dove necessario.',
-            'alignment': 'Allinea pivot e geometria; nel workflow spritesheet qui rientrano anche up/downscaling e output geometry.',
-            'settings_checkpoint': 'Salva uno snapshot esplicito delle impostazioni correnti del gruppo con il pulsante dedicato.',
-            'export': 'Apri Export Studio ed esporta singoli frame e/o spritesheet finale.',
+            'video_generation': 'Open Generate, verify that the reference image and motion reference are ready, then launch WAN.',
+            'image_generation': 'Open Image Generator. Generate the master from a prompt; R5e9 will automatically load it as the WAN reference.',
+            'spritesheet_import': 'Open Sprite Sheet. Import/decompose the desired animation and prepare the required frames or reference sheet.',
+            'motion_reference': 'After generating the intermediate motion video, return here and use “Use Current Video as Motion Reference”. The R5e9 master is restored as the final reference.',
+            'final_video_generation': 'Generate must contain both the master image and the motion video. Launch the final generation.',
+            'frame_selection': 'In R1 Extraction, choose the useful frames. Smart Selection remains available as an aid.',
+            'cleanup': 'Apply chroma/alpha, manual clean-up, and propagation where needed.',
+            'alignment': 'Align pivot and geometry; in the spritesheet workflow, this step also covers up/downscaling and output geometry.',
+            'settings_checkpoint': 'Save an explicit snapshot of the group’s current settings with the dedicated button.',
+            'export': 'Open Export Studio and export individual frames and/or the final spritesheet.',
         }
         self.step_help.setPlainText(hints.get(step_id, step['title']))
 
@@ -268,17 +267,17 @@ class WorkflowWorkspace(QWidget):
         self.apply_workflow_button.setEnabled(has_group)
         self.step_list.clear()
         if not has_group:
-            self.group_label.setText('Nessun Project Group di direzione attivo.')
-            self.progress_label.setText('Attiva un gruppo in Progetto per scegliere il workflow.')
+            self.group_label.setText('No active Direction Project Group.')
+            self.progress_label.setText('Activate a group in Project to choose a workflow.')
             self.guided_tabs_checkbox.setEnabled(False)
             self.checkpoint_button.setEnabled(False)
             self.motion_reference_button.setEnabled(False)
             return
 
-        self.group_label.setText(f'Gruppo attivo: {store.group_label(group_id)}')
+        self.group_label.setText(f'Active group: {store.group_label(group_id)}')
         workflow = self.current_workflow()
         if workflow is None:
-            self.progress_label.setText('Workflow non ancora scelto. Seleziona uno dei tre flussi ufficiali.')
+            self.progress_label.setText('No workflow selected yet. Choose one of the three official routes.')
             self.guided_tabs_checkbox.setEnabled(False)
             self.checkpoint_button.setEnabled(False)
             self.motion_reference_button.setEnabled(False)
@@ -302,9 +301,9 @@ class WorkflowWorkspace(QWidget):
             item = QListWidgetItem(f"{status_icons[row['status']]}  {row['index'] + 1}. {row['title']}")
             item.setData(Qt.ItemDataRole.UserRole, row['id'])
             if row['status'] == 'complete':
-                item.setToolTip('Completato (automaticamente o manualmente).')
+                item.setToolTip('Completed (automatically or manually).')
             elif row['status'] == 'skipped':
-                item.setToolTip('Saltato esplicitamente.')
+                item.setToolTip('Explicitly skipped.')
             self.step_list.addItem(item)
             if select_step_id == row['id'] or (select_step_id is None and row['id'] == workflow.get('current_step')):
                 selected_item = item
@@ -315,8 +314,7 @@ class WorkflowWorkspace(QWidget):
 
         completed_count = sum(1 for row in rows if row['status'] in {'complete', 'skipped'})
         self.progress_label.setText(
-            f"{workflow_definition(workflow['type'])['title']} · {completed_count}/{len(rows)} step conclusi. "
-            f"Prossimo: {next_incomplete_step(group, workflow) or 'workflow completato'}."
+            f"{workflow_definition(workflow['type'])['title']} · {completed_count}/{len(rows)} steps completed. Next: {next_incomplete_step(group, workflow) or 'workflow completed'}."
         )
         self.checkpoint_button.setEnabled(True)
         self.motion_reference_button.setEnabled(workflow['type'] == 'full')
@@ -334,7 +332,7 @@ class WorkflowWorkspace(QWidget):
         workflow = set_step_state(workflow, 'settings_checkpoint', 'complete')
         self._save_workflow(workflow)
         self.refresh_context(select_step_id='settings_checkpoint')
-        self.status_message.emit('Checkpoint impostazioni salvato nel Project Group.')
+        self.status_message.emit('Settings checkpoint saved in the Project Group.')
 
     def record_motion_reference(self, *, path: str, promoted_from_source_video: str) -> None:
         workflow = self.current_workflow()
@@ -348,4 +346,4 @@ class WorkflowWorkspace(QWidget):
         workflow['current_step'] = 'final_video_generation'
         self._save_workflow(workflow)
         self.refresh_context(select_step_id='final_video_generation')
-        self.status_message.emit('Video intermedio promosso a riferimento movimento; pronto per la generazione finale.')
+        self.status_message.emit('Intermediate video promoted to motion reference; ready for final generation.')

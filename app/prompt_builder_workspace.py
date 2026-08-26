@@ -82,7 +82,7 @@ class PromptBuilderWorkspace(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(10, 10, 10, 10)
         banner = QLabel(
-            'R5e7 — Prompt Builder & Prompt Profiles. Il builder compone prompt strutturati ma il testo finale resta sempre visibile, modificabile e applicato a Genera solo su comando esplicito.'
+            'R5e7 — Prompt Builder & Prompt Profiles. The builder composes structured prompts while keeping the final text visible and editable; it is applied to Generate only on explicit command.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet('QLabel { color: #f4f6f8; padding: 9px; background: #29263b; border: 1px solid #69609a; }')
@@ -95,16 +95,16 @@ class PromptBuilderWorkspace(QWidget):
         actions = QWidget()
         actions_layout = QHBoxLayout(actions)
         actions_layout.setContentsMargins(0, 0, 0, 0)
-        load_button = QPushButton('Carica')
+        load_button = QPushButton('Load')
         load_button.clicked.connect(self._load_selected_profile)
-        save_button = QPushButton('Salva come…')
+        save_button = QPushButton('Save As…')
         save_button.clicked.connect(self._save_profile_as)
-        delete_button = QPushButton('Elimina')
+        delete_button = QPushButton('Delete')
         delete_button.clicked.connect(self._delete_selected_profile)
         actions_layout.addWidget(load_button)
         actions_layout.addWidget(save_button)
         actions_layout.addWidget(delete_button)
-        profiles_form.addRow('Profilo', self.profile_combo)
+        profiles_form.addRow('Profile', self.profile_combo)
         profiles_form.addRow('', actions)
         root.addWidget(profiles_group)
 
@@ -125,7 +125,7 @@ class PromptBuilderWorkspace(QWidget):
         self.background_combo = QComboBox(); self.background_combo.addItems(BACKGROUNDS)
         self.output_combo = QComboBox(); self.output_combo.addItems(OUTPUT_PURPOSES)
         self.identity_description_edit = QPlainTextEdit(); self.identity_description_edit.setMaximumHeight(92)
-        self.custom_background_button = QPushButton('Scegli RGB custom')
+        self.custom_background_button = QPushButton('Choose Custom RGB')
         self.custom_background_button.clicked.connect(self._choose_custom_background)
         self.custom_background_label = QLabel('RGB(0, 255, 0)')
         custom_bg_row = QWidget()
@@ -159,7 +159,7 @@ class PromptBuilderWorkspace(QWidget):
         right = QWidget()
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(6, 0, 0, 0)
-        prompts_group = QGroupBox('Prompt finale · sempre modificabile')
+        prompts_group = QGroupBox('Final Prompt · always editable')
         prompts_layout = QVBoxLayout(prompts_group)
         prompts_layout.addWidget(QLabel('Positive prompt'))
         self.positive_edit = QPlainTextEdit()
@@ -172,18 +172,18 @@ class PromptBuilderWorkspace(QWidget):
         right_layout.addWidget(prompts_group, 1)
 
         button_row = QHBoxLayout()
-        compose_button = QPushButton('Componi dai blocchi')
+        compose_button = QPushButton('Compose from Blocks')
         compose_button.clicked.connect(self._compose)
-        load_generate_button = QPushButton('Carica testo da Genera')
+        load_generate_button = QPushButton('Load Text from Generate')
         load_generate_button.clicked.connect(self._load_from_generate)
-        apply_button = QPushButton('Applica a Genera')
+        apply_button = QPushButton('Apply to Generate')
         apply_button.clicked.connect(self._apply_to_generate)
         button_row.addWidget(compose_button)
         button_row.addWidget(load_generate_button)
         button_row.addWidget(apply_button)
         right_layout.addLayout(button_row)
         note = QLabel(
-            '“Componi dai blocchi” rigenera i due campi. Dopo la composizione puoi editarli liberamente. “Applica a Genera” copia il testo corrente: nessun prompt viene sostituito automaticamente.'
+            '“Compose from Blocks” regenerates both fields. After composing, you can edit them freely. “Apply to Generate” copies the current text; no prompt is replaced automatically.'
         )
         note.setWordWrap(True)
         note.setStyleSheet('color: #9198a5;')
@@ -238,7 +238,7 @@ class PromptBuilderWorkspace(QWidget):
         state = self._current_builder_state()
         self.positive_edit.setPlainText(compose_prompt(state))
         self.negative_edit.setPlainText(compose_negative_prompt(state))
-        self.status_message.emit('Prompt composto dai blocchi R5e7. Il testo resta modificabile.')
+        self.status_message.emit('R5e7 prompt composed from blocks. The text remains editable.')
 
     def _refresh_profiles(self, selected: str | None = None) -> None:
         names = self.prompt_store.list_names()
@@ -255,7 +255,7 @@ class PromptBuilderWorkspace(QWidget):
         if profile is None:
             return
         self._apply_profile(profile)
-        self.status_message.emit(f'Prompt profile caricato: {name}')
+        self.status_message.emit(f'Prompt profile loaded: {name}')
 
     def _apply_profile(self, profile: dict) -> None:
         normalized = normalize_prompt_profile(profile)
@@ -264,7 +264,7 @@ class PromptBuilderWorkspace(QWidget):
         self.negative_edit.setPlainText(normalized['negative_prompt'])
 
     def _save_profile_as(self) -> None:
-        name, ok = QInputDialog.getText(self, 'Salva Prompt Profile', 'Nome profilo:')
+        name, ok = QInputDialog.getText(self, 'Save Prompt Profile', 'Profile name:')
         if not ok:
             return
         normalized_name = name.strip()
@@ -279,7 +279,7 @@ class PromptBuilderWorkspace(QWidget):
         )
         self.prompt_store.save(normalized_name, profile)
         self._refresh_profiles(normalized_name)
-        self.status_message.emit(f'Prompt profile salvato: {normalized_name}')
+        self.status_message.emit(f'Prompt profile saved: {normalized_name}')
 
     def _delete_selected_profile(self) -> None:
         name = self.profile_combo.currentText().strip()
@@ -288,10 +288,10 @@ class PromptBuilderWorkspace(QWidget):
         try:
             self.prompt_store.delete(name)
         except ValueError as exc:
-            QMessageBox.information(self, 'Profilo protetto', str(exc))
+            QMessageBox.information(self, 'Protected Profile', str(exc))
             return
         self._refresh_profiles()
-        self.status_message.emit(f'Prompt profile eliminato: {name}')
+        self.status_message.emit(f'Prompt profile deleted: {name}')
 
     def _load_from_generate(self) -> None:
         profile = self.current_generation_profile_provider()
@@ -306,7 +306,7 @@ class PromptBuilderWorkspace(QWidget):
         if isinstance(rgb, (list, tuple)) and len(rgb) == 3:
             self._custom_background_rgb = [max(0, min(255, int(v))) for v in rgb]
             self._update_custom_background_label()
-        self.status_message.emit('Prompt corrente caricato dal workspace Genera senza ricomposizione automatica.')
+        self.status_message.emit('Current prompt loaded from the Generate workspace without automatic recomposition.')
 
     def _apply_to_generate(self) -> None:
         current = deepcopy(self.current_generation_profile_provider())
@@ -317,10 +317,10 @@ class PromptBuilderWorkspace(QWidget):
         current['prompt_profile_name'] = self.profile_combo.currentText().strip()
         current['prompt_builder_state'] = state
         self.apply_generation_profile_requested.emit(current)
-        self.status_message.emit('Prompt R5e7 applicato esplicitamente al workspace Genera.')
+        self.status_message.emit('R5e7 prompt explicitly applied to the Generate workspace.')
 
     def _choose_custom_background(self) -> None:
-        color = QColorDialog.getColor(QColor(*self._custom_background_rgb), self, 'Sfondo custom')
+        color = QColorDialog.getColor(QColor(*self._custom_background_rgb), self, 'Custom Background')
         if not color.isValid():
             return
         self._custom_background_rgb = [color.red(), color.green(), color.blue()]

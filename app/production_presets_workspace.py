@@ -27,10 +27,10 @@ from app.production_presets import (
 
 
 SECTION_LABELS = {
-    'generation': 'Generazione',
+    'generation': 'Generation',
     'chroma': 'Chroma / Alpha',
-    'selection': 'Selezione intelligente',
-    'alignment': 'Allineamento / Output Geometry',
+    'selection': 'Smart Selection',
+    'alignment': 'Alignment / Output Geometry',
     'export': 'Export Studio',
 }
 
@@ -58,14 +58,13 @@ class ProductionPresetsWorkspace(QWidget):
         root.setContentsMargins(10, 10, 10, 10)
 
         banner = QLabel(
-            'R5e4a Preset Produttivi — cattura configurazioni riutilizzabili della pipeline e applicale ai Project Groups. '
-            'I preset Starter non impongono parametri WAN non calibrati.'
+            'R5e4a Production Presets — capture reusable pipeline configurations and apply them to Project Groups. Starter presets do not impose uncalibrated WAN parameters.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet('QLabel { color: #f4f6f8; padding: 9px; background: #332d1f; border: 1px solid #8c7b43; }')
         root.addWidget(banner)
 
-        self.active_group_label = QLabel('Gruppo attivo: nessuno')
+        self.active_group_label = QLabel('Active group: none')
         self.active_group_label.setWordWrap(True)
         self.active_group_label.setStyleSheet('QLabel { padding: 7px; border: 1px solid #555; }')
         root.addWidget(self.active_group_label)
@@ -80,11 +79,11 @@ class ProductionPresetsWorkspace(QWidget):
         self.preset_list.currentTextChanged.connect(self._on_selected_preset_changed)
         left_layout.addWidget(self.preset_list, 1)
         list_actions = QHBoxLayout()
-        refresh_button = QPushButton('Aggiorna')
+        refresh_button = QPushButton('Refresh')
         refresh_button.clicked.connect(self.refresh)
-        duplicate_button = QPushButton('Duplica')
+        duplicate_button = QPushButton('Duplicate')
         duplicate_button.clicked.connect(self._duplicate_selected)
-        delete_button = QPushButton('Elimina')
+        delete_button = QPushButton('Delete')
         delete_button.clicked.connect(self._delete_selected)
         list_actions.addWidget(refresh_button)
         list_actions.addWidget(duplicate_button)
@@ -96,7 +95,7 @@ class ProductionPresetsWorkspace(QWidget):
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(5, 0, 0, 0)
 
-        details_group = QGroupBox('Preset selezionato')
+        details_group = QGroupBox('Selected preset')
         details_form = QFormLayout(details_group)
         self.preset_name_label = QLabel('—')
         self.preset_type_label = QLabel('—')
@@ -106,14 +105,14 @@ class ProductionPresetsWorkspace(QWidget):
         self.description_edit.setMaximumHeight(110)
         self.tags_label = QLabel('—')
         self.tags_label.setWordWrap(True)
-        details_form.addRow('Nome', self.preset_name_label)
-        details_form.addRow('Tipo', self.preset_type_label)
-        details_form.addRow('Calibrazione WAN', self.calibration_label)
-        details_form.addRow('Descrizione', self.description_edit)
+        details_form.addRow('Name', self.preset_name_label)
+        details_form.addRow('Type', self.preset_type_label)
+        details_form.addRow('WAN Calibration', self.calibration_label)
+        details_form.addRow('Description', self.description_edit)
         details_form.addRow('Tag', self.tags_label)
         right_layout.addWidget(details_group)
 
-        sections_group = QGroupBox('Sezioni da catturare / applicare')
+        sections_group = QGroupBox('Sections to Capture / Apply')
         sections_layout = QVBoxLayout(sections_group)
         self.section_checks: dict[str, QCheckBox] = {}
         for key in PRESET_SECTIONS:
@@ -123,19 +122,18 @@ class ProductionPresetsWorkspace(QWidget):
             sections_layout.addWidget(check)
         right_layout.addWidget(sections_group)
 
-        actions_group = QGroupBox('Azioni')
+        actions_group = QGroupBox('Actions')
         actions_layout = QVBoxLayout(actions_group)
-        capture_button = QPushButton('Cattura pipeline corrente come nuovo preset')
+        capture_button = QPushButton('Capture current pipeline as a new preset')
         capture_button.clicked.connect(self._capture_current)
-        apply_button = QPushButton('Applica preset al gruppo attivo')
+        apply_button = QPushButton('Apply preset to active group')
         apply_button.clicked.connect(self._apply_selected)
         actions_layout.addWidget(capture_button)
         actions_layout.addWidget(apply_button)
         right_layout.addWidget(actions_group)
 
         note = QLabel(
-            'La cattura salva solo impostazioni riutilizzabili: non include file sorgente, video, frame selezionati, '
-            'override manuali del clean-up o stati per-frame dell’allineamento. Durante l’applicazione questi dati del gruppo vengono preservati.'
+            'Capture stores reusable settings only: it does not include source files, videos, selected frames, manual clean-up overrides, or per-frame alignment state. Those group data are preserved when applying a preset.'
         )
         note.setWordWrap(True)
         note.setStyleSheet('color: #aaa;')
@@ -155,13 +153,13 @@ class ProductionPresetsWorkspace(QWidget):
     def refresh_context(self) -> None:
         group = self._active_group_provider()
         if not group:
-            self.active_group_label.setText('Gruppo attivo: nessuno')
+            self.active_group_label.setText('Active group: none')
             return
         assigned = group.get('metadata', {}).get('production_preset') if isinstance(group.get('metadata'), dict) else None
         suffix = ''
         if isinstance(assigned, dict) and assigned.get('name'):
-            suffix = f" · preset assegnato: {assigned['name']}"
-        self.active_group_label.setText(f"Gruppo attivo: {group.get('label', group.get('name', '—'))}{suffix}")
+            suffix = f" · assigned preset: {assigned['name']}"
+        self.active_group_label.setText(f"Active group: {group.get('label', group.get('name', '—'))}{suffix}")
 
     def refresh(self, select_name: str | None = None) -> None:
         self.store.ensure_starters()
@@ -189,11 +187,11 @@ class ProductionPresetsWorkspace(QWidget):
             self.tags_label.setText('—')
             return
         self.preset_name_label.setText(str(preset.get('name', name)))
-        self.preset_type_label.setText('Starter integrato' if preset.get('builtin') else 'Personalizzato')
+        self.preset_type_label.setText('Built-in Starter' if preset.get('builtin') else 'Custom')
         if preset.get('calibration_required'):
-            self.calibration_label.setText('Da calibrare / completare')
+            self.calibration_label.setText('Needs Calibration / Completion')
         else:
-            self.calibration_label.setText('Catturato dall’utente')
+            self.calibration_label.setText('Captured by user')
         self.description_edit.setPlainText(str(preset.get('description', '')))
         self.tags_label.setText(', '.join(str(tag) for tag in preset.get('tags', [])) or '—')
         available = set(preset.get('sections', []))
@@ -203,20 +201,20 @@ class ProductionPresetsWorkspace(QWidget):
     def _capture_current(self) -> None:
         group = self._active_group_provider()
         if not group:
-            QMessageBox.information(self, 'Nessun gruppo attivo', 'Attivare prima una direzione nel Project Groups.')
+            QMessageBox.information(self, 'No Active Group', 'Activate a Direction in Project Groups first.')
             return
         sections = self.selected_sections()
         if not sections:
-            QMessageBox.information(self, 'Nessuna sezione', 'Selezionare almeno una sezione da catturare.')
+            QMessageBox.information(self, 'No Sections', 'Select at least one section to capture.')
             return
-        name, ok = QInputDialog.getText(self, 'Nuovo preset produttivo', 'Nome preset:')
+        name, ok = QInputDialog.getText(self, 'New Production Preset', 'Preset name:')
         if not ok or not name.strip():
             return
         description, ok = QInputDialog.getMultiLineText(
             self,
-            'Descrizione preset',
-            'Descrizione / uso previsto:',
-            f"Catturato da {group.get('label', group.get('name', 'gruppo attivo'))}",
+            'Preset Description',
+            'Description / intended use:',
+            f"Captured from {group.get('label', group.get('name', 'active group'))}",
         )
         if not ok:
             return
@@ -231,11 +229,11 @@ class ProductionPresetsWorkspace(QWidget):
             tags=['custom', 'captured'],
         )
         if not preset.get('sections'):
-            QMessageBox.warning(self, 'Preset vuoto', 'Le sezioni selezionate non contengono impostazioni riutilizzabili.')
+            QMessageBox.warning(self, 'Empty preset', 'The selected sections contain no reusable settings.')
             return
         self.store.save(name.strip(), preset)
         self.refresh(select_name=name.strip())
-        self.status_message.emit(f'Preset produttivo salvato: {name.strip()}')
+        self.status_message.emit(f'Production preset saved: {name.strip()}')
 
     def _apply_selected(self) -> None:
         name = self._current_name()
@@ -244,39 +242,39 @@ class ProductionPresetsWorkspace(QWidget):
             return
         group = self._active_group_provider()
         if not group:
-            QMessageBox.information(self, 'Nessun gruppo attivo', 'Attivare prima una direzione nel Project Groups.')
+            QMessageBox.information(self, 'No Active Group', 'Activate a Direction in Project Groups first.')
             return
         available = set(preset.get('sections', []))
         sections = [section for section in self.selected_sections() if section in available]
         if not sections:
-            QMessageBox.information(self, 'Nessuna sezione', 'Il preset non contiene nessuna delle sezioni selezionate.')
+            QMessageBox.information(self, 'No Sections', 'The preset contains none of the selected sections.')
             return
         if preset.get('calibration_required'):
             answer = QMessageBox.question(
                 self,
                 'Preset Starter',
-                'Questo è un preset strutturale Starter: non contiene parametri WAN calibrati. Applicare comunque le sezioni disponibili?',
+                'This is a structural Starter preset: it contains no calibrated WAN parameters. Apply the available sections anyway?',
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
         self._apply_callback(name, preset, sections)
         self.refresh_context()
-        self.status_message.emit(f'Preset applicato al gruppo attivo: {name}')
+        self.status_message.emit(f'Preset applied to active group: {name}')
 
     def _duplicate_selected(self) -> None:
         source = self._current_name()
         if not source:
             return
-        target, ok = QInputDialog.getText(self, 'Duplica preset', 'Nome della copia:', text=f'{source} copy')
+        target, ok = QInputDialog.getText(self, 'Duplicate Preset', 'Copy name:', text=f'{source} copy')
         if not ok or not target.strip():
             return
         try:
             self.store.duplicate(source, target.strip())
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore duplicazione', str(exc))
+            QMessageBox.critical(self, 'Duplication Error', str(exc))
             return
         self.refresh(select_name=target.strip())
-        self.status_message.emit(f'Preset duplicato: {target.strip()}')
+        self.status_message.emit(f'Preset duplicated: {target.strip()}')
 
     def _delete_selected(self) -> None:
         name = self._current_name()
@@ -284,15 +282,15 @@ class ProductionPresetsWorkspace(QWidget):
             return
         preset = self.store.get(name)
         if preset and preset.get('builtin'):
-            QMessageBox.information(self, 'Preset Starter', 'I preset Starter integrati non possono essere eliminati. Duplicarli per creare una variante personalizzata.')
+            QMessageBox.information(self, 'Preset Starter', 'Built-in Starter presets cannot be deleted. Duplicate one to create a custom variant.')
             return
-        answer = QMessageBox.question(self, 'Elimina preset', f'Eliminare il preset "{name}"?')
+        answer = QMessageBox.question(self, 'Delete Preset', f'Delete preset "{name}"?')
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
             self.store.delete(name)
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore eliminazione', str(exc))
+            QMessageBox.critical(self, 'Deletion Error', str(exc))
             return
         self.refresh()
-        self.status_message.emit(f'Preset eliminato: {name}')
+        self.status_message.emit(f'Preset deleted: {name}')

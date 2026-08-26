@@ -9,15 +9,15 @@ WORKFLOW_VERSION = 'R5e10'
 
 WORKFLOW_DEFINITIONS: dict[str, dict[str, Any]] = {
     'standard': {
-        'title': 'Flusso standard · Video → Sprite',
-        'description': 'Riferimenti WAN già pronti → generazione video → selezione → clean-up → allineamento → salvataggio impostazioni → export.',
+        'title': 'Standard Workflow · Video → Sprite',
+        'description': 'Ready WAN references → video generation → selection → clean-up → alignment → save settings → export.',
         'steps': [
-            {'id': 'video_generation', 'title': 'Generazione video WAN', 'route': 'generation'},
-            {'id': 'frame_selection', 'title': 'Selezione frame', 'route': 'extraction'},
-            {'id': 'cleanup', 'title': 'Pulizia / maschera alpha', 'route': 'cleanup'},
-            {'id': 'alignment', 'title': 'Allineamento frame', 'route': 'alignment'},
-            {'id': 'settings_checkpoint', 'title': 'Salvataggio impostazioni', 'route': 'workflow'},
-            {'id': 'export', 'title': 'Esportazione spritesheet / immagini', 'route': 'export'},
+            {'id': 'video_generation', 'title': 'WAN video generation', 'route': 'generation'},
+            {'id': 'frame_selection', 'title': 'Frame selection', 'route': 'extraction'},
+            {'id': 'cleanup', 'title': 'Clean-up / alpha mask', 'route': 'cleanup'},
+            {'id': 'alignment', 'title': 'Frame alignment', 'route': 'alignment'},
+            {'id': 'settings_checkpoint', 'title': 'Save settings', 'route': 'workflow'},
+            {'id': 'export', 'title': 'Sprite sheet / image export', 'route': 'export'},
         ],
         'visible_routes': {
             'project', 'workflow', 'generation', 'extraction', 'cleanup', 'alignment',
@@ -25,18 +25,18 @@ WORKFLOW_DEFINITIONS: dict[str, dict[str, Any]] = {
         },
     },
     'full': {
-        'title': 'Flusso completo · AI → Motion Reference → Sprite',
-        'description': 'Immagine da prompt → spritesheet movimento → video reference → generazione finale → selezione → clean-up → allineamento → salvataggio → export.',
+        'title': 'Full Workflow · AI → Motion Reference → Sprite',
+        'description': 'Prompt image → motion spritesheet → reference video → final generation → selection → clean-up → alignment → save → export.',
         'steps': [
-            {'id': 'image_generation', 'title': 'Generazione immagine da prompt', 'route': 'image_generation'},
-            {'id': 'spritesheet_import', 'title': 'Importazione e scomposizione spritesheet movimento', 'route': 'spritesheet'},
-            {'id': 'motion_reference', 'title': 'Generazione e promozione video di movimento', 'route': 'generation'},
-            {'id': 'final_video_generation', 'title': 'Generazione video finale con immagine + movimento', 'route': 'generation'},
-            {'id': 'frame_selection', 'title': 'Selezione frame', 'route': 'extraction'},
-            {'id': 'cleanup', 'title': 'Pulizia / maschera alpha', 'route': 'cleanup'},
-            {'id': 'alignment', 'title': 'Allineamento frame', 'route': 'alignment'},
-            {'id': 'settings_checkpoint', 'title': 'Salvataggio impostazioni', 'route': 'workflow'},
-            {'id': 'export', 'title': 'Esportazione spritesheet / immagini', 'route': 'export'},
+            {'id': 'image_generation', 'title': 'Image generation from prompt', 'route': 'image_generation'},
+            {'id': 'spritesheet_import', 'title': 'Import and decompose motion spritesheet', 'route': 'spritesheet'},
+            {'id': 'motion_reference', 'title': 'Generate and promote motion video', 'route': 'generation'},
+            {'id': 'final_video_generation', 'title': 'Final video generation with image + motion', 'route': 'generation'},
+            {'id': 'frame_selection', 'title': 'Frame selection', 'route': 'extraction'},
+            {'id': 'cleanup', 'title': 'Clean-up / alpha mask', 'route': 'cleanup'},
+            {'id': 'alignment', 'title': 'Frame alignment', 'route': 'alignment'},
+            {'id': 'settings_checkpoint', 'title': 'Save settings', 'route': 'workflow'},
+            {'id': 'export', 'title': 'Sprite sheet / image export', 'route': 'export'},
         ],
         'visible_routes': {
             'project', 'workflow', 'generation', 'extraction', 'cleanup', 'alignment',
@@ -45,15 +45,15 @@ WORKFLOW_DEFINITIONS: dict[str, dict[str, Any]] = {
         },
     },
     'spritesheet_rework': {
-        'title': 'Rielaborazione spritesheet',
-        'description': 'Import spritesheet → selezione/aggiunta-esclusione frame → alpha/clean-up → scaling/allineamento → salvataggio impostazioni → riesportazione.',
+        'title': 'Spritesheet Rework',
+        'description': 'Import spritesheet → select/include-exclude frames → alpha/clean-up → scaling/alignment → save settings → re-export.',
         'steps': [
-            {'id': 'spritesheet_import', 'title': 'Importazione e scomposizione spritesheet', 'route': 'spritesheet'},
-            {'id': 'frame_selection', 'title': 'Selezione / inclusione-esclusione frame', 'route': 'extraction'},
-            {'id': 'cleanup', 'title': 'Maschera alpha e clean-up', 'route': 'cleanup'},
-            {'id': 'alignment', 'title': 'Scaling e allineamento', 'route': 'alignment'},
-            {'id': 'settings_checkpoint', 'title': 'Salvataggio impostazioni', 'route': 'workflow'},
-            {'id': 'export', 'title': 'Riesportazione spritesheet / immagini', 'route': 'export'},
+            {'id': 'spritesheet_import', 'title': 'Import and decompose spritesheet', 'route': 'spritesheet'},
+            {'id': 'frame_selection', 'title': 'Frame selection / include-exclude', 'route': 'extraction'},
+            {'id': 'cleanup', 'title': 'Alpha mask and clean-up', 'route': 'cleanup'},
+            {'id': 'alignment', 'title': 'Scaling and alignment', 'route': 'alignment'},
+            {'id': 'settings_checkpoint', 'title': 'Save settings', 'route': 'workflow'},
+            {'id': 'export', 'title': 'Re-export spritesheet / images', 'route': 'export'},
         ],
         'visible_routes': {
             'project', 'workflow', 'extraction', 'cleanup', 'alignment', 'smart_selection',
@@ -69,7 +69,7 @@ def now_iso() -> str:
 
 def workflow_definition(workflow_type: str) -> dict[str, Any]:
     if workflow_type not in WORKFLOW_DEFINITIONS:
-        raise ValueError(f'Workflow non supportato: {workflow_type}')
+        raise ValueError(f'Unsupported workflow: {workflow_type}')
     return deepcopy(WORKFLOW_DEFINITIONS[workflow_type])
 
 
@@ -194,10 +194,10 @@ def next_incomplete_step(group: dict[str, Any], workflow: dict[str, Any]) -> str
 def set_step_state(workflow: dict[str, Any], step_id: str, state: str) -> dict[str, Any]:
     result = normalize_workflow_state(workflow)
     if result is None:
-        raise ValueError('Workflow non valido.')
+        raise ValueError('Invalid workflow.')
     valid = {step['id'] for step in WORKFLOW_DEFINITIONS[result['type']]['steps']}
     if step_id not in valid:
-        raise ValueError(f'Step non valido: {step_id}')
+        raise ValueError(f'Invalid step: {step_id}')
     completed = set(result.get('completed_steps', []))
     skipped = set(result.get('skipped_steps', []))
     completed.discard(step_id)
@@ -207,7 +207,7 @@ def set_step_state(workflow: dict[str, Any], step_id: str, state: str) -> dict[s
     elif state == 'skipped':
         skipped.add(step_id)
     elif state != 'pending':
-        raise ValueError(f'Stato step non supportato: {state}')
+        raise ValueError(f'Unsupported step state: {state}')
     result['completed_steps'] = list(completed)
     result['skipped_steps'] = list(skipped)
     result['updated_at'] = now_iso()

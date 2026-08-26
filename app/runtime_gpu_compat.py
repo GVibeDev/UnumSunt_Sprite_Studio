@@ -38,20 +38,20 @@ class TorchRuntimeGpuProbe:
 
     def detail(self) -> str:
         if not self.available:
-            return self.raw_error or "PyTorch runtime non interrogabile"
-        supported = " ".join(self.supported_architectures) or "non dichiarate"
+            return self.raw_error or 'PyTorch runtime cannot be queried'
+        supported = " ".join(self.supported_architectures) or 'not declared'
         if not self.devices:
             return (
                 f"Python {self.python_version} · torch {self.torch_version} · CUDA {self.torch_cuda_version or '?'} · "
-                f"torch.cuda.is_available={self.cuda_available} · architetture wheel: {supported}"
+                f"torch.cuda.is_available={self.cuda_available} · wheel architectures: {supported}"
             )
         device_text = "; ".join(
-            f"GPU{device.index} {device.name} · {device.architecture} ({'compatibile' if device.compatible else 'NON compatibile'})"
+            f"GPU{device.index} {device.name} · {device.architecture} ({('compatible' if device.compatible else 'NOT compatible')})"
             for device in self.devices
         )
         return (
             f"Python {self.python_version} · torch {self.torch_version} · CUDA {self.torch_cuda_version or '?'} · "
-            f"architetture wheel: {supported} · {device_text}"
+            f"wheel architectures: {supported} · {device_text}"
         )
 
 
@@ -129,7 +129,7 @@ def probe_torch_runtime_gpu(
 ) -> TorchRuntimeGpuProbe:
     python = Path(python_executable)
     if not python.is_file():
-        return TorchRuntimeGpuProbe(False, raw_error=f"Python runtime non trovato: {python}")
+        return TorchRuntimeGpuProbe(False, raw_error=f'Python runtime not found: {python}')
     try:
         completed = runner(
             [str(python), "-c", torch_gpu_probe_script()],
@@ -144,12 +144,12 @@ def probe_torch_runtime_gpu(
         return TorchRuntimeGpuProbe(False, raw_error=(completed.stderr or completed.stdout or f"exit {completed.returncode}").strip())
     lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
     if not lines:
-        return TorchRuntimeGpuProbe(False, raw_error=(completed.stderr or "Probe PyTorch senza output").strip())
+        return TorchRuntimeGpuProbe(False, raw_error=(completed.stderr or "PyTorch probe returned no output").strip())
     try:
         payload = json.loads(lines[-1])
     except Exception as exc:
         detail = (completed.stderr or "").strip()
-        return TorchRuntimeGpuProbe(False, raw_error=f"Output probe PyTorch non valido: {exc}. {detail}".strip())
+        return TorchRuntimeGpuProbe(False, raw_error=f'Invalid PyTorch probe output: {exc}. {detail}'.strip())
     if not isinstance(payload, Mapping):
-        return TorchRuntimeGpuProbe(False, raw_error="Output probe PyTorch non è un oggetto JSON")
+        return TorchRuntimeGpuProbe(False, raw_error='PyTorch probe output is not a JSON object')
     return parse_torch_gpu_probe(payload)

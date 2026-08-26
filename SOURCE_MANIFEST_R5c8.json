@@ -1,0 +1,57 @@
+{
+  "project": "Unum Sunt Sprite Studio",
+  "version": "R5c8",
+  "status": "release_candidate",
+  "milestone": "International Release UX",
+  "validated_baseline": "R5c7",
+  "base_tag": "R5c7",
+  "platform": "Windows x64",
+  "language": "English",
+  "automatic_tests": {
+    "status": "passed",
+    "count": 329,
+    "failures": 0,
+    "errors": 0,
+    "compileall": "passed"
+  },
+  "release_changes": [
+    "English public UI and user-visible diagnostics",
+    "Built-in offline Help",
+    "GPL informational installer notice instead of click-through acceptance",
+    "R5c8 / 5.8.0.0 Windows version metadata",
+    "R5c8 Setup, Standalone and Corresponding Source release wiring",
+    "Multi-resolution Windows icon contract verified by automated test"
+  ],
+  "license": {
+    "core": "GPL-3.0-or-later",
+    "license_file": "LICENSE",
+    "open_source_notice": "OPEN_SOURCE_LICENSE_NOTICE.txt",
+    "third_party_notices": "THIRD_PARTY_NOTICES.txt",
+    "krea_safety": "KREA_SAFETY_AND_USE.txt"
+  },
+  "runtime_pins": {
+    "wangp_revision": "6e35b37e309ccebeed193ef53cdff66fb973b693",
+    "krea2_revision": "f7a3040b990b672af3c30b5ad1f0df8ffd244881"
+  },
+  "setup": {
+    "builder": "Inno Setup",
+    "script": "installer/UnumSuntSpriteStudio_R5c8.iss",
+    "expected_output": "release/installer/UnumSunt_Sprite_Studio_R5c8_Setup_x64.exe",
+    "app_id": "{5F2F2D9A-6C3C-4D0A-A0D4-2D9EF36D5D42}",
+    "same_app_id_update": true,
+    "target_requires_python": false,
+    "installer_language": "English",
+    "gpl_presentation": "informational notice"
+  },
+  "public_release": {
+    "preparer": "PREPARE_PUBLIC_RELEASE_R5C8.bat",
+    "release_notes": "RELEASE_NOTES_R5c8.md",
+    "public_checklist": "PUBLIC_RELEASE_CHECKLIST_R5c8.md",
+    "metadata": "RELEASE_METADATA_R5c8.json",
+    "corresponding_source_required": true
+  },
+  "release_gates_open": [
+    "manual_windows_validation",
+    "itch_io_publication"
+  ]
+}

@@ -174,18 +174,18 @@ def resolve_krea2_settings_template_for_checkpoint(checkpoint: str | Path | None
     template = resolve_krea2_turbo_settings_template()
     if template is None:
         raise RuntimeInstallError(
-            f"Template Krea 2 Turbo gestito non trovato: {KREA2_TURBO_TEMPLATE_RELATIVE_PATH.as_posix()}"
+            f'Managed Krea 2 Turbo template not found: {KREA2_TURBO_TEMPLATE_RELATIVE_PATH.as_posix()}'
         )
     try:
         payload = json.loads(template.read_text(encoding="utf-8"))
     except Exception as exc:
-        raise RuntimeInstallError(f"Template Krea 2 Turbo gestito non valido: {exc}") from exc
+        raise RuntimeInstallError(f'Invalid managed Krea 2 Turbo template: {exc}') from exc
     if not isinstance(payload, Mapping):
-        raise RuntimeInstallError("Template Krea 2 Turbo gestito non contiene un oggetto JSON.")
+        raise RuntimeInstallError('Managed Krea 2 Turbo template does not contain a JSON object.')
     if str(payload.get("model_type", "")).strip().lower() != "krea2_turbo":
-        raise RuntimeInstallError("Template Krea 2 Turbo privo di model_type='krea2_turbo'.")
+        raise RuntimeInstallError("Krea 2 Turbo template is missing model_type='krea2_turbo'.")
     if not str(payload.get("model_filename", "")).strip():
-        raise RuntimeInstallError("Template Krea 2 Turbo privo di model_filename.")
+        raise RuntimeInstallError('Krea 2 Turbo template is missing model_filename.')
 
     checkpoint_path = Path(checkpoint).expanduser() if checkpoint else None
     if checkpoint_path is not None and checkpoint_path.name == "Krea2Turbo_bf16.safetensors":
@@ -207,13 +207,13 @@ def resolve_krea2_settings_template_for_checkpoint(checkpoint: str | Path | None
 def load_runtime_components_manifest(path: str | Path | None = None) -> RuntimeComponentsManifest:
     target = Path(path) if path is not None else resolve_runtime_components_manifest()
     if target is None or not target.is_file():
-        raise FileNotFoundError("runtime_components.json non trovato")
+        raise FileNotFoundError('runtime_components.json not found')
     payload = json.loads(target.read_text(encoding="utf-8"))
     if not isinstance(payload, Mapping):
-        raise ValueError("runtime_components.json non valido")
+        raise ValueError('runtime_components.json is invalid')
     manifest = RuntimeComponentsManifest.from_dict(payload)
     if not manifest.miniconda_url or not manifest.wangp_archive_url or not manifest.models:
-        raise ValueError("runtime_components.json incompleto")
+        raise ValueError("runtime_components.json is incomplete")
     return manifest
 
 
@@ -335,7 +335,7 @@ class RuntimeInstaller:
 
     def _emit(self, phase: str, fraction: float, message: str) -> None:
         if self.cancelled():
-            raise RuntimeInstallCancelled("Installazione annullata dall'utente")
+            raise RuntimeInstallCancelled('Installation cancelled by the user')
         self.progress(phase, max(0.0, min(1.0, fraction)), message)
 
     def _run(self, command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None, timeout: int = 0) -> subprocess.CompletedProcess[str]:
@@ -351,7 +351,7 @@ class RuntimeInstaller:
         )
         if completed.returncode != 0:
             detail = (completed.stderr or completed.stdout or f"exit {completed.returncode}").strip()
-            raise RuntimeInstallError(f"Comando fallito ({completed.returncode}): {' '.join(command)}\n{detail}")
+            raise RuntimeInstallError(f"Command failed ({completed.returncode}): {' '.join(command)}\n{detail}")
         return completed
 
     @staticmethod
@@ -368,7 +368,7 @@ class RuntimeInstaller:
             size_ok = not expected_size or target.stat().st_size == expected_size
             hash_ok = not expected_sha256 or self._sha256(target).lower() == expected_sha256.lower()
             if size_ok and hash_ok:
-                self._emit(phase, 1.0, f"Già presente: {target.name}")
+                self._emit(phase, 1.0, f'Already present: {target.name}')
                 return target
         part = target.with_suffix(target.suffix + ".part")
         existing = part.stat().st_size if part.exists() else 0
@@ -392,7 +392,7 @@ class RuntimeInstaller:
         with part.open(mode) as handle:
             while True:
                 if self.cancelled():
-                    raise RuntimeInstallCancelled("Download annullato")
+                    raise RuntimeInstallCancelled('Download cancelled')
                 chunk = response.read(8 * 1024 * 1024)
                 if not chunk:
                     break
@@ -402,11 +402,11 @@ class RuntimeInstaller:
                 self.progress(phase, fraction, f"{target.name}: {written / (1024**3):.2f} / {(total / (1024**3)) if total else 0:.2f} GiB")
         part.replace(target)
         if expected_size and target.stat().st_size != expected_size:
-            raise RuntimeInstallError(f"Dimensione non valida per {target.name}: {target.stat().st_size} != {expected_size}")
+            raise RuntimeInstallError(f'Invalid size for {target.name}: {target.stat().st_size} != {expected_size}')
         if expected_sha256:
             actual = self._sha256(target)
             if actual.lower() != expected_sha256.lower():
-                raise RuntimeInstallError(f"SHA-256 non valido per {target.name}: {actual}")
+                raise RuntimeInstallError(f'Invalid SHA-256 for {target.name}: {actual}')
         return target
 
     def _verify_windows_signature(self, path: Path, publisher_hint: str) -> None:
@@ -420,15 +420,15 @@ class RuntimeInstaller:
         completed = self._run(command, timeout=60)
         output = (completed.stdout or "").strip()
         if publisher_hint and publisher_hint.lower() not in output.lower():
-            raise RuntimeInstallError(f"Firma Miniconda valida ma publisher inatteso: {output}")
+            raise RuntimeInstallError(f'Miniconda signature is valid but the publisher is unexpected: {output}')
 
     def _ensure_miniconda(self, *, accept_tos: bool) -> None:
         conda = self.miniconda_root / "Scripts" / "conda.exe"
         if conda.is_file():
-            self._emit("miniconda", 1.0, "Miniconda già installato")
+            self._emit("miniconda", 1.0, 'Miniconda already installed')
             return
         if not accept_tos:
-            raise RuntimeInstallError("È necessario accettare i termini Anaconda/Miniconda prima dell'installazione automatica.")
+            raise RuntimeInstallError('You must accept the Anaconda/Miniconda terms before automatic installation.')
         installer = self._download(
             self.manifest.miniconda_url,
             self.download_root / self.manifest.miniconda_filename,
@@ -437,7 +437,7 @@ class RuntimeInstaller:
         self._verify_windows_signature(installer, self.manifest.miniconda_publisher_hint)
         self.miniconda_root.parent.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
-            raise RuntimeInstallError(f"L'installazione Miniconda {APP_VERSION} è supportata solo su Windows.")
+            raise RuntimeInstallError(f'The Miniconda installation {APP_VERSION} is supported only on Windows.')
         args = [
             str(installer),
             "/InstallationType=JustMe",
@@ -448,7 +448,7 @@ class RuntimeInstaller:
         ]
         self._run(args, timeout=1800)
         if not conda.is_file():
-            raise RuntimeInstallError(f"Miniconda installato ma conda.exe non trovato: {conda}")
+            raise RuntimeInstallError(f'Miniconda installed but conda.exe not found: {conda}')
 
     def _ensure_env(self, *, accept_tos: bool) -> Path:
         python = self.env_root / "python.exe"
@@ -466,7 +466,7 @@ class RuntimeInstaller:
             str(conda), "create", "-y", "-p", str(self.env_root), f"python={self.manifest.python_version}"
         ], env=env, timeout=1800)
         if not python.is_file():
-            raise RuntimeInstallError("Ambiente WanGP creato senza python.exe")
+            raise RuntimeInstallError('WanGP environment was created without python.exe')
         return python
 
     @staticmethod
@@ -485,20 +485,20 @@ class RuntimeInstaller:
             for info in members:
                 raw_name = info.filename
                 if not raw_name or "\x00" in raw_name:
-                    raise RuntimeInstallError("Archivio ZIP WanGP contiene un nome file non valido.")
+                    raise RuntimeInstallError('WanGP ZIP archive contains an invalid filename.')
                 normalized = raw_name.replace("\\", "/")
                 pure = PurePosixPath(normalized)
                 first = pure.parts[0] if pure.parts else ""
                 if pure.is_absolute() or first.endswith(":") or any(part == ".." for part in pure.parts):
-                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: percorso vietato {raw_name!r}")
+                    raise RuntimeInstallError(f'Unsafe WanGP ZIP archive: forbidden path {raw_name!r}')
                 unix_mode = (info.external_attr >> 16) & 0o170000
                 if unix_mode == stat.S_IFLNK:
-                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: symlink vietato {raw_name!r}")
+                    raise RuntimeInstallError(f'Unsafe WanGP ZIP archive: symlink is forbidden {raw_name!r}')
                 target = (destination.joinpath(*pure.parts)).resolve()
                 try:
                     target.relative_to(destination)
                 except ValueError as exc:
-                    raise RuntimeInstallError(f"Archivio ZIP WanGP non sicuro: path traversal {raw_name!r}") from exc
+                    raise RuntimeInstallError(f'Unsafe WanGP ZIP archive: path traversal {raw_name!r}') from exc
                 validated.append((info, target))
 
             for info, target in validated:
@@ -513,7 +513,7 @@ class RuntimeInstaller:
         marker = self.wangp_root / "wgp.py"
         settings_marker = self.wangp_root / "models" / "_settings.json"
         if marker.is_file() and settings_marker.is_file() and not repair:
-            self._emit("wangp.source", 1.0, "Sorgenti WanGP già presenti")
+            self._emit("wangp.source", 1.0, 'WanGP sources already present')
             return
         archive_target = self.download_root / f"Wan2GP-{self.manifest.wangp_revision}.zip"
         if repair and archive_target.exists():
@@ -526,7 +526,7 @@ class RuntimeInstaller:
         self._safe_extract_zip(archive, staging)
         source = staging / self.manifest.wangp_archive_root
         if not source.is_dir():
-            raise RuntimeInstallError(f"Root archivio WanGP non trovata: {source}")
+            raise RuntimeInstallError(f'WanGP archive root not found: {source}')
         backup = self.runtime_root / "WanGP.backup"
         if backup.exists():
             shutil.rmtree(backup)
@@ -570,7 +570,7 @@ class RuntimeInstaller:
         ], timeout=3600)
         requirements = self.wangp_root / "requirements.txt"
         if not requirements.is_file():
-            raise RuntimeInstallError(f"requirements.txt WanGP non trovato: {requirements}")
+            raise RuntimeInstallError(f'WanGP requirements.txt not found: {requirements}')
         self._run([str(python), "-m", "pip", "install", "-r", str(requirements)], cwd=self.wangp_root, timeout=7200)
         # WanGP currently pins Transformers 4.54.0, whose runtime contract
         # requires huggingface-hub >=0.34,<1.0.  Do not blindly upgrade the
@@ -606,9 +606,9 @@ class RuntimeInstaller:
         """
         spec = self.manifest.models["krea2_turbo"]
         if not accepted:
-            raise RuntimeInstallError("Krea 2 richiede accettazione esplicita della Krea 2 Community License e AUP.")
+            raise RuntimeInstallError('Krea 2 requires explicit acceptance of the Krea 2 Community License and AUP.')
         if spec.gated and not token.strip():
-            raise RuntimeInstallError("Il repository Krea 2 configurato è gated: inserire un token Hugging Face autorizzato.")
+            raise RuntimeInstallError('The configured Krea 2 repository is gated: provide an authorized Hugging Face token.')
         # Check the selected model root before resolving/creating the WanGP ckpts
         # junction. This preserves either supported WanGP Turbo checkpoint even
         # when a runtime tree has been repaired or not yet linked on this machine.
@@ -619,14 +619,14 @@ class RuntimeInstaller:
         for name in supported_names:
             preexisting = self.ckpts_root / name
             if preexisting.is_file() and preexisting.stat().st_size > 1024 * 1024 * 1024:
-                self._emit("model.krea2", 1.0, f"Krea 2 già presente: {preexisting.name}")
+                self._emit("model.krea2", 1.0, f'Krea 2 already present: {preexisting.name}')
                 return preexisting
 
         self._ensure_ckpts_link()
         # Existing supported checkpoint wins: no network and no re-download.
         existing = self._find_existing_krea2_checkpoint()
         if existing is not None:
-            self._emit("model.krea2", 1.0, f"Krea 2 già presente: {existing.name}")
+            self._emit("model.krea2", 1.0, f'Krea 2 already present: {existing.name}')
             return existing
         target = self.ckpts_root / spec.filename
         helper = (
@@ -645,11 +645,11 @@ class RuntimeInstaller:
             safe = str(exc).replace(token.strip(), "<HF_TOKEN_REDACTED>") if token.strip() else str(exc)
             if "401" in safe or "403" in safe or "gated" in safe.lower():
                 raise RuntimeInstallError(
-                    "Accesso Hugging Face negato durante il download Krea 2. Verificare accesso/licenza del repository e, se richiesto, usare un token autorizzato."
+                    'Hugging Face access was denied during the Krea 2 download. Check repository access/license and, if required, use an authorized token.'
                 ) from exc
             raise RuntimeInstallError(safe) from exc
         if not target.is_file() or target.stat().st_size <= 1024 * 1024 * 1024:
-            raise RuntimeInstallError(f"Download Krea 2 completato ma checkpoint non valido: {target}")
+            raise RuntimeInstallError(f'Krea 2 download completed but checkpoint is invalid: {target}')
         return target
 
     def _find_existing_krea2_checkpoint(self) -> Path | None:
@@ -673,10 +673,10 @@ class RuntimeInstaller:
         actual = Path(python).expanduser().resolve()
         if actual != expected:
             raise RuntimeInstallError(
-                f"Interprete bridge WanGP non valido: {actual}. Atteso ambiente dedicato: {expected}"
+                f'Invalid WanGP bridge interpreter: {actual}. Expected dedicated environment: {expected}'
             )
         if not actual.is_file():
-            raise RuntimeInstallError(f"Python WanGP non trovato: {actual}")
+            raise RuntimeInstallError(f'WanGP Python not found: {actual}')
         completed = self._run([
             str(actual), "-c",
             "import platform,torch; print(platform.python_version()); print(torch.__version__); print(torch.cuda.is_available())",
@@ -684,11 +684,11 @@ class RuntimeInstaller:
         lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
         if len(lines) < 3 or not lines[0].startswith("3.11."):
             raise RuntimeInstallError(
-                "Ambiente WanGP non conforme: richiesto Python 3.11.x con PyTorch installato."
+                'WanGP environment is not compliant: Python 3.11.x with PyTorch installed is required.'
             )
         if lines[2].lower() != "true":
             raise RuntimeInstallError(
-                "PyTorch è presente nell'ambiente WanGP ma CUDA non è disponibile (torch.cuda.is_available() == False)."
+                'PyTorch is present in the WanGP environment, but CUDA is unavailable (torch.cuda.is_available() == False).'
             )
 
     def sync_bridge_configs(self, *, validate: bool = True) -> Path:
@@ -702,18 +702,18 @@ class RuntimeInstaller:
         template = resolve_wan_animate_settings_template()
         if template is None:
             raise RuntimeInstallError(
-                f"Template Wan Animate gestito non trovato: {WAN_ANIMATE_TEMPLATE_RELATIVE_PATH.as_posix()}"
+                f'Managed Wan Animate template not found: {WAN_ANIMATE_TEMPLATE_RELATIVE_PATH.as_posix()}'
             )
         try:
             payload = json.loads(template.read_text(encoding="utf-8"))
         except Exception as exc:
-            raise RuntimeInstallError(f"Template Wan Animate gestito non valido: {exc}") from exc
+            raise RuntimeInstallError(f'Invalid managed Wan Animate template: {exc}') from exc
         if not isinstance(payload, Mapping):
-            raise RuntimeInstallError("Template Wan Animate gestito non contiene un oggetto JSON.")
+            raise RuntimeInstallError('Managed Wan Animate template does not contain a JSON object.')
         if str(payload.get("model_type", "")).strip().lower() != "animate":
-            raise RuntimeInstallError("Template Wan Animate gestito privo di model_type='animate'.")
+            raise RuntimeInstallError("Managed Wan Animate template is missing model_type='animate'.")
         if not str(payload.get("model_filename", "")).strip():
-            raise RuntimeInstallError("Template Wan Animate gestito privo di model_filename.")
+            raise RuntimeInstallError('Managed Wan Animate template is missing model_filename.')
         return template.resolve()
 
     def _managed_krea2_template(self, checkpoint: Path | None = None) -> Path:
@@ -744,7 +744,7 @@ class RuntimeInstaller:
     def install(self, options: RuntimeInstallOptions) -> RuntimeInstallState:
         report = run_runtime_preflight(self.config)
         if report.status == STATUS_BLOCKED:
-            raise RuntimeInstallError("Preflight BLOCKED. Correggere CUDA, spazio o percorsi prima dell'installazione.\n" + report.summary())
+            raise RuntimeInstallError('Preflight BLOCKED. Fix CUDA, disk space, or paths before installation.\n' + report.summary())
         self.runtime_root.mkdir(parents=True, exist_ok=True)
         self.model_root.mkdir(parents=True, exist_ok=True)
         self.download_root.mkdir(parents=True, exist_ok=True)
@@ -764,28 +764,28 @@ class RuntimeInstaller:
         try:
             python: Path | None = None
             if options.install_runtime:
-                self._emit("runtime", 0.02, "Preparazione Miniconda")
+                self._emit("runtime", 0.02, 'Preparing Miniconda')
                 self._ensure_miniconda(accept_tos=options.accept_anaconda_tos)
-                self._emit("runtime", 0.12, "Creazione ambiente Python 3.11")
+                self._emit("runtime", 0.12, 'Creating Python 3.11 environment')
                 python = self._ensure_env(accept_tos=options.accept_anaconda_tos)
-                self._emit("runtime", 0.20, "Installazione/aggiornamento WanGP")
+                self._emit("runtime", 0.20, 'Installing/updating WanGP')
                 self._ensure_wangp_source(repair=options.repair)
-                self._emit("runtime", 0.32, "Installazione PyTorch CUDA e dipendenze WanGP")
+                self._emit("runtime", 0.32, 'Installing PyTorch CUDA and WanGP dependencies')
                 self._install_python_stack(python)
                 self.sync_bridge_configs(validate=True)
             else:
                 python = self.env_root / "python.exe"
                 if not python.is_file():
-                    raise RuntimeInstallError("Runtime base non installato: impossibile installare/gestire i modelli.")
+                    raise RuntimeInstallError('Base runtime is not installed: models cannot be installed/managed.')
                 self._ensure_ckpts_link()
 
             if options.install_wan_animate:
-                self._emit("model.animate", 0.50, "Installazione Wan 2.2 Animate 14B")
+                self._emit("model.animate", 0.50, 'Installing Wan 2.2 Animate 14B')
                 path = self._install_animate()
                 self.state.models["wan_animate"] = {"status": "installed", "path": str(path), "bytes": path.stat().st_size}
                 self.state.save()
             if options.install_krea2:
-                self._emit("model.krea2", 0.72, "Installazione Krea 2 Turbo")
+                self._emit("model.krea2", 0.72, 'Installing Krea 2 Turbo')
                 existing_before = self._find_existing_krea2_checkpoint()
                 previous = self.state.models.get("krea2_turbo", {})
                 previous_path = str(previous.get("path", "")) if isinstance(previous, Mapping) else ""
@@ -820,7 +820,7 @@ class RuntimeInstaller:
             self.state.updated_at_utc = datetime.now(timezone.utc).isoformat()
             self.state.last_error = ""
             self.state.save()
-            self._emit("complete", 1.0, "Runtime AI installato e configurato")
+            self._emit("complete", 1.0, 'AI runtime installed and configured')
             return self.state
         except Exception as exc:
             self.state.status = "failed"
@@ -880,7 +880,7 @@ class RuntimeInstaller:
             items.append(RuntimeHealthItem(
                 "cuda.toolkit",
                 False,
-                "CUDA Toolkit/nvcc non rilevato. Non blocca il runtime PyTorch cu130; può essere richiesto da kernel/acceleratori opzionali WanGP.",
+                'CUDA Toolkit/nvcc not detected. This does not block the PyTorch cu130 runtime; optional WanGP kernels/accelerators may require it.',
                 required=False,
             ))
         if python.is_file():
@@ -940,7 +940,7 @@ class RuntimeInstaller:
         record = self.state.models.get(model_id, {})
         if isinstance(record, Mapping) and str(record.get("ownership", "")).lower() in {"reused", "external"}:
             raise RuntimeInstallError(
-                f"{spec.label} è un checkpoint preesistente riutilizzato: Sprite Studio non lo cancellerà automaticamente."
+                f'{spec.label} is a reused pre-existing checkpoint: Sprite Studio will not delete it automatically.'
             )
         path = self.ckpts_root / spec.filename
         removed = False

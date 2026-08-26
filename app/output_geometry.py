@@ -25,31 +25,31 @@ class OutputSizePreset:
 
 
 OUTPUT_SIZE_PRESETS: tuple[OutputSizePreset, ...] = (
-    OutputSizePreset('custom', 'Personalizzata', None, None, 'custom'),
-    OutputSizePreset('square-36', 'Quadrata · 36 × 36', 36, 36, 'square'),
-    OutputSizePreset('square-48', 'Quadrata · 48 × 48', 48, 48, 'square'),
-    OutputSizePreset('square-64', 'Quadrata · 64 × 64', 64, 64, 'square'),
-    OutputSizePreset('square-80', 'Quadrata · 80 × 80', 80, 80, 'square'),
-    OutputSizePreset('square-96', 'Quadrata · 96 × 96', 96, 96, 'square'),
-    OutputSizePreset('square-128', 'Quadrata · 128 × 128', 128, 128, 'square'),
-    OutputSizePreset('square-160', 'Quadrata · 160 × 160', 160, 160, 'square'),
-    OutputSizePreset('square-192', 'Quadrata · 192 × 192', 192, 192, 'square'),
-    OutputSizePreset('square-224', 'Quadrata · 224 × 224', 224, 224, 'square'),
-    OutputSizePreset('square-256', 'Quadrata · 256 × 256', 256, 256, 'square'),
-    OutputSizePreset('portrait-48x64', 'Verticale · 48 × 64', 48, 64, 'portrait'),
-    OutputSizePreset('portrait-64x96', 'Verticale · 64 × 96', 64, 96, 'portrait'),
-    OutputSizePreset('portrait-80x112', 'Verticale · 80 × 112', 80, 112, 'portrait'),
-    OutputSizePreset('portrait-96x128', 'Verticale · 96 × 128', 96, 128, 'portrait'),
-    OutputSizePreset('portrait-128x192', 'Verticale · 128 × 192', 128, 192, 'portrait'),
-    OutputSizePreset('portrait-160x224', 'Verticale · 160 × 224', 160, 224, 'portrait'),
-    OutputSizePreset('portrait-192x256', 'Verticale · 192 × 256', 192, 256, 'portrait'),
-    OutputSizePreset('landscape-64x48', 'Orizzontale · 64 × 48', 64, 48, 'landscape'),
-    OutputSizePreset('landscape-96x64', 'Orizzontale · 96 × 64', 96, 64, 'landscape'),
-    OutputSizePreset('landscape-112x80', 'Orizzontale · 112 × 80', 112, 80, 'landscape'),
-    OutputSizePreset('landscape-128x96', 'Orizzontale · 128 × 96', 128, 96, 'landscape'),
-    OutputSizePreset('landscape-192x128', 'Orizzontale · 192 × 128', 192, 128, 'landscape'),
-    OutputSizePreset('landscape-224x160', 'Orizzontale · 224 × 160', 224, 160, 'landscape'),
-    OutputSizePreset('landscape-256x192', 'Orizzontale · 256 × 192', 256, 192, 'landscape'),
+    OutputSizePreset('custom', 'Custom', None, None, 'custom'),
+    OutputSizePreset('square-36', 'Square · 36 × 36', 36, 36, 'square'),
+    OutputSizePreset('square-48', 'Square · 48 × 48', 48, 48, 'square'),
+    OutputSizePreset('square-64', 'Square · 64 × 64', 64, 64, 'square'),
+    OutputSizePreset('square-80', 'Square · 80 × 80', 80, 80, 'square'),
+    OutputSizePreset('square-96', 'Square · 96 × 96', 96, 96, 'square'),
+    OutputSizePreset('square-128', 'Square · 128 × 128', 128, 128, 'square'),
+    OutputSizePreset('square-160', 'Square · 160 × 160', 160, 160, 'square'),
+    OutputSizePreset('square-192', 'Square · 192 × 192', 192, 192, 'square'),
+    OutputSizePreset('square-224', 'Square · 224 × 224', 224, 224, 'square'),
+    OutputSizePreset('square-256', 'Square · 256 × 256', 256, 256, 'square'),
+    OutputSizePreset('portrait-48x64', 'Vertical · 48 × 64', 48, 64, 'portrait'),
+    OutputSizePreset('portrait-64x96', 'Vertical · 64 × 96', 64, 96, 'portrait'),
+    OutputSizePreset('portrait-80x112', 'Vertical · 80 × 112', 80, 112, 'portrait'),
+    OutputSizePreset('portrait-96x128', 'Vertical · 96 × 128', 96, 128, 'portrait'),
+    OutputSizePreset('portrait-128x192', 'Vertical · 128 × 192', 128, 192, 'portrait'),
+    OutputSizePreset('portrait-160x224', 'Vertical · 160 × 224', 160, 224, 'portrait'),
+    OutputSizePreset('portrait-192x256', 'Vertical · 192 × 256', 192, 256, 'portrait'),
+    OutputSizePreset('landscape-64x48', 'Horizontal · 64 × 48', 64, 48, 'landscape'),
+    OutputSizePreset('landscape-96x64', 'Horizontal · 96 × 64', 96, 64, 'landscape'),
+    OutputSizePreset('landscape-112x80', 'Horizontal · 112 × 80', 112, 80, 'landscape'),
+    OutputSizePreset('landscape-128x96', 'Horizontal · 128 × 96', 128, 96, 'landscape'),
+    OutputSizePreset('landscape-192x128', 'Horizontal · 192 × 128', 192, 128, 'landscape'),
+    OutputSizePreset('landscape-224x160', 'Horizontal · 224 × 160', 224, 160, 'landscape'),
+    OutputSizePreset('landscape-256x192', 'Horizontal · 256 × 192', 256, 192, 'landscape'),
 )
 
 
@@ -94,11 +94,11 @@ def validate_output_size(width: int, height: int) -> tuple[int, int]:
     height = int(height)
     if not MIN_OUTPUT_DIMENSION <= width <= MAX_OUTPUT_DIMENSION:
         raise ValueError(
-            f'La larghezza output deve essere compresa tra {MIN_OUTPUT_DIMENSION} e {MAX_OUTPUT_DIMENSION} px.'
+            f'Output width must be between {MIN_OUTPUT_DIMENSION} and {MAX_OUTPUT_DIMENSION} px.'
         )
     if not MIN_OUTPUT_DIMENSION <= height <= MAX_OUTPUT_DIMENSION:
         raise ValueError(
-            f"L'altezza output deve essere compresa tra {MIN_OUTPUT_DIMENSION} e {MAX_OUTPUT_DIMENSION} px."
+            f'Output height must be between {MIN_OUTPUT_DIMENSION} and {MAX_OUTPUT_DIMENSION} px.'
         )
     return width, height
 
@@ -152,7 +152,7 @@ def migrate_canvas_pivot(
 
 def locked_size_from_width(width: int, aspect_ratio: float) -> tuple[int, int]:
     if aspect_ratio <= 0:
-        raise ValueError('Il rapporto deve essere positivo.')
+        raise ValueError('The ratio must be positive.')
     width = max(MIN_OUTPUT_DIMENSION, min(MAX_OUTPUT_DIMENSION, int(width)))
     height = int(round(width / aspect_ratio))
     if height < MIN_OUTPUT_DIMENSION:
@@ -166,7 +166,7 @@ def locked_size_from_width(width: int, aspect_ratio: float) -> tuple[int, int]:
 
 def locked_size_from_height(height: int, aspect_ratio: float) -> tuple[int, int]:
     if aspect_ratio <= 0:
-        raise ValueError('Il rapporto deve essere positivo.')
+        raise ValueError('The ratio must be positive.')
     height = max(MIN_OUTPUT_DIMENSION, min(MAX_OUTPUT_DIMENSION, int(height)))
     width = int(round(height * aspect_ratio))
     if width < MIN_OUTPUT_DIMENSION:

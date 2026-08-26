@@ -36,7 +36,7 @@ def install_exception_hook() -> None:
                 QMessageBox.critical(
                     None,
                     "Unum Sunt Sprite Studio",
-                    "Si è verificato un errore non gestito. Il dettaglio è stato registrato nel log dell'applicazione.",
+                    'An unhandled error occurred. Details were recorded in the application log.',
                 )
         except Exception:
             pass

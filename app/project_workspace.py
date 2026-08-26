@@ -64,21 +64,20 @@ class ProjectWorkspace(QWidget):
         root.setContentsMargins(10, 10, 10, 10)
 
         banner = QLabel(
-            'R5e4 Project Groups — organizza la produzione come Soggetto → Animazione → Direzione. '
-            'Solo una direzione può essere il gruppo attivo della pipeline.'
+            'R5e4 Project Groups — organize production as Subject → Animation → Direction. Only one Direction group can be the active pipeline group.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet('QLabel { color: #f4f6f8; padding: 9px; background: #20343a; border: 1px solid #4c7f88; }')
         root.addWidget(banner)
 
         actions = QHBoxLayout()
-        self.new_button = QPushButton('Nuovo progetto')
+        self.new_button = QPushButton('New Project')
         self.new_button.clicked.connect(self._create_project_interactive)
-        self.open_button = QPushButton('Apri progetto')
+        self.open_button = QPushButton('Open Project')
         self.open_button.clicked.connect(self._open_project_interactive)
-        self.save_button = QPushButton('Salva metadati progetto')
+        self.save_button = QPushButton('Save Project Metadata')
         self.save_button.clicked.connect(self.save_project_metadata)
-        self.snapshot_button = QPushButton('Salva snapshot pipeline')
+        self.snapshot_button = QPushButton('Save Pipeline Snapshot')
         self.snapshot_button.clicked.connect(self.save_requested.emit)
         actions.addWidget(self.new_button)
         actions.addWidget(self.open_button)
@@ -87,7 +86,7 @@ class ProjectWorkspace(QWidget):
         actions.addStretch(1)
         root.addLayout(actions)
 
-        self.active_group_label = QLabel('Gruppo attivo: nessuno')
+        self.active_group_label = QLabel('Active group: none')
         self.active_group_label.setWordWrap(True)
         self.active_group_label.setStyleSheet('QLabel { color: #f4f6f8; padding: 7px; background: #2b3325; border: 1px solid #64744f; font-weight: 600; }')
         root.addWidget(self.active_group_label)
@@ -101,11 +100,11 @@ class ProjectWorkspace(QWidget):
         left_layout.setContentsMargins(0, 0, 5, 0)
 
         groups_actions = QHBoxLayout()
-        self.add_subject_button = QPushButton('+ Soggetto')
+        self.add_subject_button = QPushButton('+ Subject')
         self.add_subject_button.clicked.connect(self._add_subject)
-        self.add_animation_button = QPushButton('+ Animazione')
+        self.add_animation_button = QPushButton('+ Animation')
         self.add_animation_button.clicked.connect(self._add_animation)
-        self.add_direction_button = QPushButton('+ Direzione')
+        self.add_direction_button = QPushButton('+ Direction')
         self.add_direction_button.clicked.connect(self._add_direction)
         groups_actions.addWidget(self.add_subject_button)
         groups_actions.addWidget(self.add_animation_button)
@@ -114,20 +113,20 @@ class ProjectWorkspace(QWidget):
 
         self.groups_tree = QTreeWidget()
         self.groups_tree.setColumnCount(4)
-        self.groups_tree.setHeaderLabels(['Nome', 'Tipo', 'Stato', 'Aggiornato'])
+        self.groups_tree.setHeaderLabels(['Name', 'Type', 'Status', 'Updated'])
         self.groups_tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.groups_tree.itemSelectionChanged.connect(self._on_tree_selection_changed)
         self.groups_tree.itemDoubleClicked.connect(lambda *_: self._set_selected_active())
         left_layout.addWidget(self.groups_tree, 1)
 
         item_actions = QHBoxLayout()
-        self.activate_button = QPushButton('Imposta attivo')
+        self.activate_button = QPushButton('Set Active')
         self.activate_button.clicked.connect(self._set_selected_active)
-        self.rename_button = QPushButton('Rinomina')
+        self.rename_button = QPushButton('Rename')
         self.rename_button.clicked.connect(self._rename_selected)
-        self.duplicate_button = QPushButton('Duplica')
+        self.duplicate_button = QPushButton('Duplicate')
         self.duplicate_button.clicked.connect(self._duplicate_selected)
-        self.delete_button = QPushButton('Elimina')
+        self.delete_button = QPushButton('Delete')
         self.delete_button.clicked.connect(self._delete_selected)
         item_actions.addWidget(self.activate_button)
         item_actions.addWidget(self.rename_button)
@@ -136,7 +135,7 @@ class ProjectWorkspace(QWidget):
         left_layout.addLayout(item_actions)
 
         copy_row = QHBoxLayout()
-        self.copy_data_button = QPushButton('Copia dati da altra direzione…')
+        self.copy_data_button = QPushButton('Copy Data from Another Direction…')
         self.copy_data_button.clicked.connect(self._copy_data_from_other_direction)
         copy_row.addWidget(self.copy_data_button)
         copy_row.addStretch(1)
@@ -147,9 +146,9 @@ class ProjectWorkspace(QWidget):
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(5, 0, 0, 0)
 
-        info_group = QGroupBox('Progetto corrente')
+        info_group = QGroupBox('Current Project')
         info_form = QFormLayout(info_group)
-        self.path_label = QLabel('Nessun progetto aperto')
+        self.path_label = QLabel('No Project Open')
         self.path_label.setWordWrap(True)
         self.name_edit = QLineEdit()
         self.subject_edit = QLineEdit()
@@ -158,15 +157,15 @@ class ProjectWorkspace(QWidget):
         self.assets_label = QLabel('—')
         self.assets_label.setWordWrap(True)
         self.updated_label = QLabel('—')
-        info_form.addRow('Cartella', self.path_label)
-        info_form.addRow('Nome', self.name_edit)
-        info_form.addRow('Soggetto legacy', self.subject_edit)
+        info_form.addRow('Folder', self.path_label)
+        info_form.addRow('Name', self.name_edit)
+        info_form.addRow('Legacy Subject', self.subject_edit)
         info_form.addRow('Note', self.notes_edit)
-        info_form.addRow('Asset globali', self.assets_label)
+        info_form.addRow('Global Assets', self.assets_label)
         info_form.addRow('Ultimo aggiornamento', self.updated_label)
         right_layout.addWidget(info_group)
 
-        group_group = QGroupBox('Gruppo selezionato')
+        group_group = QGroupBox('Selected group')
         group_form = QFormLayout(group_group)
         self.group_path_label = QLabel('—')
         self.group_path_label.setWordWrap(True)
@@ -180,14 +179,14 @@ class ProjectWorkspace(QWidget):
         self.group_assets_label.setWordWrap(True)
         self.group_counts_label = QLabel('—')
         self.group_counts_label.setWordWrap(True)
-        save_group_button = QPushButton('Salva stato e note gruppo')
+        save_group_button = QPushButton('Save Group Status and Notes')
         save_group_button.clicked.connect(self._save_selected_group_details)
-        group_form.addRow('Percorso', self.group_path_label)
-        group_form.addRow('Tipo', self.group_type_label)
-        group_form.addRow('Stato', self.group_status_combo)
+        group_form.addRow('Path', self.group_path_label)
+        group_form.addRow('Type', self.group_type_label)
+        group_form.addRow('Status', self.group_status_combo)
         group_form.addRow('Note', self.group_notes_edit)
         group_form.addRow('Asset', self.group_assets_label)
-        group_form.addRow('Dati', self.group_counts_label)
+        group_form.addRow('Data', self.group_counts_label)
         group_form.addRow('', save_group_button)
         right_layout.addWidget(group_group)
         right_layout.addStretch(1)
@@ -211,14 +210,14 @@ class ProjectWorkspace(QWidget):
         ):
             widget.setEnabled(has_project)
         if not has_project:
-            self.path_label.setText('Nessun progetto aperto')
+            self.path_label.setText('No Project Open')
             self.name_edit.setText('')
             self.subject_edit.setText('')
             self.notes_edit.setPlainText('')
             self.assets_label.setText('—')
             self.updated_label.setText('—')
             self.groups_tree.clear()
-            self.active_group_label.setText('Gruppo attivo: nessuno')
+            self.active_group_label.setText('Active group: none')
             self._refresh_selected_group_details()
             return
 
@@ -229,17 +228,17 @@ class ProjectWorkspace(QWidget):
         self.notes_edit.setPlainText(str(payload.get('notes', '')))
         assets = payload.get('assets', {}) if isinstance(payload.get('assets'), dict) else {}
         asset_lines = [f'{key}: {Path(str(value)).name}' for key, value in assets.items() if value]
-        self.assets_label.setText('\n'.join(asset_lines) if asset_lines else 'Nessun asset globale registrato.')
+        self.assets_label.setText('\n'.join(asset_lines) if asset_lines else 'No global assets registered.')
         self.updated_label.setText(str(payload.get('updated_at', '—')))
         self._populate_groups_tree(payload, select_group_id=select_group_id)
         active_id = payload.get('active_group_id')
         if active_id:
             try:
-                self.active_group_label.setText(f'Gruppo attivo: {self.project_store.group_label(active_id)}')
+                self.active_group_label.setText(f'Active group: {self.project_store.group_label(active_id)}')
             except Exception:
-                self.active_group_label.setText('Gruppo attivo: non valido')
+                self.active_group_label.setText('Active group: invalid')
         else:
-            self.active_group_label.setText('Gruppo attivo: nessuno')
+            self.active_group_label.setText('Active group: none')
         self._refresh_selected_group_details()
 
     def _populate_groups_tree(self, payload: dict, *, select_group_id: str | None = None) -> None:
@@ -308,7 +307,7 @@ class ProjectWorkspace(QWidget):
         self.group_notes_edit.setPlainText(str(group.get('notes', '')))
         assets = group.get('assets', {}) if isinstance(group.get('assets'), dict) else {}
         asset_lines = [f'{key}: {Path(str(value)).name}' for key, value in assets.items() if value]
-        self.group_assets_label.setText('\n'.join(asset_lines) if asset_lines else 'Nessun asset registrato.')
+        self.group_assets_label.setText('\n'.join(asset_lines) if asset_lines else 'No assets registered.')
         self.group_counts_label.setText(
             f"Job: {len(group.get('jobs', []))} · Export: {len(group.get('exports', []))} · "
             f"Workspace: {group.get('workspace', '—')}"
@@ -327,7 +326,7 @@ class ProjectWorkspace(QWidget):
         try:
             self.project_store = ProjectStore.open(Path(path))
         except Exception as exc:
-            QMessageBox.critical(self, 'Errore progetto', str(exc))
+            QMessageBox.critical(self, 'Project Error', str(exc))
             return
         self._refresh_view()
         current = self.current_project_path
@@ -336,12 +335,12 @@ class ProjectWorkspace(QWidget):
             active = self.active_group_id
             if active:
                 self.active_group_changed.emit(active)
-            self.status_message.emit(f'Progetto aperto: {current}')
+            self.status_message.emit(f'Project opened: {current}')
 
     def _create_project_interactive(self) -> None:
         if self.project_store is not None:
             self.save_requested.emit()
-        project_dir = QFileDialog.getExistingDirectory(self, 'Seleziona cartella del nuovo progetto')
+        project_dir = QFileDialog.getExistingDirectory(self, 'Select New Project Folder')
         if not project_dir:
             return
         suggested_name = Path(project_dir).name
@@ -350,17 +349,17 @@ class ProjectWorkspace(QWidget):
         current = self.current_project_path
         if current:
             self.project_changed.emit(current)
-            self.status_message.emit(f'Nuovo progetto creato: {current}')
+            self.status_message.emit(f'New project created: {current}')
 
     def _open_project_interactive(self) -> None:
         if self.project_store is not None:
             self.save_requested.emit()
-        selected_dir = QFileDialog.getExistingDirectory(self, 'Apri cartella progetto')
+        selected_dir = QFileDialog.getExistingDirectory(self, 'Open Project Folder')
         if not selected_dir:
             return
         target = Path(selected_dir)
         if not (target / PROJECT_FILENAME).exists():
-            QMessageBox.warning(self, 'Progetto non valido', f'File {PROJECT_FILENAME} non trovato in {target}.')
+            QMessageBox.warning(self, 'Invalid Project', f'File {PROJECT_FILENAME} not found in {target}.')
             return
         self.load_project_path(str(target))
 
@@ -373,7 +372,7 @@ class ProjectWorkspace(QWidget):
         payload['notes'] = self.notes_edit.toPlainText().strip()
         self.project_store.save(payload)
         self._refresh_view(select_group_id=self._selected_group_id())
-        self.status_message.emit('Metadati progetto salvati.')
+        self.status_message.emit('Project metadata saved.')
 
     def update_project_snapshot(self, snapshot: dict) -> None:
         if self.project_store is None:
@@ -386,7 +385,7 @@ class ProjectWorkspace(QWidget):
             payload['jobs'] = jobs
         self.project_store.save(payload)
         self._refresh_view(select_group_id=self._selected_group_id())
-        self.status_message.emit('Snapshot globale del progetto aggiornato.')
+        self.status_message.emit('Global project snapshot updated.')
 
     def update_active_group_snapshot(self, snapshot: dict) -> None:
         if self.project_store is None or not self.active_group_id:
@@ -394,12 +393,12 @@ class ProjectWorkspace(QWidget):
         group_id = self.active_group_id
         self.project_store.update_group_snapshot(group_id, snapshot)
         self._refresh_view(select_group_id=group_id)
-        self.status_message.emit(f'Snapshot salvato nel gruppo attivo: {self.project_store.group_label(group_id)}')
+        self.status_message.emit(f'Snapshot saved to active group: {self.project_store.group_label(group_id)}')
 
     def _add_subject(self) -> None:
         if self.project_store is None:
             return
-        name, ok = QInputDialog.getText(self, 'Nuovo soggetto', 'Nome soggetto:')
+        name, ok = QInputDialog.getText(self, 'New Subject', 'Subject name:')
         if not ok or not name.strip():
             return
         group = self.project_store.create_group(group_type='subject', name=name.strip())
@@ -411,9 +410,9 @@ class ProjectWorkspace(QWidget):
         parent_id = self._selected_group_id()
         parent = self.project_store.get_group(parent_id) if parent_id else None
         if not parent or parent['type'] != 'subject':
-            QMessageBox.information(self, 'Seleziona un soggetto', 'Per creare un’animazione seleziona prima un gruppo Soggetto.')
+            QMessageBox.information(self, 'Select a Subject', 'Select a Subject group before creating an Animation.')
             return
-        name, ok = QInputDialog.getText(self, 'Nuova animazione', 'Nome animazione (es. Walk, Idle, Run):')
+        name, ok = QInputDialog.getText(self, 'New Animation', 'Animation name (e.g. Walk, Idle, Run):')
         if not ok or not name.strip():
             return
         group = self.project_store.create_group(group_type='animation', name=name.strip(), parent_id=parent_id)
@@ -425,9 +424,9 @@ class ProjectWorkspace(QWidget):
         parent_id = self._selected_group_id()
         parent = self.project_store.get_group(parent_id) if parent_id else None
         if not parent or parent['type'] != 'animation':
-            QMessageBox.information(self, 'Seleziona un’animazione', 'Per creare una direzione seleziona prima un gruppo Animazione.')
+            QMessageBox.information(self, 'Select an Animation', 'Select an Animation group before creating a Direction.')
             return
-        direction, ok = QInputDialog.getItem(self, 'Nuova direzione', 'Direzione:', list(DIRECTIONS), 3, True)
+        direction, ok = QInputDialog.getItem(self, 'New Direction', 'Direction:', list(DIRECTIONS), 3, True)
         if not ok or not str(direction).strip():
             return
         name = str(direction).strip().upper()
@@ -444,7 +443,7 @@ class ProjectWorkspace(QWidget):
             return
         group = self.project_store.get_group(group_id)
         if not group or group.get('type') != 'direction':
-            raise ValueError('Solo un gruppo Direzione può essere attivato.')
+            raise ValueError('Only a Direction group can be activated.')
         old_id = self.active_group_id or ''
         if old_id == group_id:
             self._refresh_view(select_group_id=group_id)
@@ -453,7 +452,7 @@ class ProjectWorkspace(QWidget):
         self.project_store.set_active_group(group_id)
         self._refresh_view(select_group_id=group_id)
         self.active_group_changed.emit(group_id)
-        self.status_message.emit(f'Gruppo attivo: {self.project_store.group_label(group_id)}')
+        self.status_message.emit(f'Active group: {self.project_store.group_label(group_id)}')
 
     def _set_selected_active(self) -> None:
         if self.project_store is None:
@@ -471,7 +470,7 @@ class ProjectWorkspace(QWidget):
         group = self.project_store.get_group(group_id) if group_id else None
         if not group:
             return
-        name, ok = QInputDialog.getText(self, 'Rinomina gruppo', 'Nuovo nome:', text=str(group['name']))
+        name, ok = QInputDialog.getText(self, 'Rename Group', 'New name:', text=str(group['name']))
         if not ok or not name.strip():
             return
         self.project_store.update_group(group_id, name=name.strip())
@@ -485,7 +484,7 @@ class ProjectWorkspace(QWidget):
             return
         clone = self.project_store.duplicate_group(group_id)
         self._refresh_view(select_group_id=clone['id'])
-        self.status_message.emit('Gruppo duplicato con dati e sotto-gruppi.')
+        self.status_message.emit('Group duplicated with data and subgroups.')
 
     def _delete_selected(self) -> None:
         if self.project_store is None:
@@ -494,7 +493,7 @@ class ProjectWorkspace(QWidget):
         if not group_id:
             return
         label = self.project_store.group_label(group_id)
-        answer = QMessageBox.question(self, 'Elimina gruppo', f'Eliminare "{label}" e tutti i suoi sotto-gruppi?')
+        answer = QMessageBox.question(self, 'Delete Group', f'Delete "{label}" and all of its subgroups?')
         if answer != QMessageBox.StandardButton.Yes:
             return
         old_active = self.active_group_id or ''
@@ -502,7 +501,7 @@ class ProjectWorkspace(QWidget):
         self._refresh_view()
         if old_active and self.active_group_id is None:
             self.active_group_changed.emit('')
-        self.status_message.emit(f'Gruppo eliminato: {label}')
+        self.status_message.emit(f'Group deleted: {label}')
 
     def _copy_data_from_other_direction(self) -> None:
         if self.project_store is None:
@@ -513,17 +512,17 @@ class ProjectWorkspace(QWidget):
             return
         candidates = [group for group in self.project_store.list_groups() if group['type'] == 'direction' and group['id'] != target_id]
         if not candidates:
-            QMessageBox.information(self, 'Nessuna sorgente', 'Non esistono altre direzioni da cui copiare i dati.')
+            QMessageBox.information(self, 'No Source', 'There are no other directions to copy data from.')
             return
         labels = [self.project_store.group_label(group['id']) for group in candidates]
-        selected, ok = QInputDialog.getItem(self, 'Copia dati produzione', 'Copia da:', labels, 0, False)
+        selected, ok = QInputDialog.getItem(self, 'Copy Production Data', 'Copy from:', labels, 0, False)
         if not ok:
             return
         source_id = candidates[labels.index(selected)]['id']
         answer = QMessageBox.question(
             self,
-            'Conferma copia dati',
-            'Questa operazione sostituisce asset, snapshot pipeline, job, export e stato del gruppo selezionato. Continuare?',
+            'Confirm Data Copy',
+            'This operation replaces assets, pipeline snapshots, jobs, exports, and status for the selected group. Continue?',
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
@@ -531,7 +530,7 @@ class ProjectWorkspace(QWidget):
         self._refresh_view(select_group_id=target_id)
         if self.active_group_id == target_id:
             self.active_group_changed.emit(target_id)
-        self.status_message.emit(f'Dati copiati da {selected}.')
+        self.status_message.emit(f'Data copied from {selected}.')
 
     def _save_selected_group_details(self) -> None:
         if self.project_store is None:
@@ -545,7 +544,7 @@ class ProjectWorkspace(QWidget):
             notes=self.group_notes_edit.toPlainText().strip(),
         )
         self._refresh_view(select_group_id=group_id)
-        self.status_message.emit('Stato e note gruppo salvati.')
+        self.status_message.emit('Group status and notes saved.')
 
     def append_job_to_active_group(self, job_payload: dict) -> None:
         if self.project_store is None or not self.active_group_id:

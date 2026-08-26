@@ -46,7 +46,7 @@ class BackgroundColorRule:
     def from_dict(cls, data: dict[str, Any]) -> "BackgroundColorRule":
         rgb = data.get("rgb", (0, 255, 0))
         if not isinstance(rgb, (list, tuple)) or len(rgb) != 3:
-            raise ValueError("BackgroundColorRule.rgb deve contenere tre valori.")
+            raise ValueError('BackgroundColorRule.rgb must contain three values.')
         return cls(
             rgb=tuple(max(0, min(255, int(v))) for v in rgb),
             enabled=bool(data.get("enabled", True)),
@@ -97,7 +97,7 @@ class ExportSettings:
     def normalized_format(self) -> str:
         value = self.output_format.lower().strip()
         if value not in {"png", "webp"}:
-            raise ValueError(f"Formato non supportato: {self.output_format}")
+            raise ValueError(f'Unsupported format: {self.output_format}')
         return value
 
 
@@ -139,17 +139,17 @@ class AlignmentSettings:
 
     def validate(self) -> None:
         if not 36 <= self.canvas_width <= 256 or not 36 <= self.canvas_height <= 256:
-            raise ValueError("La tela output deve essere compresa tra 36×36 e 256×256 px, con larghezza e altezza indipendenti.")
+            raise ValueError('The output canvas must be between 36×36 and 256×256 px, with independent width and height.')
         if not 0 <= self.canvas_pivot_x <= self.canvas_width:
-            raise ValueError("Pivot X della tela fuori intervallo.")
+            raise ValueError('Canvas pivot X is out of range.')
         if not 0 <= self.canvas_pivot_y <= self.canvas_height:
-            raise ValueError("Pivot Y della tela fuori intervallo.")
+            raise ValueError('Canvas pivot Y is out of range.')
         if self.margin < 0:
-            raise ValueError("Il margine non può essere negativo.")
+            raise ValueError('Margin cannot be negative.')
         if self.shared_scale <= 0:
-            raise ValueError("La scala deve essere positiva.")
+            raise ValueError('Scale must be positive.')
         if self.fps <= 0:
-            raise ValueError("Gli FPS devono essere positivi.")
+            raise ValueError('FPS must be positive.')
 
     def to_dict(self) -> dict[str, Any]:
         self.validate()

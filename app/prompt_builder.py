@@ -313,7 +313,7 @@ def starter_prompt_profiles() -> dict[str, dict[str, Any]]:
             name=name,
             builder_state=state,
             builtin=True,
-            description='Starter modificabile come punto di partenza; non è un prompt universale.',
+            description='Editable Starter profile intended as a starting point; it is not a universal prompt.',
         )
     return result
 
@@ -346,5 +346,5 @@ class PromptProfileStore:
     def delete(self, name: str) -> None:
         profile = self.get(name)
         if profile and profile.get('builtin'):
-            raise ValueError('I profili Prompt Starter integrati non possono essere eliminati.')
+            raise ValueError('Built-in Prompt Starter profiles cannot be deleted.')
         self.profiles_store.delete_profile('prompt', name)

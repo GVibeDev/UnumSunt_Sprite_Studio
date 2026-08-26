@@ -71,7 +71,7 @@ class GenerationJobManager:
             model=request.model,
             state="queued",
             progress=0.0,
-            message="Job in coda",
+            message='Job queued',
             job_directory=str(job_dir),
             started_at_utc=datetime.now(timezone.utc).isoformat(),
         )
@@ -90,7 +90,7 @@ class GenerationJobManager:
             if runtime.snapshot.state in {"completed", "failed", "cancelled"}:
                 return False
             runtime.cancel_event.set()
-            runtime.snapshot.message = "Annullamento richiesto"
+            runtime.snapshot.message = 'Cancellation requested'
             self._write_status(runtime)
             return True
 
@@ -153,12 +153,12 @@ class GenerationJobManager:
             progress_callback=on_progress,
         )
         try:
-            on_progress(GenerationProgress("starting", 0.01, "Avvio provider"))
+            on_progress(GenerationProgress("starting", 0.01, 'Starting provider'))
             result = provider.run(request, context)
             with self._lock:
                 runtime.snapshot.state = "completed"
                 runtime.snapshot.progress = 1.0
-                runtime.snapshot.message = "Generazione completata"
+                runtime.snapshot.message = 'Generation completed'
                 runtime.snapshot.result = result
                 self._finalize_timing(runtime)
                 self._write_status(runtime)

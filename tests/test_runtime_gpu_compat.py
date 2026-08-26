@@ -41,7 +41,7 @@ class RuntimeGpuCompatibilityTests(unittest.TestCase):
         self.assertTrue(probe.available)
         self.assertFalse(probe.default_device_compatible)
         self.assertIn('sm_61', probe.detail())
-        self.assertIn('NON compatibile', probe.detail())
+        self.assertIn('NOT compatible', probe.detail())
 
     def test_parse_probe_accepts_rtx3070_sm86(self):
         probe = parse_torch_gpu_probe({

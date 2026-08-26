@@ -208,7 +208,7 @@ class RuntimePreflightReport:
         return target
 
     def summary(self) -> str:
-        lines = [f"Local AI Runtime Preflight: {self.status}", f"CUDA target: {self.cuda_target}"]
+        lines = [f'Local AI Runtime Preflight: {self.status}', f"CUDA target: {self.cuda_target}"]
         for item in self.checks:
             lines.append(f"[{item.status}] {item.label}: {item.detail}")
         return "\n".join(lines)
@@ -242,13 +242,13 @@ def sys_executable_dir() -> str:
 def load_install_plan(path: str | Path | None = None) -> RuntimeInstallPlan:
     target = Path(path) if path is not None else resolve_install_plan_path()
     if target is None or not target.is_file():
-        raise FileNotFoundError("runtime_install_plan.json non trovato")
+        raise FileNotFoundError('runtime_install_plan.json not found')
     data = json.loads(target.read_text(encoding="utf-8"))
     if not isinstance(data, Mapping):
-        raise ValueError("runtime_install_plan.json deve contenere un oggetto JSON")
+        raise ValueError('runtime_install_plan.json must contain a JSON object')
     plan = RuntimeInstallPlan.from_dict(data)
     if not plan.components:
-        raise ValueError("Il piano runtime non contiene componenti")
+        raise ValueError('The runtime plan contains no components')
     return plan
 
 
@@ -303,11 +303,11 @@ def probe_nvidia(
 ) -> NvidiaProbe:
     command = which("nvidia-smi")
     if not command:
-        return NvidiaProbe(False, None, (), "nvidia-smi non trovato")
+        return NvidiaProbe(False, None, (), 'nvidia-smi not found')
     try:
         summary = runner([command], capture_output=True, text=True, timeout=8, check=False)
         if summary.returncode != 0:
-            return NvidiaProbe(False, None, (), (summary.stderr or summary.stdout or "nvidia-smi fallito").strip())
+            return NvidiaProbe(False, None, (), (summary.stderr or summary.stdout or "nvidia-smi failed").strip())
         driver, cuda = parse_nvidia_smi_summary(summary.stdout)
         query = runner(
             [command, "--query-gpu=name,driver_version,memory.total", "--format=csv,noheader,nounits"],
@@ -332,23 +332,23 @@ def validate_windows_path_text(path_text: str) -> tuple[bool, list[str]]:
     value = str(path_text or "").strip()
     errors: list[str] = []
     if not value:
-        return False, ["Percorso vuoto"]
+        return False, ['Empty path']
     path = PureWindowsPath(value)
     if not path.is_absolute():
-        errors.append("Il percorso deve essere assoluto")
+        errors.append('The path must be absolute')
     for part in path.parts:
         if part in {path.anchor, "\\", "/"}:
             continue
         clean = part.rstrip(" .")
         if clean != part:
-            errors.append(f"Segmento non valido (spazio/punto finale): {part}")
+            errors.append(f'Invalid segment (trailing space/dot): {part}')
         stem = clean.split(".", 1)[0].upper()
         if stem in _WINDOWS_RESERVED:
-            errors.append(f"Nome riservato Windows: {part}")
+            errors.append(f'Reserved Windows name: {part}')
         if any(char in _WINDOWS_INVALID_CHARS for char in part):
-            errors.append(f"Carattere non valido nel segmento: {part}")
+            errors.append(f'Invalid character in segment: {part}')
         if ":" in part:
-            errors.append(f"Due punti non validi nel segmento: {part}")
+            errors.append(f'Invalid colon in segment: {part}')
     return not errors, errors
 
 
@@ -375,13 +375,13 @@ def path_drive_key(path: Path, *, platform_name: str | None = None) -> str:
 def probe_writable_path(path: Path) -> tuple[bool, str]:
     existing = nearest_existing_path(path)
     if existing is None:
-        return False, "Nessun parent esistente raggiungibile"
+        return False, 'No reachable existing parent directory'
     base = existing if existing.is_dir() else existing.parent
     try:
         with tempfile.NamedTemporaryFile(prefix="unum_sunt_preflight_", dir=base, delete=True) as handle:
             handle.write(b"ok")
             handle.flush()
-        return True, f"Scrivibile tramite {base}"
+        return True, f'Writable through {base}'
     except Exception as exc:
         return False, str(exc)
 
@@ -451,9 +451,9 @@ def inspect_existing_wangp_config() -> PreflightCheck:
     if not config_path.is_file():
         return PreflightCheck(
             "runtime.existing",
-            "Runtime WanGP esistente",
+            'Existing WanGP runtime',
             STATUS_INFO,
-            "Nessuna configurazione WanGP precedente registrata.",
+            'No previous WanGP configuration is registered.',
             blocking=False,
         )
     try:
@@ -461,17 +461,17 @@ def inspect_existing_wangp_config() -> PreflightCheck:
     except Exception as exc:
         return PreflightCheck(
             "runtime.existing",
-            "Runtime WanGP esistente",
+            'Existing WanGP runtime',
             STATUS_WARNING,
-            f"Configurazione esistente non leggibile: {exc}",
+            f'Existing configuration is unreadable: {exc}',
             blocking=False,
         )
     if not isinstance(data, Mapping):
         return PreflightCheck(
             "runtime.existing",
-            "Runtime WanGP esistente",
+            'Existing WanGP runtime',
             STATUS_WARNING,
-            "Configurazione esistente non valida.",
+            'Existing configuration is invalid.',
             blocking=False,
         )
     candidates = []
@@ -483,24 +483,24 @@ def inspect_existing_wangp_config() -> PreflightCheck:
     if missing:
         return PreflightCheck(
             "runtime.existing",
-            "Runtime WanGP esistente",
+            'Existing WanGP runtime',
             STATUS_WARNING,
-            "Configurazione trovata ma alcuni percorsi non esistono: " + "; ".join(missing),
+            'Configuration found, but some paths do not exist: ' + "; ".join(missing),
             blocking=False,
         )
     if candidates:
         return PreflightCheck(
             "runtime.existing",
-            "Runtime WanGP esistente",
+            'Existing WanGP runtime',
             STATUS_INFO,
-            "Configurazione WanGP già presente: " + "; ".join(f"{key}={value}" for key, value, _ in candidates),
+            'WanGP configuration already present: ' + "; ".join(f"{key}={value}" for key, value, _ in candidates),
             blocking=False,
         )
     return PreflightCheck(
         "runtime.existing",
-        "Runtime WanGP esistente",
+        'Existing WanGP runtime',
         STATUS_INFO,
-        f"Configurazione presente in {config_path}, ma senza percorsi runtime compilati.",
+        f'Configuration found in {config_path}, but without resolved runtime paths.',
         blocking=False,
     )
 
@@ -518,10 +518,10 @@ def _path_check(
         valid, errors = validate_windows_path_text(path_text)
     else:
         valid = path.is_absolute()
-        errors = [] if valid else ["Il percorso deve essere assoluto"]
+        errors = [] if valid else ['The path must be absolute']
     checks.append(PreflightCheck(
         f"{check_id}.syntax",
-        f"{label} · validità",
+        f'{label} · validity',
         STATUS_READY if valid else STATUS_BLOCKED,
         str(path) if valid else "; ".join(errors),
         blocking=not valid,
@@ -530,7 +530,7 @@ def _path_check(
         writable, detail = writable_probe(path)
         checks.append(PreflightCheck(
             f"{check_id}.writable",
-            f"{label} · scrittura",
+            f"{label} · write access",
             STATUS_READY if writable else STATUS_BLOCKED,
             detail,
             blocking=not writable,
@@ -538,9 +538,9 @@ def _path_check(
         if platform_name == "nt" and len(str(path)) >= 220:
             checks.append(PreflightCheck(
                 f"{check_id}.length",
-                f"{label} · lunghezza",
+                f"{label} · length",
                 STATUS_WARNING,
-                f"Percorso lungo ({len(str(path))} caratteri): alcuni tool AI possono non gestirlo correttamente.",
+                f'Long path ({len(str(path))} characters): some AI tools may not handle it correctly.',
                 blocking=False,
             ))
     return checks
@@ -570,7 +570,7 @@ def run_runtime_preflight(
         "platform.windows_x64",
         "Windows x64",
         STATUS_READY if platform_name == "nt" and is_64bit else STATUS_BLOCKED,
-        "Windows x64 rilevato" if platform_name == "nt" and is_64bit else f"Piattaforma corrente: {platform.system()} {platform.machine()}",
+        'Windows x64 detected' if platform_name == "nt" and is_64bit else f'Current platform: {platform.system()} {platform.machine()}',
         blocking=not (platform_name == "nt" and is_64bit),
     ))
 
@@ -579,7 +579,7 @@ def run_runtime_preflight(
             "cuda.nvidia_smi",
             "CUDA / driver NVIDIA",
             STATUS_BLOCKED,
-            nvidia_probe.raw_error or "nvidia-smi non disponibile o nessuna GPU CUDA rilevabile",
+            nvidia_probe.raw_error or 'nvidia-smi unavailable or no detectable CUDA GPU',
             blocking=True,
         ))
     else:
@@ -590,9 +590,9 @@ def run_runtime_preflight(
         )
         checks.append(PreflightCheck(
             "cuda.compatibility",
-            "Compatibilità CUDA",
+            'CUDA compatibility',
             STATUS_READY if compatible else STATUS_BLOCKED,
-            f"Driver espone CUDA {nvidia_probe.cuda_version or '?'}; richiesto >= {plan.minimum_reported_cuda}. {gpu_summary}",
+            f"Driver exposes CUDA {nvidia_probe.cuda_version or '?'}; required >= {plan.minimum_reported_cuda}. {gpu_summary}",
             blocking=not compatible,
             metadata={"reported_cuda": nvidia_probe.cuda_version, "required_cuda": plan.minimum_reported_cuda},
         ))
@@ -601,9 +601,9 @@ def run_runtime_preflight(
     if memory_bytes is not None:
         checks.append(PreflightCheck(
             "system.ram",
-            "RAM fisica",
+            'Physical RAM',
             STATUS_INFO,
-            f"{memory_bytes / GIB:.1f} GiB rilevati · nessuna soglia bloccante in {APP_VERSION}",
+            f'{memory_bytes / GIB:.1f} GiB detected · no blocking threshold in {APP_VERSION}',
             blocking=False,
         ))
     if nvidia_probe.gpus:
@@ -611,7 +611,7 @@ def run_runtime_preflight(
             "system.gpu_policy",
             "Policy GPU / VRAM",
             STATUS_INFO,
-            "Modello GPU e VRAM registrati a scopo diagnostico; nessuna soglia minima applicata. La compatibilità effettiva viene verificata contro la wheel PyTorch installata.",
+            'GPU model and VRAM recorded for diagnostics; no minimum threshold is enforced. Actual compatibility is checked against the installed PyTorch wheel.',
             blocking=False,
         ))
 
@@ -623,24 +623,24 @@ def run_runtime_preflight(
     if torch_probe is None:
         checks.append(PreflightCheck(
             "torch.gpu_compatibility",
-            "GPU ↔ PyTorch runtime",
+            'GPU ↔ PyTorch runtime',
             STATUS_INFO,
-            "Runtime PyTorch non ancora disponibile: la compute capability verrà verificata dopo l'installazione del runtime.",
+            'PyTorch runtime is not available yet: compute capability will be checked after runtime installation.',
             blocking=False,
         ))
     elif not torch_probe.available:
         checks.append(PreflightCheck(
             "torch.gpu_compatibility",
-            "GPU ↔ PyTorch runtime",
+            'GPU ↔ PyTorch runtime',
             STATUS_WARNING,
-            torch_probe.raw_error or "PyTorch runtime non interrogabile",
+            torch_probe.raw_error or 'PyTorch runtime cannot be queried',
             blocking=False,
         ))
     else:
         compatible = torch_probe.default_device_compatible
         checks.append(PreflightCheck(
             "torch.gpu_compatibility",
-            "GPU ↔ PyTorch runtime",
+            'GPU ↔ PyTorch runtime',
             STATUS_READY if compatible else STATUS_WARNING,
             torch_probe.detail(),
             blocking=False,
@@ -654,8 +654,8 @@ def run_runtime_preflight(
         ))
 
     checks.append(existing_runtime_check())
-    checks.extend(_path_check("path.runtime", "Runtime AI", config.runtime_root, platform_name=platform_name, writable_probe=writable_probe))
-    checks.extend(_path_check("path.models", "Modelli AI", config.model_root, platform_name=platform_name, writable_probe=writable_probe))
+    checks.extend(_path_check("path.runtime", 'AI Runtime', config.runtime_root, platform_name=platform_name, writable_probe=writable_probe))
+    checks.extend(_path_check("path.models", 'AI Models', config.model_root, platform_name=platform_name, writable_probe=writable_probe))
 
     requirements = storage_requirements_by_destination(plan)
     destination_paths = {"runtime": Path(config.runtime_root).expanduser(), "models": Path(config.model_root).expanduser()}
@@ -674,12 +674,12 @@ def run_runtime_preflight(
         required = int(bucket["required"])
         enough = free is not None and free >= required
         detail = (
-            f"Richiesti {required / GIB:.1f} GiB (incluso margine {plan.safety_margin_percent:.0f}%); "
-            + (f"liberi {free / GIB:.1f} GiB" if free is not None else "spazio libero non determinabile")
+            f"Required {required / GIB:.1f} GiB (including margin {plan.safety_margin_percent:.0f}%); "
+            + (f"liberi {free / GIB:.1f} GiB" if free is not None else 'free space could not be determined')
         )
         checks.append(PreflightCheck(
             f"storage.{key or 'target'}",
-            f"Spazio disco · {key or bucket['path']}",
+            f"Disk Space · {key or bucket['path']}",
             STATUS_READY if enough else STATUS_BLOCKED,
             detail,
             blocking=not enough,
@@ -695,11 +695,11 @@ def run_runtime_preflight(
 
     provisional = [component.label for component in plan.components if component.estimate]
     notes = [
-        "Il preflight è non distruttivo: non installa né modifica driver, CUDA, Python, Miniconda, PyTorch, WanGP o modelli.",
-        "Nessuna soglia minima di RAM, modello GPU o VRAM viene applicata: i valori sono solo diagnostici.",
+        'The preflight is non-destructive: it does not install or modify drivers, CUDA, Python, Miniconda, PyTorch, WanGP, or models.',
+        'No minimum RAM, GPU model, or VRAM threshold is enforced: values are diagnostic only.',
     ]
     if provisional:
-        notes.append("Stime provvisorie di spazio: " + ", ".join(provisional) + ". La linea R5c3 usa il manifest runtime corrente e mantiene separate le stime ancora provvisorie.")
+        notes.append('Provisional space estimates: ' + ", ".join(provisional) + '. The R5c3 line uses the current runtime manifest and keeps still-provisional estimates separate.')
 
     has_block = any(item.blocking and item.status == STATUS_BLOCKED for item in checks)
     has_warning = any(item.status == STATUS_WARNING for item in checks)

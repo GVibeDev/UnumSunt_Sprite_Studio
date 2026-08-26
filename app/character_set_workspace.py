@@ -58,8 +58,7 @@ class CharacterSetWorkspace(QWidget):
         root.setContentsMargins(10, 10, 10, 10)
 
         banner = QLabel(
-            'R5e11 Character Set / Layer Manager — vista unificata Soggetto → Animazioni → 8 Direzioni. '
-            'I layer sono non distruttivi: asset e offset vengono registrati per direzione senza alterare i frame base.'
+            'R5e11 Character Set / Layer Manager — unified Subject → Animations → 8 Directions view. Layers are non-destructive: assets and offsets are stored per direction without altering base frames.'
         )
         banner.setWordWrap(True)
         banner.setStyleSheet('QLabel { color: #f4f6f8; padding: 9px; background: #28313c; border: 1px solid #596b80; }')
@@ -68,9 +67,9 @@ class CharacterSetWorkspace(QWidget):
         top = QHBoxLayout()
         self.subject_combo = QComboBox()
         self.subject_combo.currentIndexChanged.connect(self._on_subject_changed)
-        refresh_button = QPushButton('Aggiorna')
+        refresh_button = QPushButton('Refresh')
         refresh_button.clicked.connect(self.refresh_context)
-        complete_button = QPushButton('Crea direzioni mancanti')
+        complete_button = QPushButton('Create Missing Directions')
         complete_button.clicked.connect(self._create_missing_directions)
         top.addWidget(QLabel('Character Set'))
         top.addWidget(self.subject_combo, 1)
@@ -87,18 +86,18 @@ class CharacterSetWorkspace(QWidget):
         splitter.setChildrenCollapsible(False)
         root.addWidget(splitter, 1)
 
-        coverage_box = QGroupBox('Copertura Character Set')
+        coverage_box = QGroupBox('Character Set Coverage')
         coverage_layout = QVBoxLayout(coverage_box)
         self.coverage_table = QTableWidget()
         self.coverage_table.setColumnCount(1 + len(DIRECTIONS))
-        self.coverage_table.setHorizontalHeaderLabels(['Animazione', *DIRECTIONS])
+        self.coverage_table.setHorizontalHeaderLabels(['Animation', *DIRECTIONS])
         self.coverage_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.coverage_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         self.coverage_table.cellClicked.connect(self._on_coverage_cell_clicked)
         self.coverage_table.cellDoubleClicked.connect(self._activate_selected_direction)
         coverage_layout.addWidget(self.coverage_table)
         coverage_actions = QHBoxLayout()
-        self.activate_direction_button = QPushButton('Attiva direzione selezionata')
+        self.activate_direction_button = QPushButton('Activate Selected Direction')
         self.activate_direction_button.clicked.connect(self._activate_selected_direction)
         coverage_actions.addWidget(self.activate_direction_button)
         coverage_actions.addStretch(1)
@@ -108,11 +107,11 @@ class CharacterSetWorkspace(QWidget):
         lower = QSplitter(Qt.Orientation.Horizontal)
         lower.setChildrenCollapsible(False)
 
-        layers_box = QGroupBox('Layer logici del soggetto')
+        layers_box = QGroupBox('Subject Logical Layers')
         layers_layout = QVBoxLayout(layers_box)
         self.layers_table = QTableWidget()
         self.layers_table.setColumnCount(7)
-        self.layers_table.setHorizontalHeaderLabels(['#', 'Nome', 'Tipo', 'On', 'Export', 'Opacità', 'Assegnazioni'])
+        self.layers_table.setHorizontalHeaderLabels(['#', 'Name', 'Type', 'On', 'Export', 'Opacity', 'Assignments'])
         self.layers_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.layers_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.layers_table.itemSelectionChanged.connect(self._load_selected_layer_details)
@@ -120,7 +119,7 @@ class CharacterSetWorkspace(QWidget):
         layer_actions = QHBoxLayout()
         add_button = QPushButton('+ Layer')
         add_button.clicked.connect(self._add_layer)
-        remove_button = QPushButton('Elimina')
+        remove_button = QPushButton('Delete')
         remove_button.clicked.connect(self._remove_layer)
         up_button = QPushButton('↑')
         up_button.clicked.connect(lambda: self._move_layer(-1))
@@ -138,29 +137,29 @@ class CharacterSetWorkspace(QWidget):
         self.layer_kind_combo = QComboBox()
         for kind in LAYER_KINDS:
             self.layer_kind_combo.addItem(kind.title(), kind)
-        self.layer_enabled_checkbox = QCheckBox('Abilitato nel Character Set')
-        self.layer_export_checkbox = QCheckBox('Includi nel futuro export composito')
+        self.layer_enabled_checkbox = QCheckBox('Enabled in Character Set')
+        self.layer_export_checkbox = QCheckBox('Include in future composite export')
         self.layer_opacity_spin = QDoubleSpinBox()
         self.layer_opacity_spin.setRange(0.0, 1.0)
         self.layer_opacity_spin.setSingleStep(0.05)
         self.layer_opacity_spin.setDecimals(2)
         self.layer_notes_edit = QPlainTextEdit()
         self.layer_notes_edit.setMaximumHeight(70)
-        save_layer_button = QPushButton('Salva proprietà layer')
+        save_layer_button = QPushButton('Save Layer Properties')
         save_layer_button.clicked.connect(self._save_layer_details)
         layer_form.addRow('Layer', self.layer_name_label)
-        layer_form.addRow('Tipo', self.layer_kind_combo)
+        layer_form.addRow('Type', self.layer_kind_combo)
         layer_form.addRow('', self.layer_enabled_checkbox)
         layer_form.addRow('', self.layer_export_checkbox)
-        layer_form.addRow('Opacità', self.layer_opacity_spin)
+        layer_form.addRow('Opacity', self.layer_opacity_spin)
         layer_form.addRow('Note', self.layer_notes_edit)
         layer_form.addRow('', save_layer_button)
         layers_layout.addLayout(layer_form)
         lower.addWidget(layers_box)
 
-        assignment_box = QGroupBox('Asset layer per direzione')
+        assignment_box = QGroupBox('Layer Assets by Direction')
         assignment_layout = QVBoxLayout(assignment_box)
-        self.direction_label = QLabel('Direzione: nessuna')
+        self.direction_label = QLabel('Direction: none')
         self.direction_label.setWordWrap(True)
         assignment_layout.addWidget(self.direction_label)
         self.assignment_layer_combo = QComboBox()
@@ -168,11 +167,11 @@ class CharacterSetWorkspace(QWidget):
         assignment_layout.addWidget(self.assignment_layer_combo)
 
         assign_actions = QHBoxLayout()
-        import_file_button = QPushButton('Importa PNG/WebP')
+        import_file_button = QPushButton('Import PNG/WebP')
         import_file_button.clicked.connect(self._import_layer_file)
-        import_sequence_button = QPushButton('Importa sequenza…')
+        import_sequence_button = QPushButton('Import Sequence…')
         import_sequence_button.clicked.connect(self._import_layer_sequence)
-        remove_asset_button = QPushButton('Rimuovi asset')
+        remove_asset_button = QPushButton('Remove Asset')
         remove_asset_button.clicked.connect(self._remove_layer_asset)
         assign_actions.addWidget(import_file_button)
         assign_actions.addWidget(import_sequence_button)
@@ -182,12 +181,12 @@ class CharacterSetWorkspace(QWidget):
         assignment_form = QFormLayout()
         self.assignment_info_label = QLabel('—')
         self.assignment_info_label.setWordWrap(True)
-        self.assignment_visible_checkbox = QCheckBox('Visibile')
+        self.assignment_visible_checkbox = QCheckBox('Visible')
         self.assignment_offset_x = QSpinBox()
         self.assignment_offset_x.setRange(-4096, 4096)
         self.assignment_offset_y = QSpinBox()
         self.assignment_offset_y.setRange(-4096, 4096)
-        save_assignment_button = QPushButton('Salva offset / visibilità')
+        save_assignment_button = QPushButton('Save Offset / Visibility')
         save_assignment_button.clicked.connect(self._save_assignment_details)
         assignment_form.addRow('Asset', self.assignment_info_label)
         assignment_form.addRow('', self.assignment_visible_checkbox)
@@ -196,8 +195,7 @@ class CharacterSetWorkspace(QWidget):
         assignment_form.addRow('', save_assignment_button)
         assignment_layout.addLayout(assignment_form)
         assignment_note = QLabel(
-            'I file vengono copiati nel workspace della direzione in layers/<layer_id>/. '
-            'R5e11 non appiattisce né modifica i frame base: prepara uno stack riutilizzabile dalle milestone successive.'
+            'Files are copied into the direction workspace under layers/<layer_id>/. R5e11 does not flatten or modify base frames; it prepares a reusable stack for later milestones.'
         )
         assignment_note.setWordWrap(True)
         assignment_note.setStyleSheet('color: #9aa1ad;')
@@ -265,17 +263,14 @@ class CharacterSetWorkspace(QWidget):
         self.layers_table.setRowCount(0)
         self.assignment_layer_combo.clear()
         self._selected_direction_id = None
-        self.direction_label.setText('Direzione: nessuna')
+        self.direction_label.setText('Direction: none')
         if store is None or not subject_id:
-            self.summary_label.setText('Apri un progetto con almeno un gruppo Soggetto.')
+            self.summary_label.setText('Open a project with at least one Subject group.')
             return
         groups = store.list_groups()
         coverage = character_set_coverage(groups, subject_id)
         self.summary_label.setText(
-            f"{coverage['subject']} · {coverage['animation_count']} animazioni · "
-            f"direzioni presenti {coverage['present_slots']}/{coverage['total_slots']} "
-            f"({coverage['coverage_percent']:.0f}%) · pronte/allineate {coverage['ready_slots']} "
-            f"({coverage['ready_percent']:.0f}%)"
+            f"{coverage['subject']} · {coverage['animation_count']} animations · directions present {coverage['present_slots']}/{coverage['total_slots']} ({coverage['coverage_percent']:.0f}%) · ready/aligned {coverage['ready_slots']} ({coverage['ready_percent']:.0f}%)"
         )
         self.coverage_table.setRowCount(len(coverage['rows']))
         for row_index, row in enumerate(coverage['rows']):
@@ -318,7 +313,7 @@ class CharacterSetWorkspace(QWidget):
                 try:
                     if store.subject_for_group(active)['id'] == subject_id:
                         self._selected_direction_id = active
-                        self.direction_label.setText(f"Direzione: {store.group_label(active)}")
+                        self.direction_label.setText(f'Direction: {store.group_label(active)}')
                 except Exception:
                     pass
         self._load_assignment_details()
@@ -331,9 +326,9 @@ class CharacterSetWorkspace(QWidget):
         self._selected_direction_id = str(group_id) if group_id else None
         store = self._store()
         if store and self._selected_direction_id:
-            self.direction_label.setText(f'Direzione: {store.group_label(self._selected_direction_id)}')
+            self.direction_label.setText(f'Direction: {store.group_label(self._selected_direction_id)}')
         else:
-            self.direction_label.setText('Direzione: slot non creato')
+            self.direction_label.setText('Direction: slot not created')
         self._load_assignment_details()
 
     def _activate_selected_direction(self, *_args) -> None:
@@ -348,7 +343,7 @@ class CharacterSetWorkspace(QWidget):
         groups = store.list_groups()
         animation_ids = [g['id'] for g in groups if g.get('type') == 'animation' and g.get('parent_id') == subject_id]
         if not animation_ids:
-            QMessageBox.information(self, 'Nessuna animazione', 'Creare prima almeno un gruppo Animazione nel progetto.')
+            QMessageBox.information(self, 'No Animation', 'Create at least one Animation group in the project first.')
             return
         created = 0
         for animation_id in animation_ids:
@@ -360,17 +355,17 @@ class CharacterSetWorkspace(QWidget):
                 store.create_group(group_type='direction', name=direction, parent_id=animation_id, metadata={'direction': direction})
                 created += 1
         self.refresh_context()
-        self.status_message.emit(f'R5e11: create {created} direzioni mancanti nel Character Set.')
+        self.status_message.emit(f'R5e11: create {created} missing directions in Character Set.')
 
     def _add_layer(self) -> None:
         store = self._store()
         subject_id = self._current_subject_id()
         if store is None or not subject_id:
             return
-        name, ok = QInputDialog.getText(self, 'Nuovo layer', 'Nome layer (es. Mantello, Arma, Effetti):')
+        name, ok = QInputDialog.getText(self, 'New Layer', 'Layer name (e.g. Cape, Weapon, Effects):')
         if not ok or not name.strip():
             return
-        kind, ok = QInputDialog.getItem(self, 'Tipo layer', 'Tipo:', list(LAYER_KINDS), 1, False)
+        kind, ok = QInputDialog.getItem(self, 'Layer Type', 'Type:', list(LAYER_KINDS), 1, False)
         if not ok:
             return
         layer = store.add_character_layer(subject_id, name.strip(), kind=str(kind))
@@ -391,8 +386,8 @@ class CharacterSetWorkspace(QWidget):
         if store is None or not subject_id or not layer_id:
             return
         answer = QMessageBox.question(
-            self, 'Elimina layer',
-            'Eliminare il layer dal Character Set e tutte le sue assegnazioni nelle direzioni? I frame base non verranno modificati.'
+            self, 'Delete Layer',
+            'Delete this layer from the Character Set and all of its direction assignments? Base frames will not be modified.'
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
@@ -445,19 +440,19 @@ class CharacterSetWorkspace(QWidget):
         )
         self._refresh_subject_view()
         self._select_layer(layer_id)
-        self.status_message.emit('Proprietà layer salvate.')
+        self.status_message.emit('Layer properties saved.')
 
     def _assignment_layer_id(self) -> str | None:
         value = self.assignment_layer_combo.currentData()
         return str(value) if value else None
 
     def _import_layer_file(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, 'Importa asset layer', '', 'Layer raster (*.png *.webp)')
+        path, _ = QFileDialog.getOpenFileName(self, 'Import Layer Asset', '', 'Layer raster (*.png *.webp)')
         if path:
             self._import_layer_source(Path(path))
 
     def _import_layer_sequence(self) -> None:
-        path = QFileDialog.getExistingDirectory(self, 'Importa cartella sequenza layer')
+        path = QFileDialog.getExistingDirectory(self, 'Import Layer Sequence Folder')
         if path:
             self._import_layer_source(Path(path))
 
@@ -465,17 +460,17 @@ class CharacterSetWorkspace(QWidget):
         store = self._store()
         layer_id = self._assignment_layer_id()
         if store is None or not self._selected_direction_id or not layer_id:
-            QMessageBox.information(self, 'Direzione/layer mancanti', 'Seleziona una direzione esistente e un layer.')
+            QMessageBox.information(self, 'Missing Direction/Layer', 'Select an existing direction and a layer.')
             return
         try:
             assignment = store.import_direction_layer_asset(self._selected_direction_id, layer_id, source)
         except Exception as exc:
-            QMessageBox.warning(self, 'Import layer non riuscito', str(exc))
+            QMessageBox.warning(self, 'Layer Import Failed', str(exc))
             return
         self._load_assignment_details()
         self._refresh_subject_view()
         self.status_message.emit(
-            f"Layer importato: {assignment['frame_count']} frame · {assignment['width']}×{assignment['height']}"
+            f"Layer imported: {assignment['frame_count']} frame · {assignment['width']}×{assignment['height']}"
         )
 
     def _remove_layer_asset(self) -> None:
@@ -491,7 +486,7 @@ class CharacterSetWorkspace(QWidget):
         store = self._store()
         layer_id = self._assignment_layer_id()
         if store is None or not self._selected_direction_id or not layer_id:
-            self.assignment_info_label.setText('Nessun asset assegnato.')
+            self.assignment_info_label.setText('No asset assigned.')
             self.assignment_visible_checkbox.setChecked(False)
             self.assignment_offset_x.setValue(0)
             self.assignment_offset_y.setValue(0)
@@ -502,7 +497,7 @@ class CharacterSetWorkspace(QWidget):
             return
         assignment = stack['assignments'].get(layer_id)
         if not assignment:
-            self.assignment_info_label.setText('Nessun asset assegnato.')
+            self.assignment_info_label.setText('No asset assigned.')
             self.assignment_visible_checkbox.setChecked(False)
             self.assignment_offset_x.setValue(0)
             self.assignment_offset_y.setValue(0)
@@ -530,7 +525,7 @@ class CharacterSetWorkspace(QWidget):
                 offset_y=self.assignment_offset_y.value(),
             )
         except KeyError:
-            QMessageBox.information(self, 'Asset non assegnato', 'Importa prima un asset per questo layer e direzione.')
+            QMessageBox.information(self, 'Asset Not Assigned', 'Import an asset for this layer and direction first.')
             return
         self._load_assignment_details()
-        self.status_message.emit('Offset e visibilità del layer salvati.')
+        self.status_message.emit('Layer offset and visibility saved.')

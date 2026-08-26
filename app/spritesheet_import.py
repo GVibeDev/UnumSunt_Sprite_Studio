@@ -25,7 +25,7 @@ class GridSliceSettings:
     def normalized(self) -> 'GridSliceSettings':
         order = str(self.reading_order).strip().lower()
         if order not in {'row_major', 'column_major'}:
-            raise ValueError(f'Ordine lettura non supportato: {self.reading_order}')
+            raise ValueError(f'Unsupported reading order: {self.reading_order}')
         values = {
             'frame_width': int(self.frame_width),
             'frame_height': int(self.frame_height),
@@ -36,11 +36,11 @@ class GridSliceSettings:
             'outer_margin': int(self.outer_margin),
         }
         if values['frame_width'] <= 0 or values['frame_height'] <= 0:
-            raise ValueError('Frame width/height devono essere positivi.')
+            raise ValueError('Frame width/height must be positive.')
         if values['rows'] <= 0 or values['columns'] <= 0:
             raise ValueError('Rows/columns devono essere positivi.')
         if values['horizontal_padding'] < 0 or values['vertical_padding'] < 0 or values['outer_margin'] < 0:
-            raise ValueError('Padding e margin non possono essere negativi.')
+            raise ValueError('Padding and margin cannot be negative.')
         return GridSliceSettings(reading_order=order, **values)
 
     def to_dict(self) -> dict:
@@ -69,7 +69,7 @@ class AtlasRegion:
 def ensure_rgba(image: np.ndarray) -> np.ndarray:
     arr = np.asarray(image)
     if arr.ndim != 3 or arr.shape[2] not in (3, 4) or arr.dtype != np.uint8:
-        raise ValueError('È richiesta un\'immagine RGB/RGBA uint8.')
+        raise ValueError('An RGB/RGBA uint8 image is required.')
     if arr.shape[2] == 4:
         return arr.copy()
     alpha = np.full(arr.shape[:2] + (1,), 255, dtype=np.uint8)
@@ -79,10 +79,10 @@ def ensure_rgba(image: np.ndarray) -> np.ndarray:
 def load_image_rgba(path: str | Path) -> np.ndarray:
     source = Path(path)
     if not source.exists() or not source.is_file():
-        raise FileNotFoundError(f'Spritesheet non trovato: {source}')
+        raise FileNotFoundError(f'Spritesheet not found: {source}')
     raw = cv2.imread(str(source), cv2.IMREAD_UNCHANGED)
     if raw is None:
-        raise ValueError(f'Impossibile leggere lo spritesheet: {source}')
+        raise ValueError(f'Unable to read the spritesheet: {source}')
     if raw.ndim == 2:
         rgb = cv2.cvtColor(raw, cv2.COLOR_GRAY2RGB)
         return ensure_rgba(rgb)
@@ -90,7 +90,7 @@ def load_image_rgba(path: str | Path) -> np.ndarray:
         return cv2.cvtColor(raw, cv2.COLOR_BGRA2RGBA)
     if raw.shape[2] == 3:
         return ensure_rgba(cv2.cvtColor(raw, cv2.COLOR_BGR2RGB))
-    raise ValueError('Formato immagine non supportato.')
+    raise ValueError('Unsupported image format.')
 
 
 def _intervals_from_boolean(values: np.ndarray) -> list[tuple[int, int]]:
@@ -162,7 +162,7 @@ def auto_detect_regular_grid(image_rgba: np.ndarray) -> GridDetectionResult:
             expected_w = settings.outer_margin * 2 + settings.columns * settings.frame_width + (settings.columns - 1) * settings.horizontal_padding
             expected_h = settings.outer_margin * 2 + settings.rows * settings.frame_height + (settings.rows - 1) * settings.vertical_padding
             confidence = 'high' if abs(expected_w - w) <= 2 and abs(expected_h - h) <= 2 else 'medium'
-            return GridDetectionResult(settings, confidence, 'Griglia rilevata dalla trasparenza e dagli intervalli occupati.')
+            return GridDetectionResult(settings, confidence, 'Grid detected from transparency and occupied intervals.')
 
     # Opaque fallback: separator lines similar to the border colour.
     rgb = rgba[:, :, :3].astype(np.int16)
@@ -192,13 +192,13 @@ def auto_detect_regular_grid(image_rgba: np.ndarray) -> GridDetectionResult:
             vertical_padding=_derive_padding(y_intervals),
             outer_margin=max(0, min(x_intervals[0][0], y_intervals[0][0], w - x_intervals[-1][1], h - y_intervals[-1][1])),
         )
-        return GridDetectionResult(settings, 'medium', 'Griglia stimata da linee/separatori uniformi su immagine opaca.')
+        return GridDetectionResult(settings, 'medium', 'Grid estimated from uniform lines/separators on an opaque image.')
 
     # Last-resort proposal: one frame covering the whole sheet, deliberately low confidence.
     return GridDetectionResult(
         GridSliceSettings(frame_width=w, frame_height=h, rows=1, columns=1),
         'low',
-        'Nessuna griglia regolare affidabile rilevata: proposta l\'intera immagine come singolo frame.',
+        'No reliable regular grid detected: the entire image is proposed as a single frame.',
     )
 
 
@@ -259,7 +259,7 @@ def extract_atlas_frames(image_rgba: np.ndarray, regions: Sequence[AtlasRegion])
     for region in regions:
         x, y, w, h = int(region.x), int(region.y), int(region.width), int(region.height)
         if x < 0 or y < 0 or w <= 0 or h <= 0 or x + w > rgba.shape[1] or y + h > rgba.shape[0]:
-            raise ValueError(f'Regione atlas fuori limiti: {region}')
+            raise ValueError(f'Atlas region out of bounds: {region}')
         frames.append(rgba[y:y + h, x:x + w].copy())
     return frames
 
@@ -270,7 +270,7 @@ def normalize_frames_to_canvas(
     alignment: str = 'bottom_center',
 ) -> tuple[list[np.ndarray], tuple[int, int], list[tuple[int, int]]]:
     if not frames:
-        raise ValueError('Nessun frame da normalizzare.')
+        raise ValueError('No frames to normalize.')
     rgba_frames = [ensure_rgba(frame) for frame in frames]
     canvas_w = max(frame.shape[1] for frame in rgba_frames)
     canvas_h = max(frame.shape[0] for frame in rgba_frames)
@@ -288,7 +288,7 @@ def normalize_frames_to_canvas(
             x = 0
             y = 0
         else:
-            raise ValueError(f'Allineamento canvas non supportato: {alignment}')
+            raise ValueError(f'Unsupported canvas alignment: {alignment}')
         canvas = np.zeros((canvas_h, canvas_w, 4), dtype=np.uint8)
         canvas[y:y + h, x:x + w] = frame
         result.append(canvas)
@@ -304,13 +304,13 @@ def create_reference_sheet(
     padding: int = 8,
 ) -> tuple[np.ndarray, dict]:
     if not indices:
-        raise ValueError('Selezionare almeno un frame per la reference sheet.')
+        raise ValueError('Select at least one frame for the reference sheet.')
     selected: list[np.ndarray] = []
     normalized_indices: list[int] = []
     for value in indices:
         index = int(value)
         if index < 0 or index >= len(frames):
-            raise IndexError(f'Indice frame fuori intervallo: {index}')
+            raise IndexError(f'Frame index out of range: {index}')
         selected.append(ensure_rgba(frames[index]))
         normalized_indices.append(index)
     columns = max(1, min(int(columns), len(selected)))
@@ -350,7 +350,7 @@ def save_rgba_png(path: str | Path, rgba: np.ndarray) -> None:
     arr = ensure_rgba(rgba)
     bgra = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGRA)
     if not cv2.imwrite(str(target), bgra):
-        raise OSError(f'Impossibile salvare PNG: {target}')
+        raise OSError(f'Unable to save PNG: {target}')
 
 
 def save_sequence_manifest(
@@ -388,7 +388,7 @@ def load_sequence_manifest(manifest_path: str | Path) -> dict:
     path = Path(manifest_path)
     payload = json.loads(path.read_text(encoding='utf-8'))
     if payload.get('kind') != 'sprite_sequence' or not isinstance(payload.get('frame_paths'), list):
-        raise ValueError('Manifest sequenza sprite non valido.')
+        raise ValueError('Invalid sprite sequence manifest.')
     resolved: list[str] = []
     for value in payload['frame_paths']:
         candidate = Path(str(value))

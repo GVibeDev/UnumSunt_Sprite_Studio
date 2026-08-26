@@ -37,11 +37,11 @@ class BackgroundDiagnostic:
 
 def _validate_rgb_image(image_rgb: np.ndarray) -> None:
     if not isinstance(image_rgb, np.ndarray):
-        raise TypeError("L'immagine deve essere un array NumPy.")
+        raise TypeError('The image must be a NumPy array.')
     if image_rgb.ndim != 3 or image_rgb.shape[2] != 3:
-        raise ValueError("L'immagine RGB deve avere forma H×W×3.")
+        raise ValueError('The RGB image must have shape H×W×3.')
     if image_rgb.dtype != np.uint8:
-        raise ValueError("L'immagine RGB deve usare valori uint8.")
+        raise ValueError('The RGB image must use uint8 values.')
 
 
 def _corner_pixels(image_rgb: np.ndarray, patch_fraction: float = 0.06) -> np.ndarray:
@@ -234,13 +234,13 @@ def _hard_background_candidate(
 ) -> np.ndarray:
     candidates = [distance <= float(tolerance) for distance, tolerance in zip(distances, tolerances)]
     if not candidates:
-        raise ValueError('Nessun colore background disponibile.')
+        raise ValueError('No background color available.')
     return np.logical_or.reduce(candidates)
 
 
 def _connected_region_from_seed(candidate: np.ndarray, seed_mask: np.ndarray) -> np.ndarray:
     if candidate.shape != seed_mask.shape:
-        raise ValueError('Candidate e seed mask devono avere la stessa dimensione.')
+        raise ValueError('Candidate and seed masks must have the same dimensions.')
     binary = candidate.astype(np.uint8)
     count, labels = cv2.connectedComponents(binary, connectivity=8)
     if count <= 1:
@@ -254,14 +254,14 @@ def _connected_region_from_seed(candidate: np.ndarray, seed_mask: np.ndarray) ->
 
 def _detect_central_subject(alpha: np.ndarray) -> tuple[np.ndarray, bool, str, str]:
     if alpha.ndim != 2:
-        raise ValueError('La maschera alpha deve essere bidimensionale.')
+        raise ValueError('The alpha mask must be two-dimensional.')
     height, width = alpha.shape
     foreground = alpha > 8
     binary = foreground.astype(np.uint8)
     count, labels, stats, _centroids = cv2.connectedComponentsWithStats(binary, connectivity=8)
     empty = np.zeros_like(foreground, dtype=bool)
     if count <= 1:
-        return empty, False, 'nessuna', 'nessuna componente foreground'
+        return empty, False, 'none', 'no foreground component'
 
     x0 = int(round(width * 0.25))
     x1 = int(round(width * 0.75))
@@ -292,15 +292,15 @@ def _detect_central_subject(alpha: np.ndarray) -> tuple[np.ndarray, bool, str, s
         label, area, _central, touches_border = max(central, key=lambda item: item[1])
         component = labels == label
         confidence = 'media' if touches_border else 'alta'
-        reason = 'componente maggiore che interseca la ROI centrale'
+        reason = 'largest component intersecting the central ROI'
         return component, True, confidence, reason
 
     fallback = [item for item in candidates if not item[3]]
     if fallback:
         label, _area, _central, _touches = max(fallback, key=lambda item: item[1])
-        return labels == label, True, 'media', 'componente foreground maggiore non collegata al bordo'
+        return labels == label, True, 'media', 'largest foreground component not connected to the border'
 
-    return empty, False, 'nessuna', 'nessuna sagoma centrale rilevata in modo affidabile'
+    return empty, False, 'none', 'no reliable central subject detected'
 
 
 def _legacy_alpha_mask(
@@ -536,14 +536,14 @@ def crop_rgba_to_subject(
     alpha_threshold: int = 8,
 ) -> tuple[np.ndarray, tuple[int, int, int, int]]:
     if not isinstance(rgba, np.ndarray):
-        raise TypeError("L'immagine deve essere un array NumPy.")
+        raise TypeError('The image must be a NumPy array.')
     if rgba.ndim != 3 or rgba.shape[2] != 4 or rgba.dtype != np.uint8:
-        raise ValueError("L'immagine RGBA deve avere forma H×W×4 e dtype uint8.")
+        raise ValueError('The RGBA image must have shape H×W×4 and dtype uint8.')
     alpha = rgba[:, :, 3]
     ys, xs = np.nonzero(alpha > max(0, min(255, alpha_threshold)))
     if len(xs) == 0 or len(ys) == 0:
         raise EmptySubjectError(
-            "Nessuna sagoma rilevata. Ridurre la tolleranza o scegliere meglio il colore di sfondo."
+            'No subject detected. Reduce tolerance or choose a better background color.'
         )
     height, width = alpha.shape
     pad = max(0, int(padding))
@@ -570,7 +570,7 @@ def render_checkerboard_region(
     the same coordinates, but it allocates only for the dirty brush rectangle.
     """
     if rgba_region.ndim != 3 or rgba_region.shape[2] != 4:
-        raise ValueError("È richiesta un'immagine RGBA.")
+        raise ValueError('An RGBA image is required.')
     height, width, _ = rgba_region.shape
     tile = max(2, int(tile_size))
     y_tiles = np.arange(int(origin_y), int(origin_y) + height)[:, None] // tile
@@ -592,7 +592,7 @@ def render_checkerboard(
     dark: int = 166,
 ) -> np.ndarray:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
-        raise ValueError("È richiesta un'immagine RGBA.")
+        raise ValueError('An RGBA image is required.')
     height, width, _ = rgba.shape
     y_tiles = np.arange(height)[:, None] // max(2, tile_size)
     x_tiles = np.arange(width)[None, :] // max(2, tile_size)

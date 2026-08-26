@@ -42,7 +42,7 @@ class BackgroundRulesController:
         self.list_widget.clear()
         for index, rule in enumerate(self.settings.additional_background_colors):
             r, g, b = rule.rgb
-            tolerance_text = 'globale' if rule.tolerance is None else str(rule.tolerance)
+            tolerance_text = 'global' if rule.tolerance is None else str(rule.tolerance)
             state = '✓' if rule.enabled else '○'
             self.list_widget.addItem(
                 f'{state} {index + 1:02d} · #{r:02X}{g:02X}{b:02X} · RGB({r},{g},{b}) · tol {tolerance_text}'
@@ -57,7 +57,7 @@ class BackgroundRulesController:
     def _at_capacity(self) -> bool:
         if len(self.settings.additional_background_colors) < self.MAX_RULES:
             return False
-        self.show_warning('Limite colori', f'Sono già presenti {self.MAX_RULES} colori aggiuntivi.')
+        self.show_warning('Color Limit', f'There are already {self.MAX_RULES} additional colors.')
         return True
 
     def _notify_changed(self) -> None:
@@ -77,12 +77,12 @@ class BackgroundRulesController:
 
     def arm_sample(self) -> None:
         if not self.has_current_frame():
-            self.show_info('Nessun frame', 'Aprire un video prima di campionare un colore aggiuntivo.')
+            self.show_info('No Frames', 'Open a video before sampling an additional color.')
             return
         if self._at_capacity():
             return
         self._sample_armed = True
-        self.status('Campionamento colore aggiuntivo attivo: cliccare sulla preview Originale.')
+        self.status('Additional color sampling is active: click the Original preview.')
 
     def try_consume_sample(self, rgb: tuple[int, int, int], x: int, y: int) -> bool:
         if not self._sample_armed:
@@ -95,7 +95,7 @@ class BackgroundRulesController:
             BackgroundColorRule(rgb=color, enabled=True, tolerance=None)
         )
         self._notify_changed()
-        self.status(f'Colore aggiuntivo campionato a ({x}, {y}): RGB {color}')
+        self.status(f'Additional color sampled at ({x}, {y}): RGB {color}')
         return True
 
     def toggle_selected(self) -> None:

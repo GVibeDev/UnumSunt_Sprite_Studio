@@ -114,15 +114,14 @@ def extract_frame_feature(
     descriptor_size: int = 32,
 ) -> FrameFeature:
     if image_rgb.ndim != 3 or image_rgb.shape[2] != 3:
-        raise ValueError("Il fotogramma sorgente deve essere RGB.")
+        raise ValueError('The source frame must be RGB.')
 
     rgba, alpha = apply_chroma_key(image_rgb, chroma_settings)
     binary = alpha > 24
     ys, xs = np.nonzero(binary)
     if len(xs) == 0:
         raise ValueError(
-            f"Nessuna sagoma rilevabile nel frame {frame_index}. "
-            "Correggere le impostazioni chroma prima dell'analisi."
+            f'No detectable subject in frame {frame_index}. Fix the chroma settings before analysis.'
         )
 
     height, width = alpha.shape
@@ -249,7 +248,7 @@ def analyze_feature_sequence(
 ) -> tuple[list[tuple[int, int, float]], float, float]:
     ordered = sorted(features, key=lambda feature: feature.frame_index)
     if not ordered:
-        raise ValueError("Nessun frame da analizzare.")
+        raise ValueError('No frames to analyze.')
 
     motions = [0.0]
     duplicate_pairs: list[tuple[int, int, float]] = []
@@ -296,15 +295,15 @@ def analyze_feature_sequence(
         feature.quality_score = float(np.clip(exp(-0.18 * anomaly), 0.0, 1.0))
 
         if shape_z >= 3.5:
-            feature.flags.append("sagoma anomala")
+            feature.flags.append("abnormal silhouette")
         if center_z >= 3.5:
-            feature.flags.append("deriva posizione")
+            feature.flags.append('position drift')
         if detail_z >= 4.0:
-            feature.flags.append("dettaglio instabile")
+            feature.flags.append("unstable detail")
         if position > 0 and transition_z >= 4.0:
-            feature.flags.append("salto movimento")
+            feature.flags.append("motion jump")
         if feature.frame_index in duplicate_second_frames:
-            feature.flags.append("quasi duplicato")
+            feature.flags.append("near duplicate")
 
     loop_distance = (
         feature_distance(ordered[0], ordered[-1])
@@ -353,11 +352,11 @@ def select_keyframes(
 ) -> list[int]:
     ordered = sorted(features, key=lambda feature: feature.frame_index)
     if not ordered:
-        raise ValueError("Nessun frame disponibile.")
+        raise ValueError('No frames available.')
     desired = max(1, min(int(desired_count), len(ordered)))
     profile_key = profile.lower().strip()
     if profile_key not in PROFILE_DEFAULTS:
-        raise ValueError(f"Profilo non supportato: {profile}")
+        raise ValueError(f'Unsupported profile: {profile}')
 
     candidates = [
         feature

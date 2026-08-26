@@ -1,11 +1,11 @@
 UNUM SUNT SPRITE STUDIO — KREA 2 SAFETY AND USE CONTROLS
-Release line: R5c7
+Release line: R5c8
 
 Krea 2 Turbo is an optional, separately licensed model component. It is not part of
 the GPL-covered Sprite Studio Core and its own Community License Agreement and
 Acceptable Use Policy remain applicable.
 
-R5c7 uses a local manual-review safeguard appropriate to a single-user desktop
+R5c8 uses a local manual-review safeguard appropriate to a single-user desktop
 creative workflow:
 
 1. Managed installation gate

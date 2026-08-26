@@ -21,7 +21,7 @@ class PreviewLabel(QLabel):
         self.setStyleSheet(
             "QLabel { background: #17191d; border: 1px solid #383c44; color: #c9cdd5; }"
         )
-        self.setText("Nessun video caricato")
+        self.setText('No video loaded')
 
     def set_preview_pixmap(
         self,
@@ -34,7 +34,7 @@ class PreviewLabel(QLabel):
         self._source_height = source_height
         self._refresh_scaled_pixmap()
 
-    def clear_preview(self, text: str = "Nessun video caricato") -> None:
+    def clear_preview(self, text: str = 'No video loaded') -> None:
         self._original_pixmap = None
         self._source_width = 0
         self._source_height = 0

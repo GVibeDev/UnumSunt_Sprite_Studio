@@ -102,7 +102,7 @@ class LocalWanGPImageConfig:
         if profile:
             if profile not in {'1', '2', '3', '4', '5'}:
                 raise InvalidGenerationRequestError(
-                    f'Profilo memoria WanGP non valido: {profile}. Valori ammessi: Auto, 1, 2, 3, 4, 5.'
+                    f'Invalid WanGP memory profile: {profile}. Allowed values: Auto, 1, 2, 3, 4, 5.'
                 )
             result.extend(['--profile', profile])
         reserved = float(self.reserved_memory_max or 0.0)
@@ -192,14 +192,14 @@ class WanGPImageSettingsAdapter:
         template_path = Path(config.settings_template).expanduser() if config.settings_template else None
         if template_path is None or not template_path.is_file():
             raise InvalidGenerationRequestError(
-                'R5e9 richiede un preset/settings JSON WanGP dedicato alla generazione immagini.'
+                'R5e9 requires a dedicated WanGP JSON preset/settings file for image generation.'
             )
         try:
             template = json.loads(template_path.read_text(encoding='utf-8'))
         except Exception as exc:
-            raise InvalidGenerationRequestError(f'Preset immagine WanGP non valido: {exc}') from exc
+            raise InvalidGenerationRequestError(f'Invalid WanGP image preset: {exc}') from exc
         if not isinstance(template, dict):
-            raise InvalidGenerationRequestError('Il preset immagine WanGP deve contenere un oggetto JSON.')
+            raise InvalidGenerationRequestError('The WanGP image preset must contain a JSON object.')
         payload = self._replace(template, request, paths)
         return self._bind_common_fields(payload, request, paths)
 
@@ -269,19 +269,19 @@ class MockImageProvider(ImageGeneratorProvider):
 
     def validate_request(self, request: GenerationRequest) -> None:
         if request.task not in {'text_to_image', 'image_to_image'}:
-            raise InvalidGenerationRequestError('Il mock immagine supporta text_to_image e image_to_image.')
+            raise InvalidGenerationRequestError('The image mock supports text_to_image and image_to_image.')
         if request.task == 'image_to_image':
             if not request.reference_image or not Path(request.reference_image).expanduser().is_file():
-                raise InvalidGenerationRequestError('Image-to-image richiede un’immagine master valida.')
+                raise InvalidGenerationRequestError('Image-to-image requires a valid master image.')
         if not request.positive_prompt.strip():
-            raise InvalidGenerationRequestError('Il prompt positivo non può essere vuoto.')
+            raise InvalidGenerationRequestError('The positive prompt cannot be empty.')
         if request.width < 64 or request.height < 64:
-            raise InvalidGenerationRequestError('Risoluzione minima 64×64.')
+            raise InvalidGenerationRequestError('Minimum resolution is 64×64.')
 
     def run(self, request: GenerationRequest, context: GenerationJobContext) -> GenerationResult:
         self.validate_request(request)
         self._check_cancel(context)
-        context.progress_callback(GenerationProgress('preprocessing', 0.10, 'Preparazione mock immagine'))
+        context.progress_callback(GenerationProgress('preprocessing', 0.10, 'Preparing mock image'))
         rng = np.random.default_rng(int(request.seed))
         canvas = np.zeros((request.height, request.width, 3), dtype=np.uint8)
         yy, xx = np.mgrid[:request.height, :request.width]
@@ -314,7 +314,7 @@ class MockImageProvider(ImageGeneratorProvider):
             draw.line((cx+body_w//3, cy+body_h//3, cx+body_w//2, cy+body_h//2), fill=(60, 54, 48, 255), width=max(4, body_w//8))
 
         self._check_cancel(context)
-        context.progress_callback(GenerationProgress('denoising', 0.75, 'Rendering mock deterministico'))
+        context.progress_callback(GenerationProgress('denoising', 0.75, 'Deterministic mock rendering'))
         output_path = context.output_directory / 'generated_image.png'
         image.save(output_path, format='PNG')
         metadata = {
@@ -326,7 +326,7 @@ class MockImageProvider(ImageGeneratorProvider):
             'file_size_bytes': output_path.stat().st_size,
         }
         self._write_image_manifest(request, context, output_path, metadata)
-        context.progress_callback(GenerationProgress('saving', 0.99, 'Immagine mock salvata'))
+        context.progress_callback(GenerationProgress('saving', 0.99, 'Mock image saved'))
         return GenerationResult(
             job_id=request.job_id,
             state='completed',
@@ -368,7 +368,7 @@ class MockImageProvider(ImageGeneratorProvider):
     @staticmethod
     def _check_cancel(context: GenerationJobContext) -> None:
         if context.cancel_event.is_set():
-            raise GenerationCancelledError('Generazione immagine annullata dall’utente.')
+            raise GenerationCancelledError('Image generation cancelled by the user.')
 
 
 class LocalWanGPImageProvider(ImageGeneratorProvider):
@@ -399,16 +399,16 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
 
     def validate_request(self, request: GenerationRequest) -> None:
         if request.task not in {'text_to_image', 'image_to_image'}:
-            raise InvalidGenerationRequestError('Il provider immagine locale supporta text_to_image e image_to_image.')
+            raise InvalidGenerationRequestError('The local image provider supports text_to_image and image_to_image.')
         if not request.positive_prompt.strip():
-            raise InvalidGenerationRequestError('Il prompt positivo non può essere vuoto.')
+            raise InvalidGenerationRequestError('The positive prompt cannot be empty.')
         if request.width <= 0 or request.height <= 0 or request.steps <= 0:
-            raise InvalidGenerationRequestError('Dimensioni e steps devono essere positivi.')
+            raise InvalidGenerationRequestError('Dimensions and steps must be positive.')
         if request.task == 'image_to_image':
             if not request.reference_image:
-                raise InvalidGenerationRequestError('Image-to-image richiede un’immagine master.')
+                raise InvalidGenerationRequestError('Image-to-image requires a master image.')
             if not Path(request.reference_image).expanduser().is_file():
-                raise InvalidGenerationRequestError(f'Immagine master non trovata: {request.reference_image}')
+                raise InvalidGenerationRequestError(f'Master image not found: {request.reference_image}')
         report = self.health_check()
         if not report.available:
             raise LocalRuntimeNotInstalledError(report.summary())
@@ -424,8 +424,8 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
     def run(self, request: GenerationRequest, context: GenerationJobContext) -> GenerationResult:
         self.validate_request(request)
         if context.cancel_event.is_set():
-            raise GenerationCancelledError('Generazione immagine annullata dall’utente.')
-        context.progress_callback(GenerationProgress('validating', 0.02, 'Validazione runtime WanGP Image'))
+            raise GenerationCancelledError('Image generation cancelled by the user.')
+        context.progress_callback(GenerationProgress('validating', 0.02, 'WanGP Image runtime validation'))
 
         reference_path: str | None = None
         if request.reference_image:
@@ -445,7 +445,7 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
         )
         settings_path = context.job_directory / 'wangp_image_settings.json'
         settings_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding='utf-8')
-        context.progress_callback(GenerationProgress('starting', 0.05, 'Avvio WanGP image model'))
+        context.progress_callback(GenerationProgress('starting', 0.05, 'Starting WanGP image model'))
 
         runner = LocalWanGPProvider(self.config.to_video_config())
         try:
@@ -456,13 +456,11 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
             if 'out of memory' in lower or 'cudaerrormemoryallocation' in lower:
                 raise ProcessCrashError(
                     detail
-                    + " | Sprite Studio: memoria esaurita durante Image Gen. "
-                      "Prova Memory profile 5 e, se supportato dal runtime WanGP installato, "
-                      "Reserved RAM max 0.20; poi prova profilo 4 per maggiore velocità."
+                    + ' | Sprite Studio: out of memory during Image Gen. Try Memory profile 5 and, if supported by the installed WanGP runtime, Reserved RAM max 0.20; then try profile 4 for higher speed.'
                 ) from exc
             raise
         if context.cancel_event.is_set():
-            raise GenerationCancelledError('Generazione immagine annullata dall’utente.')
+            raise GenerationCancelledError('Image generation cancelled by the user.')
 
         source_output = self._find_output_image(context.output_directory)
         normalized_path = context.output_directory / 'generated_image.png'
@@ -475,7 +473,7 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
             'generated_at_utc': datetime.now(timezone.utc).isoformat(),
         })
         MockImageProvider._write_image_manifest(request, context, normalized_path, metadata)
-        context.progress_callback(GenerationProgress('saving', 0.995, 'Output immagine WanGP normalizzato'))
+        context.progress_callback(GenerationProgress('saving', 0.995, 'Normalized WanGP image output'))
         return GenerationResult(
             job_id=request.job_id,
             state='completed',
@@ -501,7 +499,7 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
             normalized = output_directory / 'generated_image.png'
             if normalized.is_file() and normalized.stat().st_size > 0:
                 return normalized
-            raise OutputNotFoundError('WanGP non ha prodotto alcuna immagine leggibile nella cartella output.')
+            raise OutputNotFoundError('WanGP did not produce any readable image in the output folder.')
         return max(candidates, key=lambda path: (path.stat().st_mtime_ns, path.stat().st_size))
 
     @staticmethod
@@ -515,9 +513,9 @@ class LocalWanGPImageProvider(ImageGeneratorProvider):
                 elif source.suffix.lower() != '.png':
                     image.save(target, format='PNG')
         except Exception as exc:
-            raise OutputNotFoundError(f'Output immagine WanGP non leggibile: {exc}') from exc
+            raise OutputNotFoundError(f'Unreadable WanGP image output: {exc}') from exc
         if not target.is_file() or target.stat().st_size <= 0:
-            raise OutputNotFoundError('Normalizzazione PNG dell’output WanGP fallita.')
+            raise OutputNotFoundError('PNG normalization of WanGP output failed.')
         return {
             'width': int(width),
             'height': int(height),

@@ -180,7 +180,7 @@ class ChromaProfileController:
             return
         self.store.set_profile('chroma', normalized, self.capture_profile_data())
         self.refresh_profiles_combo(normalized)
-        self.status(f'Profilo chroma salvato: {normalized}')
+        self.status(f'Chroma profile saved: {normalized}')
 
     def load_selected(self) -> None:
         name = self.profile_combo.currentText().strip()
@@ -188,11 +188,11 @@ class ChromaProfileController:
             return
         data = self.store.get_profile('chroma', name)
         if data is None:
-            self.show_info('Profilo non trovato', 'Il profilo selezionato non è disponibile.')
+            self.show_info('Profile Not Found', 'The selected profile is not available.')
             self.refresh_profiles_combo()
             return
         self.apply_profile_data(data, persist_last=True)
-        self.status(f'Profilo chroma caricato: {name}')
+        self.status(f'Chroma profile loaded: {name}')
 
     def delete_selected(self) -> None:
         name = self.profile_combo.currentText().strip()
@@ -200,4 +200,4 @@ class ChromaProfileController:
             return
         self.store.delete_profile('chroma', name)
         self.refresh_profiles_combo()
-        self.status(f'Profilo chroma eliminato: {name}')
+        self.status(f'Chroma profile deleted: {name}')

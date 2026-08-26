@@ -26,7 +26,7 @@ class AlphaCleanupSettings:
 
 def _validate_rgba(rgba: np.ndarray) -> None:
     if rgba.ndim != 3 or rgba.shape[2] != 4 or rgba.dtype != np.uint8:
-        raise ValueError('È richiesta un\'immagine RGBA uint8.')
+        raise ValueError('An RGBA uint8 image is required.')
 
 
 def _component_stats(mask: np.ndarray) -> tuple[int, np.ndarray, np.ndarray]:
@@ -167,7 +167,7 @@ def paint_alpha_circle_inplace(
             alpha = roi[:, :, 3]
             alpha[mask] = 255
     else:
-        raise ValueError(f'Modalità pennello non supportata: {mode}')
+        raise ValueError(f'Unsupported brush mode: {mode}')
 
     return AlphaPaintRegion(left, top, right, bottom, changed)
 
@@ -218,7 +218,7 @@ def rectangle_selection_mask(
     h = int(image_height)
     w = int(image_width)
     if h <= 0 or w <= 0:
-        raise ValueError('Dimensioni immagine non valide.')
+        raise ValueError('Invalid image dimensions.')
     left = max(0, min(w - 1, int(np.floor(min(float(x0), float(x1))))))
     top = max(0, min(h - 1, int(np.floor(min(float(y0), float(y1))))))
     right = max(left + 1, min(w, int(np.ceil(max(float(x0), float(x1))))))
@@ -237,9 +237,9 @@ def polygon_selection_mask(
     h = int(image_height)
     w = int(image_width)
     if h <= 0 or w <= 0:
-        raise ValueError('Dimensioni immagine non valide.')
+        raise ValueError('Invalid image dimensions.')
     if len(points) < 3:
-        raise ValueError('Una selezione poligonale richiede almeno tre vertici.')
+        raise ValueError('A polygon selection requires at least three vertices.')
     polygon = np.array(
         [
             [
@@ -260,7 +260,7 @@ def erase_alpha_selection(rgba: np.ndarray, selection_mask: np.ndarray) -> np.nd
     _validate_rgba(rgba)
     selection = np.asarray(selection_mask, dtype=bool)
     if selection.shape != rgba.shape[:2]:
-        raise ValueError('La selezione non coincide con le dimensioni del frame sorgente.')
+        raise ValueError('The selection does not match the source frame dimensions.')
     result = rgba.copy()
     result[selection] = (0, 0, 0, 0)
     return result
@@ -287,9 +287,9 @@ def erase_alpha_selection_batch(
         if expected_shape is None:
             expected_shape = shape
         elif shape != expected_shape:
-            raise ValueError('I frame selezionati non hanno tutti la stessa dimensione.')
+            raise ValueError('The selected frames do not all have the same dimensions.')
         if selection.shape != shape:
-            raise ValueError('La selezione non coincide con le dimensioni del frame sorgente.')
+            raise ValueError('The selection does not match the source frame dimensions.')
         edited = rgba.copy()
         edited[selection] = (0, 0, 0, 0)
         result[int(frame_index)] = edited
