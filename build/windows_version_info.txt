@@ -1,0 +1,28 @@
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(5, 7, 0, 0),
+    prodvers=(5, 7, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'Unum Sunt'),
+         StringStruct('FileDescription', 'Unum Sunt Sprite Studio'),
+         StringStruct('FileVersion', 'R5c7'),
+         StringStruct('InternalName', 'UnumSuntSpriteStudio'),
+         StringStruct('LegalCopyright', 'Unum Sunt'),
+         StringStruct('OriginalFilename', 'UnumSuntSpriteStudio.exe'),
+         StringStruct('ProductName', 'Unum Sunt Sprite Studio'),
+         StringStruct('ProductVersion', 'R5c7')]
+      )
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
