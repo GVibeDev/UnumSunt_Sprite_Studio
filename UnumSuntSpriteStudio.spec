@@ -6,6 +6,7 @@ branding_datas = [('assets/branding', 'assets/branding')]
 runtime_datas = [('assets/runtime', 'assets/runtime')]
 legal_datas = [
     ('LICENSE', '.'),
+    ('OPEN_SOURCE_LICENSE_NOTICE.txt', '.'),
     ('THIRD_PARTY_NOTICES.txt', '.'),
     ('KREA_SAFETY_AND_USE.txt', '.'),
     ('GPL_DISTRIBUTION_CHECKLIST.txt', '.'),
