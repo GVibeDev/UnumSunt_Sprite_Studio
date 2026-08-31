@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import cast
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -20,8 +20,6 @@ from app.workstation_routes import (
     WORKSPACE_ROUTES,
     MacroEnvironment,
     WorkspaceRoute,
-    route_by_id,
-    route_for_legacy_index,
     validate_route_registry,
 )
 
@@ -138,6 +136,25 @@ class _EnvironmentPage(QWidget):
         button.setVisible(bool(visible))
         if visible or self._current_route != route_id:
             return self._current_route
+        return self._select_fallback()
+
+    def set_visible_routes(self, visible_route_ids: set[str]) -> str | None:
+        unknown = visible_route_ids.difference(self._positions)
+        if unknown:
+            raise KeyError(f'Routes do not belong to {self.environment}: {sorted(unknown)}')
+        for route in self._routes:
+            route_id = route.route_id
+            visible = route_id in visible_route_ids
+            self._visible[route_id] = visible
+            self._buttons[route_id].setVisible(visible)
+        current = self._current_route
+        if (
+            current is not None
+            and current in visible_route_ids
+            and self.is_registered(current)
+            and self._enabled[current]
+        ):
+            return current
         return self._select_fallback()
 
     def set_route_enabled(self, route_id: str, enabled: bool) -> str | None:
@@ -342,6 +359,40 @@ class WorkstationShell(QWidget):
         if route.environment == self._current_environment and current != previous and current is not None:
             self.route_changed.emit(current)
 
+    def set_visible_routes(
+        self,
+        route_ids: Iterable[str],
+        *,
+        fallback_route_id: str | None = None,
+    ) -> None:
+        visible = {str(route_id).strip() for route_id in route_ids}
+        unknown = visible.difference(self._routes_by_id)
+        if unknown:
+            raise KeyError(f'Unknown workstation routes: {sorted(unknown)}')
+        if fallback_route_id is not None:
+            fallback_route_id = str(fallback_route_id).strip()
+            if fallback_route_id not in self._routes_by_id:
+                raise KeyError(f'Unknown fallback workstation route: {fallback_route_id}')
+            if fallback_route_id not in visible:
+                raise ValueError('The fallback route must remain visible.')
+
+        previous_route = self.current_route()
+        for environment in ENVIRONMENT_ORDER:
+            page = self._environment_pages[environment]
+            environment_visible = {
+                route.route_id
+                for route in self._routes
+                if route.environment == environment and route.route_id in visible
+            }
+            self._last_route[environment] = page.set_visible_routes(environment_visible)
+
+        current_route = self.current_route()
+        if previous_route is not None and previous_route not in visible and fallback_route_id is not None:
+            self.navigate(fallback_route_id)
+            return
+        if current_route is not None and current_route != previous_route:
+            self.route_changed.emit(current_route)
+
     def set_route_enabled(self, route_id: str, enabled: bool) -> None:
         route = self._require_route(route_id)
         page = self._environment_pages[route.environment]
@@ -369,79 +420,3 @@ class WorkstationShell(QWidget):
         self._current_environment = environment
         self._environment_stack.setCurrentIndex(self._environment_positions[environment])
         self._macro_buttons[environment].setChecked(True)
-
-class LegacyWorkspaceTabAdapter(QObject):
-    """Temporary QTabWidget-compatible navigation facade for Phase 1C.
-
-    MainWindow still contains validated R5c8 code that addresses workspaces by
-    their historical tab indices. P1-C rehosts the widgets in WorkstationShell
-    while this facade translates only those navigation calls. P1-D removes the
-    remaining index-based callers and this adapter can then be deleted.
-    """
-
-    currentChanged = Signal(int)
-
-    def __init__(self, shell: WorkstationShell, parent: QObject | None = None) -> None:
-        super().__init__(parent)
-        self._shell = shell
-        self._tab_text: dict[int, str] = {}
-        self._tab_tooltips: dict[int, str] = {}
-        self._shell.route_changed.connect(self._on_route_changed)
-
-    def _route_for_index(self, index: int) -> WorkspaceRoute:
-        return route_for_legacy_index(int(index))
-
-    def _on_route_changed(self, route_id: str) -> None:
-        self.currentChanged.emit(route_by_id(route_id).legacy_index)
-
-    def currentIndex(self) -> int:
-        route_id = self._shell.current_route()
-        if route_id is None:
-            return -1
-        return route_by_id(route_id).legacy_index
-
-    def setCurrentIndex(self, index: int) -> None:
-        self._shell.navigate(self._route_for_index(index).route_id)
-
-    def count(self) -> int:
-        return len(WORKSPACE_ROUTES)
-
-    def setTabVisible(self, index: int, visible: bool) -> None:
-        self._shell.set_route_visible(self._route_for_index(index).route_id, bool(visible))
-
-    def isTabVisible(self, index: int) -> bool:
-        route = self._route_for_index(index)
-        return route.route_id in self._shell.visible_routes(route.environment)
-
-    def widget(self, index: int) -> QWidget | None:
-        return self._shell.registered_widget(self._route_for_index(index).route_id)
-
-    def indexOf(self, widget: QWidget) -> int:
-        for route in WORKSPACE_ROUTES:
-            if self._shell.registered_widget(route.route_id) is widget:
-                return route.legacy_index
-        return -1
-
-    # QTabWidget presentation methods remain temporary compatibility no-ops.
-    # P1-F migrates theme/presentation settings to the workstation navigation.
-    def tabBar(self):
-        return None
-
-    def setUsesScrollButtons(self, _enabled: bool) -> None:
-        return None
-
-    def setElideMode(self, _mode) -> None:
-        return None
-
-    def setDocumentMode(self, _enabled: bool) -> None:
-        return None
-
-    def setTabText(self, index: int, text: str) -> None:
-        self._tab_text[int(index)] = str(text)
-
-    def setTabToolTip(self, index: int, text: str) -> None:
-        self._tab_tooltips[int(index)] = str(text)
-
-    def setStyleSheet(self, _stylesheet: str) -> None:
-        return None
-

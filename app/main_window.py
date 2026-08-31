@@ -61,16 +61,16 @@ from app.production_presets import merge_preset_into_pipeline
 from app.production_presets_workspace import ProductionPresetsWorkspace
 from app.performance_probe import perf_instrument
 from app.prompt_builder_workspace import PromptBuilderWorkspace
+from app.project_session import ProjectSession
 from app.project_workspace import ProjectWorkspace
 from app.smart_selection_studio import SmartSelectionStudio
 from app.spritesheet_workspace import SpriteSheetWorkspace
 from app.video_source import VideoOpenError, VideoSource
 from app.workflow_workspace import WorkflowWorkspace
 from app.workflows import WORKFLOW_DEFINITIONS, normalize_workflow_state
-from app.ui_commands import TAB_ROUTES, TAB_SHORT_LABELS, TAB_TOOLTIPS, toolbar_command_state
-from app.workstation_routes import route_by_id
-from app.workstation_shell import LegacyWorkspaceTabAdapter, WorkstationShell
-from app.themed_tab_bar import ThemedTabBar
+from app.ui_commands import toolbar_command_state
+from app.workstation_routes import WORKSPACE_ROUTES, route_by_id, route_for_legacy_index
+from app.workstation_shell import WorkstationShell
 from app.ui_theme import DEFAULT_TAB_THEME
 from app.version import APP_VERSION
 from app.theme_preferences_controller import ThemePreferencesController
@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         self.resize(1560, 960)
         self.video = VideoSource()
         self.profile_store = ProfilesStore()
-        self.current_project_path: str | None = None
+        self.project_session = ProjectSession(self)
         self._generation_job_groups: dict[str, str | None] = {}
         self.current_frame_index = 0
         self.current_frame_rgb: np.ndarray | None = None
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar(self))
         self.theme_preferences = ThemePreferencesController(
             parent=self,
-            tab_bar_provider=lambda: self.workspace_tabs.tabBar() if hasattr(self, 'workspace_tabs') else None,
+            tab_bar_provider=lambda: None,
             status_bar_provider=self.statusBar,
             switch_action=getattr(self, 'theme_switch_action', None),
             switch_widget=getattr(self, 'theme_switch_widget', None),
@@ -195,13 +195,12 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         self._build_toolbar()
-        # P1-C: rehost the validated R5c8 workspace widgets inside the new
-        # three-environment shell. The temporary adapter keeps the remaining
-        # legacy index callers working until P1-D converts them to route IDs.
+        # P1-D: the three-environment shell is now the authoritative navigation
+        # layer. All active navigation uses stable route IDs; the temporary
+        # Phase 1C legacy tab-index adapter has been removed.
         self.workstation_shell = WorkstationShell()
-        self.workspace_tabs = LegacyWorkspaceTabAdapter(self.workstation_shell, self)
 
-        self.project_workspace = ProjectWorkspace()
+        self.project_workspace = ProjectWorkspace(project_session=self.project_session)
         self.project_workspace.project_changed.connect(self._on_project_changed)
         self.project_workspace.save_requested.connect(self._save_project_snapshot)
         self.project_workspace.active_group_will_change.connect(self._on_active_group_will_change)
@@ -270,8 +269,8 @@ class MainWindow(QMainWindow):
         self.workstation_shell.register_route(route_by_id('production_presets'), self.production_presets_workspace)
 
         self.calibration_workspace = CalibrationWorkspace(
-            project_store_provider=lambda: self.project_workspace.project_store,
-            active_group_id_provider=lambda: self.project_workspace.active_group_id,
+            project_store_provider=lambda: self.project_session.store,
+            active_group_id_provider=lambda: self.project_session.active_group_id,
             current_generation_profile_provider=self.generation_workspace.capture_generation_profile,
         )
         self.calibration_workspace.status_message.connect(self.statusBarMessage)
@@ -287,8 +286,8 @@ class MainWindow(QMainWindow):
         self.workstation_shell.register_route(route_by_id('prompt_builder'), self.prompt_builder_workspace)
 
         self.spritesheet_workspace = SpriteSheetWorkspace(
-            project_store_provider=lambda: self.project_workspace.project_store,
-            active_group_id_provider=lambda: self.project_workspace.active_group_id,
+            project_store_provider=lambda: self.project_session.store,
+            active_group_id_provider=lambda: self.project_session.active_group_id,
         )
         self.spritesheet_workspace.status_message.connect(self.statusBarMessage)
         self.spritesheet_workspace.sequence_ready.connect(self._import_spritesheet_sequence)
@@ -302,8 +301,8 @@ class MainWindow(QMainWindow):
         self.workstation_shell.register_route(route_by_id('image_generation'), self.image_generation_workspace)
 
         self.workflow_workspace = WorkflowWorkspace(
-            project_store_provider=lambda: self.project_workspace.project_store,
-            active_group_id_provider=lambda: self.project_workspace.active_group_id,
+            project_store_provider=lambda: self.project_session.store,
+            active_group_id_provider=lambda: self.project_session.active_group_id,
         )
         self.workflow_workspace.status_message.connect(self.statusBarMessage)
         self.workflow_workspace.route_requested.connect(self._route_workflow_step)
@@ -313,21 +312,14 @@ class MainWindow(QMainWindow):
         self.workstation_shell.register_route(route_by_id('workflow'), self.workflow_workspace)
 
         self.character_set_workspace = CharacterSetWorkspace(
-            project_store_provider=lambda: self.project_workspace.project_store,
-            active_group_id_provider=lambda: self.project_workspace.active_group_id,
+            project_store_provider=lambda: self.project_session.store,
+            active_group_id_provider=lambda: self.project_session.active_group_id,
         )
         self.character_set_workspace.status_message.connect(self.statusBarMessage)
         self.character_set_workspace.activate_group_requested.connect(self.project_workspace.activate_group)
         self.workstation_shell.register_route(route_by_id('character_set'), self.character_set_workspace)
 
-        self._workflow_tab_routes = {
-            'project': 0, 'generation': 1, 'extraction': 2, 'cleanup': 3, 'alignment': 4,
-            'smart_selection': 5, 'export': 6, 'production_presets': 7, 'calibration': 8,
-            'prompt_builder': 9, 'spritesheet': 10, 'image_generation': 11, 'workflow': 12,
-            'character_set': 13,
-        }
-        self.workspace_tabs.currentChanged.connect(self._on_workspace_changed)
-        self._apply_workspace_tab_style()
+        self.workstation_shell.route_changed.connect(self._on_workspace_changed)
         self.setCentralWidget(self.workstation_shell)
         self._refresh_command_context()
 
@@ -561,12 +553,10 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _current_workspace_route(self) -> str:
-        if not hasattr(self, 'workspace_tabs'):
+        if not hasattr(self, 'workstation_shell'):
             return 'project'
-        index = self.workspace_tabs.currentIndex()
-        if 0 <= index < len(TAB_ROUTES):
-            return TAB_ROUTES[index]
-        return 'project'
+        route = self.workstation_shell.current_route()
+        return str(route) if route else 'project'
 
     def _refresh_command_context(self) -> None:
         if not hasattr(self, '_toolbar_command_actions'):
@@ -586,30 +576,17 @@ class MainWindow(QMainWindow):
             elif command_id in {'new_project', 'save_project', 'open_video', 'open_spritesheet'}:
                 item.setEnabled(True)
         if hasattr(self, 'command_context_label'):
-            label = TAB_SHORT_LABELS[TAB_ROUTES.index(context)] if context in TAB_ROUTES else context
+            try:
+                label = route_by_id(context).label
+            except KeyError:
+                label = context
             self.command_context_label.setText(f'Context: {label}')
 
-    def _apply_workspace_tab_style(self) -> None:
-        if not hasattr(self, 'workspace_tabs'):
-            return
-        self.workspace_tabs.setUsesScrollButtons(True)
-        self.workspace_tabs.setElideMode(Qt.TextElideMode.ElideRight)
-        self.workspace_tabs.setDocumentMode(True)
-        tab_bar = self.workspace_tabs.tabBar()
-        if isinstance(tab_bar, ThemedTabBar):
-            tab_bar.set_theme(self.theme_preferences.theme_name if hasattr(self, 'theme_preferences') else DEFAULT_TAB_THEME)
-        for index in range(min(self.workspace_tabs.count(), len(TAB_SHORT_LABELS))):
-            self.workspace_tabs.setTabText(index, TAB_SHORT_LABELS[index])
-            self.workspace_tabs.setTabToolTip(index, TAB_TOOLTIPS[index])
-        self.workspace_tabs.setStyleSheet('QTabWidget::pane { border-top: 1px solid #353b44; }')
-
     def _route_command_workspace(self, route: str) -> None:
-        index = getattr(self, '_workflow_tab_routes', {}).get(str(route))
-        if index is None:
+        try:
+            self.workstation_shell.navigate(str(route))
+        except (KeyError, RuntimeError):
             return
-        # An explicit menu command is allowed to reveal a tab hidden by Guided View.
-        self.workspace_tabs.setTabVisible(index, True)
-        self.workspace_tabs.setCurrentIndex(index)
 
     def _open_spritesheet_from_command(self) -> None:
         self._route_command_workspace('spritesheet')
@@ -801,16 +778,16 @@ class MainWindow(QMainWindow):
         selection_layout.addLayout(selection_buttons)
         layout.addWidget(selection_group, 1)
 
-        for label, idx in (
-            ('Go to Project →', 0),
-            ('Go to Generate →', 1),
-            ('Go to Clean-up R3b →', 3),
-            ('Go to R2 Alignment →', 4),
-            ('Analyze and Try R3 Selection →', 5),
-            ('Go to Export Studio R5e4 →', 6),
+        for label, route_id in (
+            ('Go to Project →', 'project'),
+            ('Go to Generate →', 'generation'),
+            ('Go to Clean-up R3b →', 'cleanup'),
+            ('Go to R2 Alignment →', 'alignment'),
+            ('Analyze and Try R3 Selection →', 'smart_selection'),
+            ('Go to Export Studio R5e4 →', 'export'),
         ):
             b = QPushButton(label)
-            b.clicked.connect(lambda checked=False, tab=idx: self.workspace_tabs.setCurrentIndex(tab))
+            b.clicked.connect(lambda checked=False, route=route_id: self._route_command_workspace(route))
             layout.addWidget(b)
         return panel
 
@@ -862,7 +839,7 @@ class MainWindow(QMainWindow):
 
     def _import_generated_video(self, path: str) -> None:
         if self._open_video_path(path):
-            self.workspace_tabs.setCurrentIndex(2)
+            self.workstation_shell.navigate('extraction')
             self.statusBar().showMessage(f'Generated video imported into R1: {Path(path).name}')
 
     def _apply_opened_source(self, metadata, *, label: str, select_all: bool = False) -> None:
@@ -937,7 +914,7 @@ class MainWindow(QMainWindow):
         if not manifest_path:
             return
         if self._open_sequence_manifest_path(str(manifest_path), select_all=True):
-            self.workspace_tabs.setCurrentIndex(2)
+            self.workstation_shell.navigate('extraction')
             self._save_active_group_snapshot()
             if hasattr(self, 'workflow_workspace'):
                 self.workflow_workspace.refresh_context()
@@ -946,7 +923,7 @@ class MainWindow(QMainWindow):
     def _use_reference_sheet_in_generate(self, path: str) -> None:
         target = str(Path(path).resolve())
         self.generation_workspace.reference_edit.setText(target)
-        self.workspace_tabs.setCurrentIndex(1)
+        self.workstation_shell.navigate('generation')
         self._save_active_group_snapshot()
         self.statusBarMessage(f'WAN Reference Sheet loaded in Generate: {Path(target).name}')
 
@@ -956,8 +933,8 @@ class MainWindow(QMainWindow):
             self.statusBarMessage('R5e9: generated image is not available.')
             return
         target = source
-        store = self.project_workspace.project_store
-        group_id = self.project_workspace.active_group_id
+        store = self.project_session.store
+        group_id = self.project_session.active_group_id
         if store is not None and group_id:
             workspace = store.group_workspace(group_id)
             source_dir = workspace / 'source'
@@ -1309,38 +1286,39 @@ class MainWindow(QMainWindow):
         self._refresh_selection_list()
         self.statusBar().showMessage(f'R1 selection updated from R3: {len(normalized)} frame.')
 
-    def _on_workspace_changed(self, index: int) -> None:
-        if index == 3:
+    def _on_workspace_changed(self, route: str) -> None:
+        route_id = str(route)
+        if route_id == 'cleanup':
             self._stop_playback()
             self.smart_studio.player.stop()
             self.cleanup_studio.set_selected_frames(self.selected_frames)
-        elif index == 4:
+        elif route_id == 'alignment':
             self._stop_playback()
             self.smart_studio.player.stop()
             self.alignment_studio.ensure_prepared()
-        elif index == 5:
+        elif route_id == 'smart_selection':
             self._stop_playback()
             self.smart_studio.set_r1_selection(self.selected_frames)
-        elif index == 6:
+        elif route_id == 'export':
             self._stop_playback()
             self.smart_studio.player.stop()
-        elif index == 7:
+        elif route_id == 'production_presets':
             self._stop_playback()
             self.smart_studio.player.stop()
             self.production_presets_workspace.refresh_context()
-        elif index == 8:
+        elif route_id == 'calibration':
             self._stop_playback()
             self.smart_studio.player.stop()
             self.calibration_workspace.refresh_context(auto_sync=True)
-        elif index in (9, 10, 11):
+        elif route_id in {'prompt_builder', 'spritesheet', 'image_generation'}:
             self._stop_playback()
             self.smart_studio.player.stop()
-        elif index == 12:
+        elif route_id == 'workflow':
             self._stop_playback()
             self.smart_studio.player.stop()
             self._save_active_group_snapshot()
             self.workflow_workspace.refresh_context()
-        elif index == 13:
+        elif route_id == 'character_set':
             self._stop_playback()
             self.smart_studio.player.stop()
         self._refresh_command_context()
@@ -1385,17 +1363,17 @@ class MainWindow(QMainWindow):
 
     def _load_calibration_profile_in_generate(self, profile: dict) -> None:
         self.generation_workspace.apply_generation_profile(profile, persist_last=True)
-        self.workspace_tabs.setCurrentIndex(1)
+        self.workstation_shell.navigate('generation')
         self.statusBarMessage('Calibration Lab: configuration loaded into the Generate workspace.')
 
     def _load_prompt_profile_in_generate(self, profile: dict) -> None:
         self.generation_workspace.apply_generation_profile(profile, persist_last=True)
-        self.workspace_tabs.setCurrentIndex(1)
+        self.workstation_shell.navigate('generation')
         self.statusBarMessage('Prompt Builder R5e7: prompt applied to the Generate workspace.')
 
     def _active_group_context(self) -> dict | None:
-        store = self.project_workspace.project_store
-        group_id = self.project_workspace.active_group_id
+        store = self.project_session.store
+        group_id = self.project_session.active_group_id
         if store is None or not group_id:
             return None
         group = store.get_group(group_id)
@@ -1406,7 +1384,7 @@ class MainWindow(QMainWindow):
         return group
 
     def _current_pipeline_for_preset(self) -> dict:
-        group_id = self.project_workspace.active_group_id
+        group_id = self.project_session.active_group_id
         if not group_id:
             return {}
         snapshot = self._capture_pipeline_snapshot(group_id=group_id)
@@ -1423,8 +1401,8 @@ class MainWindow(QMainWindow):
         return mapping.get(key, str(value).strip().lower())
 
     def _apply_production_preset(self, preset_name: str, preset: dict, sections: list[str]) -> None:
-        store = self.project_workspace.project_store
-        group_id = self.project_workspace.active_group_id
+        store = self.project_session.store
+        group_id = self.project_session.active_group_id
         if store is None or not group_id:
             raise RuntimeError('No active Project Group.')
 
@@ -1480,8 +1458,8 @@ class MainWindow(QMainWindow):
             'source_spritesheet': (str(self.video.metadata.path) if self.video.is_open and self.video.source_kind == 'sequence' else None),
         }
         cleanup_state: dict = {'frame_indices': sorted(self.rgba_overrides.keys()), 'override_file': None}
-        if group_id and self.project_workspace.project_store is not None:
-            workspace = self.project_workspace.project_store.group_workspace(group_id)
+        if group_id and self.project_session.store is not None:
+            workspace = self.project_session.store.group_workspace(group_id)
             cleanup_dir = workspace / 'cleanup'
             cleanup_dir.mkdir(parents=True, exist_ok=True)
             override_path = cleanup_dir / 'rgba_overrides.npz'
@@ -1518,15 +1496,15 @@ class MainWindow(QMainWindow):
         return self._capture_pipeline_snapshot(group_id=None)
 
     def _save_project_snapshot(self) -> None:
-        if self.project_workspace.current_project_path is None:
+        if self.project_session.project_path is None:
             QMessageBox.information(self, 'No Project', 'Create or open a project before saving the snapshot.')
             return
         self.project_workspace.update_project_snapshot(self._capture_project_snapshot())
         self._save_active_group_snapshot()
 
     def _save_active_group_snapshot(self) -> None:
-        group_id = self.project_workspace.active_group_id
-        if not group_id or self.project_workspace.project_store is None:
+        group_id = self.project_session.active_group_id
+        if not group_id or self.project_session.store is None:
             return
         self.project_workspace.update_active_group_snapshot(self._capture_pipeline_snapshot(group_id=group_id))
 
@@ -1565,12 +1543,12 @@ class MainWindow(QMainWindow):
 
     def _load_cleanup_overrides_for_group(self, group_id: str, cleanup_state: dict) -> None:
         self.rgba_overrides.clear()
-        if self.project_workspace.project_store is None or not isinstance(cleanup_state, dict):
+        if self.project_session.store is None or not isinstance(cleanup_state, dict):
             return
         relative = cleanup_state.get('override_file')
         if not relative:
             return
-        path = self.project_workspace.project_store.group_workspace(group_id) / str(relative)
+        path = self.project_session.store.group_workspace(group_id) / str(relative)
         if not path.exists():
             return
         try:
@@ -1596,11 +1574,11 @@ class MainWindow(QMainWindow):
                 self.calibration_workspace.refresh_context(auto_sync=False)
             if hasattr(self, 'workflow_workspace'):
                 self.workflow_workspace.refresh_context()
-                self._show_all_workflow_tabs()
+                self._show_all_workflow_routes()
             return
-        if self.project_workspace.project_store is None:
+        if self.project_session.store is None:
             return
-        group = self.project_workspace.project_store.get_group(group_id)
+        group = self.project_session.store.get_group(group_id)
         if not group:
             return
         pipeline = group.get('pipeline_state', {}) if isinstance(group.get('pipeline_state'), dict) else {}
@@ -1662,7 +1640,7 @@ class MainWindow(QMainWindow):
             studio_state = export_state.get('studio')
             if isinstance(studio_state, dict):
                 self.export_studio.apply_state(studio_state)
-        self.statusBarMessage(f'Active context loaded: {self.project_workspace.project_store.group_label(group_id)}')
+        self.statusBarMessage(f'Active context loaded: {self.project_session.store.group_label(group_id)}')
         if hasattr(self, 'production_presets_workspace'):
             self.production_presets_workspace.refresh_context()
         if hasattr(self, 'calibration_workspace'):
@@ -1673,20 +1651,20 @@ class MainWindow(QMainWindow):
             self.workflow_workspace.refresh_context()
             workflow = self.workflow_workspace.current_workflow()
             if workflow is None:
-                self._show_all_workflow_tabs()
-                self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['workflow'])
+                self._show_all_workflow_routes()
+                self.workstation_shell.navigate('workflow')
             else:
                 self._apply_guided_workflow_tabs(bool(workflow.get('guided_tabs', False)))
 
     def _on_generation_job_started(self, job_id: str) -> None:
-        self._generation_job_groups[str(job_id)] = self.project_workspace.active_group_id
+        self._generation_job_groups[str(job_id)] = self.project_session.active_group_id
 
     def _on_generation_job_finished(self, job_payload: dict) -> None:
         job_id = str(job_payload.get('job_id', ''))
         group_id = self._generation_job_groups.pop(job_id, None)
-        if not group_id or self.project_workspace.project_store is None:
+        if not group_id or self.project_session.store is None:
             return
-        if self.project_workspace.project_store.get_group(group_id) is None:
+        if self.project_session.store.get_group(group_id) is None:
             return
         payload = dict(job_payload)
         job_dir = payload.get('job_directory')
@@ -1697,27 +1675,26 @@ class MainWindow(QMainWindow):
                     payload['request'] = json.loads(request_path.read_text(encoding='utf-8'))
                 except Exception:
                     pass
-        self.project_workspace.project_store.append_group_job(group_id, payload)
-        self.project_workspace._refresh_view(select_group_id=self.project_workspace.active_group_id)
-        if hasattr(self, 'calibration_workspace') and group_id == self.project_workspace.active_group_id:
+        self.project_session.store.append_group_job(group_id, payload)
+        self.project_workspace._refresh_view(select_group_id=self.project_session.active_group_id)
+        if hasattr(self, 'calibration_workspace') and group_id == self.project_session.active_group_id:
             self.calibration_workspace.refresh_context(auto_sync=True)
-        if hasattr(self, 'workflow_workspace') and group_id == self.project_workspace.active_group_id:
+        if hasattr(self, 'workflow_workspace') and group_id == self.project_session.active_group_id:
             self.workflow_workspace.refresh_context()
 
     def _on_export_completed(self, export_payload: dict) -> None:
-        if self.project_workspace.active_group_id:
+        if self.project_session.active_group_id:
             self.project_workspace.append_export_to_active_group(export_payload)
             self._save_active_group_snapshot()
             if hasattr(self, 'workflow_workspace'):
                 self.workflow_workspace.refresh_context()
 
     def _on_project_changed(self, path: str) -> None:
-        self.current_project_path = path
         if hasattr(self, 'character_set_workspace'):
             self.character_set_workspace.refresh_context()
-        payload = self.project_workspace.project_store.load() if self.project_workspace.project_store else {}
+        payload = self.project_session.store.load() if self.project_session.store else {}
         # Legacy/global project state remains the fallback when no direction group is active.
-        if self.project_workspace.active_group_id:
+        if self.project_session.active_group_id:
             self._persist_application_state()
             return
         pipeline_state = payload.get('pipeline_state', {}) if isinstance(payload, dict) else {}
@@ -1759,39 +1736,35 @@ class MainWindow(QMainWindow):
         self._persist_application_state()
 
     def _route_workflow_step(self, route: str) -> None:
-        index = self._workflow_tab_routes.get(str(route))
-        if index is None:
+        try:
+            self.workstation_shell.navigate(str(route))
+        except (KeyError, RuntimeError):
             self.statusBarMessage(f'R5e10: unrecognized workflow route: {route}')
-            return
-        self.workspace_tabs.setCurrentIndex(index)
 
-    def _show_all_workflow_tabs(self) -> None:
-        for index in range(self.workspace_tabs.count()):
-            self.workspace_tabs.setTabVisible(index, True)
+    def _show_all_workflow_routes(self) -> None:
+        self.workstation_shell.set_visible_routes(route.route_id for route in WORKSPACE_ROUTES)
 
     def _apply_guided_workflow_tabs(self, enabled: bool) -> None:
-        if not hasattr(self, 'workflow_workspace') or not hasattr(self, '_workflow_tab_routes'):
+        if not hasattr(self, 'workflow_workspace'):
             return
         workflow = self.workflow_workspace.current_workflow()
         if not enabled or workflow is None:
-            self._show_all_workflow_tabs()
+            self._show_all_workflow_routes()
             return
         definition = WORKFLOW_DEFINITIONS.get(str(workflow.get('type')))
         if not definition:
-            self._show_all_workflow_tabs()
+            self._show_all_workflow_routes()
             return
         visible_routes = set(definition.get('visible_routes', set()))
         visible_routes.update({'project', 'workflow'})
-        visible_indices = {self._workflow_tab_routes[name] for name in visible_routes if name in self._workflow_tab_routes}
-        current = self.workspace_tabs.currentIndex()
-        for index in range(self.workspace_tabs.count()):
-            self.workspace_tabs.setTabVisible(index, index in visible_indices)
-        if current not in visible_indices:
-            self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['workflow'])
+        self.workstation_shell.set_visible_routes(
+            visible_routes,
+            fallback_route_id='workflow',
+        )
 
     def _save_workflow_settings_checkpoint(self) -> None:
-        group_id = self.project_workspace.active_group_id
-        store = self.project_workspace.project_store
+        group_id = self.project_session.active_group_id
+        store = self.project_session.store
         if not group_id or store is None:
             QMessageBox.information(self, 'No Group', 'Activate a Project Group before saving the checkpoint.')
             return
@@ -1811,8 +1784,8 @@ class MainWindow(QMainWindow):
         if not self.video.is_open or self.video.source_kind != 'video':
             QMessageBox.warning(self, 'Video Unavailable', 'Generate or open the intermediate motion video first.')
             return
-        store = self.project_workspace.project_store
-        group_id = self.project_workspace.active_group_id
+        store = self.project_session.store
+        group_id = self.project_session.active_group_id
         if store is None or not group_id:
             QMessageBox.warning(self, 'No Group', 'Activate a Project Group first.')
             return
@@ -1845,14 +1818,17 @@ class MainWindow(QMainWindow):
         })
         self.workflow_workspace.record_motion_reference(path=str(target), promoted_from_source_video=str(source))
         self.project_workspace._refresh_view(select_group_id=group_id)
-        self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['generation'])
+        self.workstation_shell.navigate('generation')
         self.statusBarMessage('R5e10: intermediate video promoted to motion reference; master image restored for final generation.')
 
     def _capture_app_state(self) -> dict:
         return {
             'version': APP_VERSION,
-            'current_tab': int(self.workspace_tabs.currentIndex()),
-            'current_project_path': self.project_workspace.current_project_path,
+            'current_route': self._current_workspace_route(),
+            # Retain the legacy field only as a downgrade/migration hint. Active
+            # P1-D navigation no longer reads or writes tab indices directly.
+            'current_tab': route_by_id(self._current_workspace_route()).legacy_index,
+            'current_project_path': self.project_session.project_path,
             'last_video_path': (str(self.video.metadata.path) if self.video.is_open and self.video.source_kind == 'video' else None),
             'last_sequence_manifest': (str(self.video.sequence_manifest_path) if self.video.is_open and self.video.source_kind == 'sequence' and self.video.sequence_manifest_path is not None else None),
             'generation_workspace': self.generation_workspace.snapshot_state(),
@@ -1873,6 +1849,20 @@ class MainWindow(QMainWindow):
     def _persist_application_state(self) -> None:
         self.profile_store.set_app_state(self._capture_app_state())
 
+    def _saved_route_from_app_state(self, state: dict, *, fallback: str = 'project') -> str:
+        current_route = state.get('current_route')
+        if isinstance(current_route, str):
+            try:
+                route_by_id(current_route)
+                return current_route
+            except KeyError:
+                pass
+        legacy_index = state.get('current_tab')
+        try:
+            return route_for_legacy_index(int(legacy_index)).route_id
+        except (TypeError, ValueError, KeyError):
+            return fallback
+
     def _restore_app_state(self) -> None:
         state = self.profile_store.get_app_state()
         if not state:
@@ -1881,16 +1871,15 @@ class MainWindow(QMainWindow):
         project_path = state.get('current_project_path')
         if isinstance(project_path, str) and Path(project_path).exists():
             self.project_workspace.load_project_path(project_path)
-        if self.project_workspace.active_group_id:
+        saved_route = self._saved_route_from_app_state(state)
+        if self.project_session.active_group_id:
             workflow = self.workflow_workspace.current_workflow() if hasattr(self, 'workflow_workspace') else None
             if workflow is None:
-                self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['workflow'])
+                self.workstation_shell.navigate('workflow')
+            elif saved_route in self.workstation_shell.visible_routes(route_by_id(saved_route).environment):
+                self.workstation_shell.navigate(saved_route)
             else:
-                tab_index = int(state.get('current_tab', 0))
-                if 0 <= tab_index < self.workspace_tabs.count() and self.workspace_tabs.isTabVisible(tab_index):
-                    self.workspace_tabs.setCurrentIndex(tab_index)
-                else:
-                    self.workspace_tabs.setCurrentIndex(self._workflow_tab_routes['workflow'])
+                self.workstation_shell.navigate('workflow')
             return
         generation_state = state.get('generation_workspace')
         if isinstance(generation_state, dict):
@@ -1924,9 +1913,7 @@ class MainWindow(QMainWindow):
                     self.selected_frames = sorted(set(int(v) for v in frames if isinstance(v, int) or str(v).isdigit()))
                     self._refresh_selection_list()
                     self.cleanup_studio.set_selected_frames(self.selected_frames)
-        tab_index = int(state.get('current_tab', 0))
-        if 0 <= tab_index < self.workspace_tabs.count():
-            self.workspace_tabs.setCurrentIndex(tab_index)
+        self.workstation_shell.navigate(saved_route)
 
     @staticmethod
     def _format_time(seconds: float) -> str:
@@ -1941,7 +1928,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event) -> None:  # type: ignore[override]
         self._stop_playback()
         self.smart_studio.player.stop()
-        if self.project_workspace.current_project_path is not None:
+        if self.project_session.project_path is not None:
             try:
                 self.project_workspace.update_project_snapshot(self._capture_project_snapshot())
                 self._save_active_group_snapshot()

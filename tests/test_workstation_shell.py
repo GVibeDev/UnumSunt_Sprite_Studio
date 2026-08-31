@@ -12,7 +12,7 @@ if PYSIDE6_AVAILABLE:
     from PySide6.QtWidgets import QApplication, QLabel
 
     from app.workstation_routes import WORKSPACE_ROUTES, route_by_id
-    from app.workstation_shell import LegacyWorkspaceTabAdapter, WorkstationShell
+    from app.workstation_shell import WorkstationShell
 
 
 @unittest.skipUnless(PYSIDE6_AVAILABLE, 'PySide6 is not installed in this test interpreter.')
@@ -53,8 +53,6 @@ class WorkstationShellTests(unittest.TestCase):
 
     def test_environment_initial_route_uses_registry_order_not_registration_order(self) -> None:
         shell = WorkstationShell()
-        # Legacy MainWindow constructs Extraction before SpriteSheet. CREATE must
-        # still open on Import because it is the canonical lowest-order route.
         shell.register_route(route_by_id('extraction'), QLabel('extraction'))
         shell.register_route(route_by_id('cleanup'), QLabel('cleanup'))
         shell.register_route(route_by_id('spritesheet'), QLabel('spritesheet'))
@@ -86,34 +84,31 @@ class WorkstationShellTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             shell.set_environment('missing')
 
+    def test_batch_visibility_falls_back_once_to_requested_route(self) -> None:
+        shell, _widgets = self._shell_with_all_routes()
+        shell.navigate('image_generation')
+        observed: list[str] = []
+        shell.route_changed.connect(observed.append)
+        visible = {'project', 'workflow', 'spritesheet', 'extraction', 'cleanup', 'alignment', 'export'}
+        shell.set_visible_routes(visible, fallback_route_id='workflow')
+        self.assertEqual(shell.current_route(), 'workflow')
+        self.assertEqual(shell.current_environment(), 'manage')
+        self.assertEqual(observed, ['workflow'])
 
-    def test_legacy_adapter_maps_indices_to_shell_routes(self) -> None:
-        shell, widgets = self._shell_with_all_routes()
-        adapter = LegacyWorkspaceTabAdapter(shell)
-        adapter.setCurrentIndex(3)
+    def test_batch_visibility_preserves_current_route_when_still_visible(self) -> None:
+        shell, _widgets = self._shell_with_all_routes()
+        shell.navigate('cleanup')
+        observed: list[str] = []
+        shell.route_changed.connect(observed.append)
+        visible = {'project', 'workflow', 'extraction', 'cleanup', 'alignment', 'export'}
+        shell.set_visible_routes(visible, fallback_route_id='workflow')
         self.assertEqual(shell.current_route(), 'cleanup')
-        self.assertEqual(adapter.currentIndex(), 3)
-        self.assertIs(adapter.widget(3), widgets['cleanup'])
-        self.assertEqual(adapter.indexOf(widgets['cleanup']), 3)
+        self.assertEqual(observed, [])
 
-    def test_legacy_adapter_visibility_maps_to_route_visibility(self) -> None:
+    def test_batch_visibility_requires_visible_fallback(self) -> None:
         shell, _widgets = self._shell_with_all_routes()
-        adapter = LegacyWorkspaceTabAdapter(shell)
-        adapter.setCurrentIndex(3)
-        adapter.setTabVisible(3, False)
-        self.assertFalse(adapter.isTabVisible(3))
-        self.assertNotEqual(adapter.currentIndex(), 3)
-        adapter.setCurrentIndex(3)
-        self.assertTrue(adapter.isTabVisible(3))
-        self.assertEqual(adapter.currentIndex(), 3)
-
-    def test_legacy_adapter_emits_legacy_index_on_route_change(self) -> None:
-        shell, _widgets = self._shell_with_all_routes()
-        adapter = LegacyWorkspaceTabAdapter(shell)
-        observed: list[int] = []
-        adapter.currentChanged.connect(observed.append)
-        shell.navigate('prompt_builder')
-        self.assertEqual(observed[-1], 9)
+        with self.assertRaises(ValueError):
+            shell.set_visible_routes({'project'}, fallback_route_id='workflow')
 
 
 if __name__ == '__main__':

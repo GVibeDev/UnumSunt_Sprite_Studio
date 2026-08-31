@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.project_session import ProjectSession
 from app.project_store import (
     DIRECTIONS,
     GROUP_STATUSES,
@@ -39,25 +40,38 @@ class ProjectWorkspace(QWidget):
     active_group_changed = Signal(str)
     status_message = Signal(str)
 
-    def __init__(self) -> None:
+    def __init__(self, project_session: ProjectSession | None = None) -> None:
         super().__init__()
-        self.project_store: ProjectStore | None = None
+        self.project_session = project_session or ProjectSession(self)
         self._tree_items: dict[str, QTreeWidgetItem] = {}
+        # ProjectSession owns project identity. ProjectWorkspace remains the UI
+        # editor and forwards session lifecycle signals after refreshing its view.
+        self.project_session.project_changed.connect(self._on_session_project_changed)
+        self.project_session.active_group_will_change.connect(self.active_group_will_change.emit)
+        self.project_session.active_group_changed.connect(self._on_session_active_group_changed)
         self._build_ui()
         self._refresh_view()
 
     @property
+    def project_store(self) -> ProjectStore | None:
+        """Compatibility view of the authoritative ProjectSession store."""
+        return self.project_session.store
+
+    @property
     def current_project_path(self) -> str | None:
-        if self.project_store is None or self.project_store.path is None:
-            return None
-        return str(self.project_store.path.parent)
+        return self.project_session.project_path
 
     @property
     def active_group_id(self) -> str | None:
-        if self.project_store is None:
-            return None
-        group = self.project_store.get_active_group()
-        return str(group['id']) if group else None
+        return self.project_session.active_group_id
+
+    def _on_session_project_changed(self, path: str) -> None:
+        self._refresh_view()
+        self.project_changed.emit(path)
+
+    def _on_session_active_group_changed(self, group_id: str) -> None:
+        self._refresh_view(select_group_id=group_id or None)
+        self.active_group_changed.emit(group_id)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -324,17 +338,12 @@ class ProjectWorkspace(QWidget):
 
     def load_project_path(self, path: str) -> None:
         try:
-            self.project_store = ProjectStore.open(Path(path))
+            self.project_session.open_project(Path(path))
         except Exception as exc:
             QMessageBox.critical(self, 'Project Error', str(exc))
             return
-        self._refresh_view()
         current = self.current_project_path
         if current:
-            self.project_changed.emit(current)
-            active = self.active_group_id
-            if active:
-                self.active_group_changed.emit(active)
             self.status_message.emit(f'Project opened: {current}')
 
     def _create_project_interactive(self) -> None:
@@ -344,11 +353,9 @@ class ProjectWorkspace(QWidget):
         if not project_dir:
             return
         suggested_name = Path(project_dir).name
-        self.project_store = ProjectStore.create(Path(project_dir), name=suggested_name)
-        self._refresh_view()
+        self.project_session.create_project(Path(project_dir), name=suggested_name)
         current = self.current_project_path
         if current:
-            self.project_changed.emit(current)
             self.status_message.emit(f'New project created: {current}')
 
     def _open_project_interactive(self) -> None:
@@ -448,10 +455,7 @@ class ProjectWorkspace(QWidget):
         if old_id == group_id:
             self._refresh_view(select_group_id=group_id)
             return
-        self.active_group_will_change.emit(old_id, group_id)
-        self.project_store.set_active_group(group_id)
-        self._refresh_view(select_group_id=group_id)
-        self.active_group_changed.emit(group_id)
+        self.project_session.set_active_group(group_id)
         self.status_message.emit(f'Active group: {self.project_store.group_label(group_id)}')
 
     def _set_selected_active(self) -> None:
@@ -499,8 +503,7 @@ class ProjectWorkspace(QWidget):
         old_active = self.active_group_id or ''
         self.project_store.delete_group(group_id)
         self._refresh_view()
-        if old_active and self.active_group_id is None:
-            self.active_group_changed.emit('')
+        self.project_session.synchronize_active_group(old_active)
         self.status_message.emit(f'Group deleted: {label}')
 
     def _copy_data_from_other_direction(self) -> None:
@@ -529,7 +532,7 @@ class ProjectWorkspace(QWidget):
         self.project_store.copy_group_data(source_id, target_id)
         self._refresh_view(select_group_id=target_id)
         if self.active_group_id == target_id:
-            self.active_group_changed.emit(target_id)
+            self.project_session.refresh_active_group()
         self.status_message.emit(f'Data copied from {selected}.')
 
     def _save_selected_group_details(self) -> None:
