@@ -2,23 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.workstation_routes import legacy_route_ids
 
-TAB_ROUTES = (
-    'project',
-    'generation',
-    'extraction',
-    'cleanup',
-    'alignment',
-    'smart_selection',
-    'export',
-    'production_presets',
-    'calibration',
-    'prompt_builder',
-    'spritesheet',
-    'image_generation',
-    'workflow',
-    'character_set',
-)
+
+# Backward-compatible legacy ordering. The workstation route registry is now
+# the authoritative source of route IDs; labels/tooltips stay here until the
+# top-level shell replaces the R5c8 tab bar in Phase 1C.
+TAB_ROUTES = legacy_route_ids()
 
 TAB_SHORT_LABELS = (
     '0 · Project',

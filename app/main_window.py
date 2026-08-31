@@ -68,6 +68,8 @@ from app.video_source import VideoOpenError, VideoSource
 from app.workflow_workspace import WorkflowWorkspace
 from app.workflows import WORKFLOW_DEFINITIONS, normalize_workflow_state
 from app.ui_commands import TAB_ROUTES, TAB_SHORT_LABELS, TAB_TOOLTIPS, toolbar_command_state
+from app.workstation_routes import route_by_id
+from app.workstation_shell import LegacyWorkspaceTabAdapter, WorkstationShell
 from app.themed_tab_bar import ThemedTabBar
 from app.ui_theme import DEFAULT_TAB_THEME
 from app.version import APP_VERSION
@@ -193,8 +195,11 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         self._build_toolbar()
-        self.workspace_tabs = QTabWidget()
-        self.workspace_tabs.setTabBar(ThemedTabBar(self.workspace_tabs, theme_name=DEFAULT_TAB_THEME))
+        # P1-C: rehost the validated R5c8 workspace widgets inside the new
+        # three-environment shell. The temporary adapter keeps the remaining
+        # legacy index callers working until P1-D converts them to route IDs.
+        self.workstation_shell = WorkstationShell()
+        self.workspace_tabs = LegacyWorkspaceTabAdapter(self.workstation_shell, self)
 
         self.project_workspace = ProjectWorkspace()
         self.project_workspace.project_changed.connect(self._on_project_changed)
@@ -202,16 +207,17 @@ class MainWindow(QMainWindow):
         self.project_workspace.active_group_will_change.connect(self._on_active_group_will_change)
         self.project_workspace.active_group_changed.connect(self._on_active_group_changed)
         self.project_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.project_workspace, '0 · Project')
+        self.workstation_shell.register_route(route_by_id('project'), self.project_workspace)
 
         self.generation_workspace = GenerationWorkspace()
         self.generation_workspace.video_ready.connect(self._import_generated_video)
         self.generation_workspace.job_started.connect(self._on_generation_job_started)
         self.generation_workspace.job_finished.connect(self._on_generation_job_finished)
         self.generation_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.generation_workspace, '1 · Generate')
+        self.workstation_shell.register_route(route_by_id('generation'), self.generation_workspace)
 
-        self.workspace_tabs.addTab(self._build_extraction_workspace(), '2 · R1 Extraction')
+        self.extraction_workspace = self._build_extraction_workspace()
+        self.workstation_shell.register_route(route_by_id('extraction'), self.extraction_workspace)
 
         self.cleanup_studio = CleanupStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -223,7 +229,7 @@ class MainWindow(QMainWindow):
         self.cleanup_studio.frame_requested.connect(self._set_frame)
         self.cleanup_studio.status_message.connect(self.statusBarMessage)
         self.cleanup_studio.overrides_changed.connect(self._on_overrides_changed)
-        self.workspace_tabs.addTab(self.cleanup_studio, '3 · Clean-up R5e5-D')
+        self.workstation_shell.register_route(route_by_id('cleanup'), self.cleanup_studio)
 
         self.alignment_studio = AlignmentStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -233,7 +239,7 @@ class MainWindow(QMainWindow):
         )
         self.alignment_studio.frame_requested.connect(self._set_frame)
         self.alignment_studio.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.alignment_studio, '4 · Alignment R5e2')
+        self.workstation_shell.register_route(route_by_id('alignment'), self.alignment_studio)
 
         self.smart_studio = SmartSelectionStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -245,7 +251,7 @@ class MainWindow(QMainWindow):
         self.smart_studio.frame_requested.connect(self._set_frame)
         self.smart_studio.selection_applied.connect(self._apply_smart_selection)
         self.smart_studio.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.smart_studio, '5 · Smart Selection R3')
+        self.workstation_shell.register_route(route_by_id('smart_selection'), self.smart_studio)
 
         self.export_studio = ExportStudio(
             raw_frames_provider=self._build_raw_export_payload,
@@ -253,7 +259,7 @@ class MainWindow(QMainWindow):
         )
         self.export_studio.export_completed.connect(self._on_export_completed)
         self.export_studio.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.export_studio, '6 · Export Studio R5e4')
+        self.workstation_shell.register_route(route_by_id('export'), self.export_studio)
 
         self.production_presets_workspace = ProductionPresetsWorkspace(
             active_group_provider=self._active_group_context,
@@ -261,7 +267,7 @@ class MainWindow(QMainWindow):
             apply_callback=self._apply_production_preset,
         )
         self.production_presets_workspace.status_message.connect(self.statusBarMessage)
-        self.workspace_tabs.addTab(self.production_presets_workspace, '7 · Production Presets R5e4a')
+        self.workstation_shell.register_route(route_by_id('production_presets'), self.production_presets_workspace)
 
         self.calibration_workspace = CalibrationWorkspace(
             project_store_provider=lambda: self.project_workspace.project_store,
@@ -270,7 +276,7 @@ class MainWindow(QMainWindow):
         )
         self.calibration_workspace.status_message.connect(self.statusBarMessage)
         self.calibration_workspace.load_generation_profile_requested.connect(self._load_calibration_profile_in_generate)
-        self.workspace_tabs.addTab(self.calibration_workspace, '8 · Calibration Lab R5e6')
+        self.workstation_shell.register_route(route_by_id('calibration'), self.calibration_workspace)
 
         self.prompt_builder_workspace = PromptBuilderWorkspace(
             current_generation_profile_provider=self.generation_workspace.capture_generation_profile,
@@ -278,7 +284,7 @@ class MainWindow(QMainWindow):
         )
         self.prompt_builder_workspace.status_message.connect(self.statusBarMessage)
         self.prompt_builder_workspace.apply_generation_profile_requested.connect(self._load_prompt_profile_in_generate)
-        self.workspace_tabs.addTab(self.prompt_builder_workspace, '9 · Prompt Builder R5e7')
+        self.workstation_shell.register_route(route_by_id('prompt_builder'), self.prompt_builder_workspace)
 
         self.spritesheet_workspace = SpriteSheetWorkspace(
             project_store_provider=lambda: self.project_workspace.project_store,
@@ -287,13 +293,13 @@ class MainWindow(QMainWindow):
         self.spritesheet_workspace.status_message.connect(self.statusBarMessage)
         self.spritesheet_workspace.sequence_ready.connect(self._import_spritesheet_sequence)
         self.spritesheet_workspace.reference_sheet_ready.connect(self._use_reference_sheet_in_generate)
-        self.workspace_tabs.addTab(self.spritesheet_workspace, '10 · Sprite Sheet R5e8')
+        self.workstation_shell.register_route(route_by_id('spritesheet'), self.spritesheet_workspace)
 
         self.image_generation_workspace = ImageGenerationWorkspace()
         self.image_generation_workspace.status_message.connect(self.statusBarMessage)
         self.image_generation_workspace.image_ready.connect(self._use_generated_image_as_reference)
         self.image_generation_workspace.job_finished.connect(self._on_image_generation_job_finished)
-        self.workspace_tabs.addTab(self.image_generation_workspace, '11 · Image Generator R5e9')
+        self.workstation_shell.register_route(route_by_id('image_generation'), self.image_generation_workspace)
 
         self.workflow_workspace = WorkflowWorkspace(
             project_store_provider=lambda: self.project_workspace.project_store,
@@ -304,7 +310,7 @@ class MainWindow(QMainWindow):
         self.workflow_workspace.guided_tabs_changed.connect(self._apply_guided_workflow_tabs)
         self.workflow_workspace.settings_checkpoint_requested.connect(self._save_workflow_settings_checkpoint)
         self.workflow_workspace.motion_reference_requested.connect(self._promote_current_video_to_motion_reference)
-        self.workspace_tabs.addTab(self.workflow_workspace, '12 · Workflow R5e10')
+        self.workstation_shell.register_route(route_by_id('workflow'), self.workflow_workspace)
 
         self.character_set_workspace = CharacterSetWorkspace(
             project_store_provider=lambda: self.project_workspace.project_store,
@@ -312,7 +318,7 @@ class MainWindow(QMainWindow):
         )
         self.character_set_workspace.status_message.connect(self.statusBarMessage)
         self.character_set_workspace.activate_group_requested.connect(self.project_workspace.activate_group)
-        self.workspace_tabs.addTab(self.character_set_workspace, '13 · Character Set R5e11')
+        self.workstation_shell.register_route(route_by_id('character_set'), self.character_set_workspace)
 
         self._workflow_tab_routes = {
             'project': 0, 'generation': 1, 'extraction': 2, 'cleanup': 3, 'alignment': 4,
@@ -322,7 +328,7 @@ class MainWindow(QMainWindow):
         }
         self.workspace_tabs.currentChanged.connect(self._on_workspace_changed)
         self._apply_workspace_tab_style()
-        self.setCentralWidget(self.workspace_tabs)
+        self.setCentralWidget(self.workstation_shell)
         self._refresh_command_context()
 
     def get_rgba_override(self, frame_index: int) -> np.ndarray | None:
