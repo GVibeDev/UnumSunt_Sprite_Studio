@@ -110,6 +110,19 @@ class WorkstationShellTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             shell.set_visible_routes({'project'}, fallback_route_id='workflow')
 
+    def test_workstation_theme_applies_without_rebuilding_routes(self) -> None:
+        shell, widgets = self._shell_with_all_routes()
+        cleanup = widgets['cleanup']
+        shell.apply_theme('blue')
+        self.assertEqual(shell.theme_name, 'blue')
+        self.assertIs(shell.registered_widget('cleanup'), cleanup)
+        self.assertIn('workstationRole="macro"', shell.styleSheet())
+
+    def test_invalid_workstation_theme_falls_back_to_default(self) -> None:
+        shell, _widgets = self._shell_with_all_routes()
+        shell.apply_theme('not-a-theme')
+        self.assertEqual(shell.theme_name, 'red')
+
 
 if __name__ == '__main__':
     unittest.main()

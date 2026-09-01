@@ -5,11 +5,10 @@ from collections.abc import Callable
 from PySide6.QtWidgets import QDialog
 
 from app.preferences_dialog import PreferencesDialog
-from app.themed_tab_bar import ThemedTabBar
 from app.ui_theme import (
-    DEFAULT_TAB_THEME,
+    DEFAULT_WORKSTATION_THEME,
     STATUS_BAR_STYLESHEET,
-    TAB_THEMES,
+    WORKSTATION_THEMES,
     next_theme_name,
     normalize_theme_name,
     theme_button_stylesheet,
@@ -17,21 +16,21 @@ from app.ui_theme import (
 
 
 class ThemePreferencesController:
-    """Own UI-theme selection, persistence hooks and presentation updates."""
+    """Own workstation-theme selection, persistence hooks and presentation updates."""
 
     def __init__(
         self,
         *,
         parent,
-        tab_bar_provider: Callable[[], object | None],
+        workstation_provider: Callable[[], object | None],
         status_bar_provider: Callable[[], object | None],
         switch_action,
         switch_widget,
         persist_callback: Callable[[], None],
-        initial_theme: str = DEFAULT_TAB_THEME,
+        initial_theme: str = DEFAULT_WORKSTATION_THEME,
     ) -> None:
         self.parent = parent
-        self.tab_bar_provider = tab_bar_provider
+        self.workstation_provider = workstation_provider
         self.status_bar_provider = status_bar_provider
         self.switch_action = switch_action
         self.switch_widget = switch_widget
@@ -39,16 +38,16 @@ class ThemePreferencesController:
         self.theme_name = normalize_theme_name(initial_theme)
 
     def apply(self, *, persist: bool = True) -> None:
-        tab_bar = self.tab_bar_provider()
-        if isinstance(tab_bar, ThemedTabBar):
-            tab_bar.set_theme(self.theme_name)
-            tab_bar.update()
+        workstation = self.workstation_provider()
+        apply_theme = getattr(workstation, 'apply_theme', None)
+        if callable(apply_theme):
+            apply_theme(self.theme_name)
 
         status = self.status_bar_provider()
         if status is not None:
             status.setStyleSheet(STATUS_BAR_STYLESHEET)
 
-        theme = TAB_THEMES[self.theme_name]
+        theme = WORKSTATION_THEMES[self.theme_name]
         if self.switch_action is not None:
             self.switch_action.setText(f'Theme: {theme.label}')
         if self.switch_widget is not None:
@@ -65,16 +64,18 @@ class ThemePreferencesController:
         self.set_theme(next_theme_name(self.theme_name), persist=True)
 
     def open_preferences(self) -> None:
-        dialog = PreferencesDialog(self.parent, tab_theme=self.theme_name)
+        dialog = PreferencesDialog(self.parent, workstation_theme=self.theme_name)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        self.set_theme(dialog.selected_tab_theme(), persist=True)
+        self.set_theme(dialog.selected_workstation_theme(), persist=True)
 
     def snapshot(self) -> dict[str, str]:
-        return {'tab_theme': self.theme_name}
+        return {'workstation_theme': self.theme_name}
 
     def restore(self, value: dict | None) -> None:
         if not isinstance(value, dict):
             self.apply(persist=False)
             return
-        self.set_theme(str(value.get('tab_theme', DEFAULT_TAB_THEME)), persist=False)
+        # ``tab_theme`` is read-only migration support for R5c8/P1-E profiles.
+        theme_name = value.get('workstation_theme', value.get('tab_theme', DEFAULT_WORKSTATION_THEME))
+        self.set_theme(str(theme_name), persist=False)

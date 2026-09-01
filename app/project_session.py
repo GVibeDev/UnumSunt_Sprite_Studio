@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
+from app.project_state import ProjectContext, ProjectState, SourceRef
 from app.project_store import ProjectStore
 
 
@@ -15,23 +17,39 @@ class ProjectSession(QObject):
     workspaces no longer need to reach through ``ProjectWorkspace`` to discover
     project context.
 
-    Phase 1E deliberately does not cache a second copy of the project document:
-    the active ``ProjectStore`` remains the single authoritative persistence
-    object.
+    Phase 2A adds a small ``ProjectState`` for transient production identity,
+    but deliberately does not cache a second copy of the project document: the
+    active ``ProjectStore`` remains the single authoritative persistence object.
     """
 
     project_changed = Signal(str)
     project_closed = Signal()
     active_group_will_change = Signal(str, str)
     active_group_changed = Signal(str)
+    project_state_changed = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._store: ProjectStore | None = None
+        self._project_state = ProjectState()
 
     @property
     def store(self) -> ProjectStore | None:
         return self._store
+
+    @property
+    def project_state(self) -> ProjectState:
+        return self._project_state
+
+    @property
+    def project_context(self) -> ProjectContext:
+        lineage: list[dict] = []
+        if self._store is not None and self.active_group_id:
+            try:
+                lineage = self._store.group_lineage(self.active_group_id)
+            except (KeyError, ValueError):
+                lineage = []
+        return self._project_state.context_from_lineage(lineage)
 
     @property
     def project_path(self) -> str | None:
@@ -49,6 +67,8 @@ class ProjectSession(QObject):
     def create_project(self, project_dir: str | Path, *, name: str | None = None) -> ProjectStore:
         self._store = ProjectStore.create(Path(project_dir), name=name)
         current = self.project_path
+        self._project_state.adopt_project(current, self.active_group_id)
+        self.project_state_changed.emit()
         if current is not None:
             self.project_changed.emit(current)
         return self._store
@@ -56,6 +76,8 @@ class ProjectSession(QObject):
     def open_project(self, project_dir_or_file: str | Path) -> ProjectStore:
         self._store = ProjectStore.open(Path(project_dir_or_file))
         current = self.project_path
+        self._project_state.adopt_project(current, self.active_group_id)
+        self.project_state_changed.emit()
         if current is not None:
             self.project_changed.emit(current)
         active = self.active_group_id
@@ -70,6 +92,8 @@ class ProjectSession(QObject):
         if old_active:
             self.active_group_will_change.emit(old_active, '')
         self._store = None
+        self._project_state.clear_project()
+        self.project_state_changed.emit()
         if old_active:
             self.active_group_changed.emit('')
         self.project_closed.emit()
@@ -91,6 +115,8 @@ class ProjectSession(QObject):
                 raise ValueError('Only a direction group can become the active production context.')
         self.active_group_will_change.emit(old, target)
         self._store.set_active_group(group_id)
+        self._project_state.set_active_group(group_id)
+        self.project_state_changed.emit()
         self.active_group_changed.emit(target)
 
     def refresh_active_group(self) -> None:
@@ -108,4 +134,50 @@ class ProjectSession(QObject):
         previous = str(previous_group_id or '')
         current = self.active_group_id or ''
         if current != previous:
+            self._project_state.set_active_group(current or None)
+            self.project_state_changed.emit()
             self.active_group_changed.emit(current)
+
+    def set_current_asset(self, asset_id: str | None) -> None:
+        before = self._project_state.context_revision
+        self._project_state.set_current_asset(asset_id)
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()
+
+    def set_current_source(
+        self,
+        *,
+        kind: str,
+        path: str,
+        manifest_path: str | None = None,
+    ) -> None:
+        before = self._project_state.context_revision
+        self._project_state.set_current_source(
+            SourceRef(kind=kind, path=path, manifest_path=manifest_path)
+        )
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()
+
+    def clear_current_source(self) -> None:
+        before = self._project_state.context_revision
+        self._project_state.set_current_source(None)
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()
+
+    def set_current_frame(self, frame_index: int | None) -> None:
+        before = self._project_state.context_revision
+        self._project_state.set_current_frame(frame_index)
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()
+
+    def set_selected_frames(self, frame_indices: Iterable[int]) -> None:
+        before = self._project_state.context_revision
+        self._project_state.set_selected_frames(frame_indices)
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()
+
+    def clear_production_context(self) -> None:
+        before = self._project_state.context_revision
+        self._project_state.clear_production_context()
+        if self._project_state.context_revision != before:
+            self.project_state_changed.emit()

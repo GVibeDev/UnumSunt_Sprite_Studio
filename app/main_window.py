@@ -68,10 +68,16 @@ from app.spritesheet_workspace import SpriteSheetWorkspace
 from app.video_source import VideoOpenError, VideoSource
 from app.workflow_workspace import WorkflowWorkspace
 from app.workflows import WORKFLOW_DEFINITIONS, normalize_workflow_state
+from app.app_state import (
+    APP_STATE_SCHEMA_VERSION,
+    app_state_needs_migration,
+    navigation_state_for_route,
+    resolve_navigation_state,
+)
 from app.ui_commands import toolbar_command_state
-from app.workstation_routes import WORKSPACE_ROUTES, route_by_id, route_for_legacy_index
+from app.workstation_routes import WORKSPACE_ROUTES, route_by_id
 from app.workstation_shell import WorkstationShell
-from app.ui_theme import DEFAULT_TAB_THEME
+from app.ui_theme import DEFAULT_WORKSTATION_THEME
 from app.version import APP_VERSION
 from app.theme_preferences_controller import ThemePreferencesController
 from app.runtime_preflight_dialog import RuntimePreflightDialog
@@ -108,12 +114,12 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar(self))
         self.theme_preferences = ThemePreferencesController(
             parent=self,
-            tab_bar_provider=lambda: None,
+            workstation_provider=lambda: self.workstation_shell,
             status_bar_provider=self.statusBar,
             switch_action=getattr(self, 'theme_switch_action', None),
             switch_widget=getattr(self, 'theme_switch_widget', None),
             persist_callback=self._persist_application_state,
-            initial_theme=DEFAULT_TAB_THEME,
+            initial_theme=DEFAULT_WORKSTATION_THEME,
         )
         self.theme_preferences.apply(persist=False)
         self.background_rules.refresh_list()
@@ -543,7 +549,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.command_context_label)
         toolbar.addSeparator()
         self.theme_switch_action = QAction('Theme: —', self)
-        self.theme_switch_action.setToolTip('Quickly cycle the tab gradient: Red → Green → Blue')
+        self.theme_switch_action.setToolTip('Quickly cycle the workstation accent: Red → Green → Blue')
         self.theme_switch_action.triggered.connect(lambda: self.theme_preferences.cycle())
         toolbar.addAction(self.theme_switch_action)
         self.theme_switch_widget = toolbar.widgetForAction(self.theme_switch_action)
@@ -1822,12 +1828,11 @@ class MainWindow(QMainWindow):
         self.statusBarMessage('R5e10: intermediate video promoted to motion reference; master image restored for final generation.')
 
     def _capture_app_state(self) -> dict:
+        navigation = navigation_state_for_route(self._current_workspace_route())
         return {
             'version': APP_VERSION,
-            'current_route': self._current_workspace_route(),
-            # Retain the legacy field only as a downgrade/migration hint. Active
-            # P1-D navigation no longer reads or writes tab indices directly.
-            'current_tab': route_by_id(self._current_workspace_route()).legacy_index,
+            'state_schema': APP_STATE_SCHEMA_VERSION,
+            'navigation': navigation.to_dict(),
             'current_project_path': self.project_session.project_path,
             'last_video_path': (str(self.video.metadata.path) if self.video.is_open and self.video.source_kind == 'video' else None),
             'last_sequence_manifest': (str(self.video.sequence_manifest_path) if self.video.is_open and self.video.source_kind == 'sequence' and self.video.sequence_manifest_path is not None else None),
@@ -1835,7 +1840,7 @@ class MainWindow(QMainWindow):
             'chroma': self.chroma_profiles.capture_profile_data(),
             'alignment': self.alignment_studio._capture_alignment_profile_data(),
             'selection': {'selected_frames': list(self.selected_frames)},
-            'preferences': (self.theme_preferences.snapshot() if hasattr(self, 'theme_preferences') else {'tab_theme': DEFAULT_TAB_THEME}),
+            'preferences': (self.theme_preferences.snapshot() if hasattr(self, 'theme_preferences') else {'workstation_theme': DEFAULT_WORKSTATION_THEME}),
             'export': {
                 'r1': {
                     'format_index': self.format_combo.currentIndex(),
@@ -1850,23 +1855,13 @@ class MainWindow(QMainWindow):
         self.profile_store.set_app_state(self._capture_app_state())
 
     def _saved_route_from_app_state(self, state: dict, *, fallback: str = 'project') -> str:
-        current_route = state.get('current_route')
-        if isinstance(current_route, str):
-            try:
-                route_by_id(current_route)
-                return current_route
-            except KeyError:
-                pass
-        legacy_index = state.get('current_tab')
-        try:
-            return route_for_legacy_index(int(legacy_index)).route_id
-        except (TypeError, ValueError, KeyError):
-            return fallback
+        return resolve_navigation_state(state, fallback_route_id=fallback).route_id
 
     def _restore_app_state(self) -> None:
         state = self.profile_store.get_app_state()
         if not state:
             return
+        migrate_state = app_state_needs_migration(state)
         self.theme_preferences.restore(state.get('preferences'))
         project_path = state.get('current_project_path')
         if isinstance(project_path, str) and Path(project_path).exists():
@@ -1880,6 +1875,8 @@ class MainWindow(QMainWindow):
                 self.workstation_shell.navigate(saved_route)
             else:
                 self.workstation_shell.navigate('workflow')
+            if migrate_state:
+                self._persist_application_state()
             return
         generation_state = state.get('generation_workspace')
         if isinstance(generation_state, dict):
@@ -1914,6 +1911,8 @@ class MainWindow(QMainWindow):
                     self._refresh_selection_list()
                     self.cleanup_studio.set_selected_frames(self.selected_frames)
         self.workstation_shell.navigate(saved_route)
+        if migrate_state:
+            self._persist_application_state()
 
     @staticmethod
     def _format_time(seconds: float) -> str:

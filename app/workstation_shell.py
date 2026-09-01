@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.ui_theme import DEFAULT_WORKSTATION_THEME, normalize_theme_name, workstation_theme_stylesheet
 from app.workstation_routes import (
     DEFAULT_ROUTE_ID,
     ENVIRONMENT_LABELS,
@@ -44,6 +45,7 @@ class _EnvironmentPage(QWidget):
 
         navigation = QWidget(self)
         navigation.setObjectName(f'workstationSubnav_{environment}')
+        navigation.setProperty('workstationRole', 'subNavigation')
         navigation_layout = QHBoxLayout(navigation)
         navigation_layout.setContentsMargins(8, 6, 8, 6)
         navigation_layout.setSpacing(6)
@@ -56,6 +58,7 @@ class _EnvironmentPage(QWidget):
         for route in self._routes:
             button = QPushButton(route.label, navigation)
             button.setObjectName(f'workstationRoute_{route.route_id}')
+            button.setProperty('workstationRole', 'route')
             button.setCheckable(True)
             button.setEnabled(False)
             button.setToolTip(route.tooltip)
@@ -207,6 +210,7 @@ class WorkstationShell(QWidget):
         if default_route_id not in self._routes_by_id:
             raise KeyError(f'Unknown default workstation route: {default_route_id}')
         self._default_route_id = default_route_id
+        self._theme_name = DEFAULT_WORKSTATION_THEME
 
         self._registered_widgets: dict[str, QWidget] = {}
         self._widget_routes: dict[int, str] = {}
@@ -222,6 +226,7 @@ class WorkstationShell(QWidget):
 
         macro_navigation = QWidget(self)
         macro_navigation.setObjectName('workstationMacroNavigation')
+        macro_navigation.setProperty('workstationRole', 'macroNavigation')
         macro_layout = QHBoxLayout(macro_navigation)
         macro_layout.setContentsMargins(10, 8, 10, 8)
         macro_layout.setSpacing(8)
@@ -237,6 +242,7 @@ class WorkstationShell(QWidget):
         for environment in ENVIRONMENT_ORDER:
             button = QPushButton(ENVIRONMENT_LABELS[environment], macro_navigation)
             button.setObjectName(f'workstationEnvironment_{environment}')
+            button.setProperty('workstationRole', 'macro')
             button.setCheckable(True)
             button.clicked.connect(
                 lambda _checked=False, env=environment: self.set_environment(env)
@@ -256,6 +262,17 @@ class WorkstationShell(QWidget):
         root.addWidget(macro_navigation)
         root.addWidget(self._environment_stack, 1)
         self._activate_environment(default_environment)
+        self.apply_theme(self._theme_name)
+
+
+    @property
+    def theme_name(self) -> str:
+        return self._theme_name
+
+    def apply_theme(self, theme_name: str) -> None:
+        self._theme_name = normalize_theme_name(theme_name)
+        self.setStyleSheet(workstation_theme_stylesheet(self._theme_name))
+        self.update()
 
     def register_route(self, route: WorkspaceRoute, widget: QWidget) -> None:
         canonical = self._routes_by_id.get(route.route_id)

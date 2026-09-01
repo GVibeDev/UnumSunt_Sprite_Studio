@@ -7,7 +7,7 @@ Color = tuple[int, int, int]
 
 
 @dataclass(frozen=True)
-class TabTheme:
+class WorkstationTheme:
     key: str
     label: str
     text_start: Color
@@ -17,8 +17,8 @@ class TabTheme:
     accent: Color
 
 
-TAB_THEMES: dict[str, TabTheme] = {
-    'red': TabTheme(
+WORKSTATION_THEMES: dict[str, WorkstationTheme] = {
+    'red': WorkstationTheme(
         key='red',
         label='Red',
         text_start=(34, 7, 12),
@@ -27,7 +27,7 @@ TAB_THEMES: dict[str, TabTheme] = {
         background_end=(32, 8, 14),
         accent=(205, 92, 106),
     ),
-    'green': TabTheme(
+    'green': WorkstationTheme(
         key='green',
         label='Green',
         text_start=(5, 28, 19),
@@ -36,7 +36,7 @@ TAB_THEMES: dict[str, TabTheme] = {
         background_end=(6, 30, 21),
         accent=(91, 170, 128),
     ),
-    'blue': TabTheme(
+    'blue': WorkstationTheme(
         key='blue',
         label='Blue',
         text_start=(7, 22, 38),
@@ -48,12 +48,18 @@ TAB_THEMES: dict[str, TabTheme] = {
 }
 
 THEME_ORDER = ('red', 'green', 'blue')
-DEFAULT_TAB_THEME = 'red'
+DEFAULT_WORKSTATION_THEME = 'red'
+
+# Compatibility aliases for older modules/plugins. P1-F application code uses
+# the workstation terminology; these aliases avoid needless API breakage.
+TabTheme = WorkstationTheme
+TAB_THEMES = WORKSTATION_THEMES
+DEFAULT_TAB_THEME = DEFAULT_WORKSTATION_THEME
 
 
 def normalize_theme_name(value: str | None) -> str:
     key = str(value or '').strip().lower()
-    return key if key in TAB_THEMES else DEFAULT_TAB_THEME
+    return key if key in WORKSTATION_THEMES else DEFAULT_WORKSTATION_THEME
 
 
 def _interpolate(start: Color, end: Color, count: int) -> list[Color]:
@@ -71,16 +77,17 @@ def _interpolate(start: Color, end: Color, count: int) -> list[Color]:
     return colors
 
 
-def tab_theme_colors(theme_name: str, count: int) -> list[tuple[Color, Color]]:
-    """Return (text, background) pairs.
-
-    Text becomes lighter from tab 0 to N while the background intentionally
-    travels in the opposite direction, improving per-tab contrast.
-    """
-    theme = TAB_THEMES[normalize_theme_name(theme_name)]
+def workstation_theme_colors(theme_name: str, count: int) -> list[tuple[Color, Color]]:
+    """Return legacy-compatible text/background gradient pairs for the theme."""
+    theme = WORKSTATION_THEMES[normalize_theme_name(theme_name)]
     text = _interpolate(theme.text_start, theme.text_end, count)
     background = _interpolate(theme.background_start, theme.background_end, count)
     return list(zip(text, background))
+
+
+def tab_theme_colors(theme_name: str, count: int) -> list[tuple[Color, Color]]:
+    """Compatibility alias for the pre-workstation theme API."""
+    return workstation_theme_colors(theme_name, count)
 
 
 def next_theme_name(current: str) -> str:
@@ -90,7 +97,7 @@ def next_theme_name(current: str) -> str:
 
 
 def theme_button_stylesheet(theme_name: str) -> str:
-    theme = TAB_THEMES[normalize_theme_name(theme_name)]
+    theme = WORKSTATION_THEMES[normalize_theme_name(theme_name)]
     r, g, b = theme.accent
     return (
         'QToolButton { '
@@ -98,6 +105,36 @@ def theme_button_stylesheet(theme_name: str) -> str:
         'color: #f7f8fa; border: 1px solid rgba(255,255,255,70); '
         'padding: 4px 9px; border-radius: 4px; font-weight: 600; } '
         'QToolButton:hover { border: 1px solid rgba(255,255,255,150); }'
+    )
+
+
+def workstation_theme_stylesheet(theme_name: str) -> str:
+    """Style the three-environment workstation navigation with one accent family."""
+    theme = WORKSTATION_THEMES[normalize_theme_name(theme_name)]
+    r, g, b = theme.accent
+    deep = (max(0, r - 150), max(0, g - 150), max(0, b - 150))
+    mid = (max(0, r - 95), max(0, g - 95), max(0, b - 95))
+    soft = (min(255, r + 20), min(255, g + 20), min(255, b + 20))
+    return (
+        'QWidget[workstationRole="macroNavigation"] {'
+        f' background: rgb({deep[0]}, {deep[1]}, {deep[2]});'
+        ' border-bottom: 1px solid #353b44; }'
+        'QWidget[workstationRole="subNavigation"] {'
+        ' background: #171a1f; border-bottom: 1px solid #353b44; }'
+        'QPushButton[workstationRole="macro"] {'
+        ' color: #e7ebf1; background: transparent; border: 1px solid transparent;'
+        ' padding: 7px 14px; border-radius: 5px; font-weight: 700; }'
+        'QPushButton[workstationRole="macro"]:hover {'
+        f' background: rgb({mid[0]}, {mid[1]}, {mid[2]}); border-color: rgba(255,255,255,55); }}'
+        'QPushButton[workstationRole="macro"]:checked {'
+        f' color: #ffffff; background: rgb({r}, {g}, {b}); border-color: rgb({soft[0]}, {soft[1]}, {soft[2]}); }}'
+        'QPushButton[workstationRole="route"] {'
+        ' color: #cbd2dc; background: #20242a; border: 1px solid #343a43;'
+        ' padding: 5px 10px; border-radius: 4px; }'
+        'QPushButton[workstationRole="route"]:hover {'
+        f' border-color: rgb({r}, {g}, {b}); }}'
+        'QPushButton[workstationRole="route"]:checked {'
+        f' color: #ffffff; background: rgb({mid[0]}, {mid[1]}, {mid[2]}); border-color: rgb({r}, {g}, {b}); font-weight: 600; }}'
     )
 
 

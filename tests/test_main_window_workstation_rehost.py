@@ -54,14 +54,21 @@ class MainWindowWorkstationRehostSourceTests(unittest.TestCase):
         self.assertIn("fallback_route_id='workflow'", self.source)
         self.assertNotIn('visible_indices', self.source)
 
-    def test_application_state_persists_stable_route_id(self) -> None:
-        self.assertIn("'current_route': self._current_workspace_route()", self.source)
-        self.assertIn("state.get('current_route')", self.source)
-        # `current_tab` remains only as a compatibility hint for R5c8/P1-C profiles.
-        self.assertIn('route_for_legacy_index(int(legacy_index)).route_id', self.source)
+    def test_application_state_writes_only_native_navigation_shape(self) -> None:
+        self.assertIn("'state_schema': APP_STATE_SCHEMA_VERSION", self.source)
+        self.assertIn("'navigation': navigation.to_dict()", self.source)
+        capture = self.source.split('def _capture_app_state', 1)[1].split('def _persist_application_state', 1)[0]
+        self.assertNotIn("'current_tab'", capture)
+        self.assertNotIn("'current_route'", capture)
 
-    def test_theme_controller_no_longer_depends_on_legacy_tab_bar(self) -> None:
-        self.assertIn('tab_bar_provider=lambda: None', self.source)
+    def test_legacy_app_state_migration_is_isolated_outside_main_window(self) -> None:
+        self.assertIn('resolve_navigation_state(state, fallback_route_id=fallback)', self.source)
+        self.assertNotIn('route_for_legacy_index', self.source)
+        self.assertIn('app_state_needs_migration(state)', self.source)
+
+    def test_theme_controller_targets_workstation_not_legacy_tab_bar(self) -> None:
+        self.assertIn('workstation_provider=lambda: self.workstation_shell', self.source)
+        self.assertNotIn('tab_bar_provider=', self.source)
 
 
 if __name__ == '__main__':
