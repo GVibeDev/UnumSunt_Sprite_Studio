@@ -1,6 +1,6 @@
 # P2-E Canvas Connectivity Hotfix
 
-Status: validation candidate.
+Status: **VALIDATED as part of the reconciled P2-E/P2-F source — 2026-09-05**.
 
 ## Reason
 

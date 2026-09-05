@@ -9,9 +9,11 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QSplitter,
     QStackedWidget,
@@ -22,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.canvas_layers import CanvasGuideState, CanvasSelectionRect
+from app.create_control_rehousing import control_plan_for_route
 from app.create_frame_context import CreateFrameContext, normalize_onion_skin_mode
 from app.create_frame_strip import CreateFrameStrip
 from app.create_workspace_state import CreateWorkspaceState
@@ -155,6 +158,11 @@ class CreateWorkspaceShell(QWidget):
         root.addWidget(toolbar)
 
     def _build_workspace_body(self, root: QVBoxLayout) -> None:
+        self._panel_stacks: dict[str, QStackedWidget] = {}
+        self._panel_route_layouts: dict[str, dict[str, QVBoxLayout]] = {}
+        self._panel_route_placeholders: dict[str, dict[str, QLabel]] = {}
+        self._panel_route_has_content: dict[str, dict[str, bool]] = {}
+
         self.splitter = QSplitter(self)
         self.splitter.setObjectName('createWorkspaceSplitter')
         self.splitter.setChildrenCollapsible(False)
@@ -173,12 +181,15 @@ class CreateWorkspaceShell(QWidget):
         self.left_tabs.setObjectName('createToolsOptionsTabs')
         self.left_tabs.currentChanged.connect(self._remember_left_section)
 
+        # Source stays a single canonical application surface. The buttons reuse
+        # the File-menu QActions; audited route-specific source/status controls
+        # are re-parented beneath them rather than reimplemented.
         self._source_page = QWidget(self.left_tabs)
         source_layout = QVBoxLayout(self._source_page)
         source_layout.setContentsMargins(8, 8, 8, 8)
         source_layout.setSpacing(7)
         source_hint = QLabel(
-            'Load an existing video or spritesheet through the same File actions used by the application. '
+            'Open source files through the same File actions used by the application. '
             'Local source files can also be dropped directly on the canvas.',
             self._source_page,
         )
@@ -194,16 +205,22 @@ class CreateWorkspaceShell(QWidget):
         self.open_spritesheet_source_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.open_spritesheet_source_button.setEnabled(False)
         source_layout.addWidget(self.open_spritesheet_source_button)
-        self.current_route_controls_button = QPushButton('Open current route controls', self._source_page)
-        self.current_route_controls_button.clicked.connect(self.show_workspace_controls)
-        source_layout.addWidget(self.current_route_controls_button)
-        source_layout.addStretch(1)
-
-        self._left_tools_label = self._placeholder_page(
-            'Contextual tool controls will be moved here only after the existing CREATE UI audit.'
+        source_layout.addWidget(
+            self._build_route_panel_stack(
+                'source',
+                self._source_page,
+                'No additional source controls are required for this CREATE route.',
+            ),
+            1,
         )
-        self._left_options_label = self._placeholder_page(
-            'Only the options of the active tool will occupy this sector.'
+
+        self._left_tools_label = self._build_panel_section_host(
+            'tools',
+            'No direct tool controls are assigned to this CREATE route.',
+        )
+        self._left_options_label = self._build_panel_section_host(
+            'options',
+            'No additional tool options are assigned to this CREATE route.',
         )
         self.left_tabs.addTab(self._source_page, 'Source')
         self.left_tabs.addTab(self._left_tools_label, 'Tools')
@@ -218,9 +235,9 @@ class CreateWorkspaceShell(QWidget):
         production_layout = QVBoxLayout(self.production_panel)
         production_layout.setContentsMargins(0, 0, 0, 0)
         production_layout.setSpacing(0)
-        # P2-C adds one persistent canvas without removing the validated legacy
-        # CREATE workspaces. During the transition both occupy the same central
-        # sector as local pages rather than being shown simultaneously.
+        # P2-G keeps the validated specialized production widgets reachable while
+        # moving their controls into the persistent side sectors. Canvas and the
+        # route production surface remain same-sector pages, never side-by-side.
         self.production_tabs = QTabWidget(self.production_panel)
         self.production_tabs.setObjectName('createProductionTabs')
 
@@ -258,11 +275,13 @@ class CreateWorkspaceShell(QWidget):
         self.right_tabs = QTabWidget(self.right_panel)
         self.right_tabs.setObjectName('createConfigurationsOutputTabs')
         self.right_tabs.currentChanged.connect(self._remember_right_section)
-        self._right_config_label = self._placeholder_page(
-            'Result configuration is grouped here instead of remaining simultaneously visible.'
+        self._right_config_label = self._build_panel_section_host(
+            'configurations',
+            'No route-specific result configuration is assigned here.',
         )
-        self._right_output_label = self._placeholder_page(
-            'Output controls will be re-housed here after the existing functions are audited.'
+        self._right_output_label = self._build_panel_section_host(
+            'output',
+            'No route-specific output controls are assigned here.',
         )
         self.right_tabs.addTab(self._right_config_label, 'Configurations')
         self.right_tabs.addTab(self._right_output_label, 'Output')
@@ -285,6 +304,124 @@ class CreateWorkspaceShell(QWidget):
         self.frame_context_label = self.frame_strip.frame_context_label
         self.frame_strip.set_onion_mode(self.state.overlays.onion_skin_mode, emit=False)
         root.addWidget(self.frame_strip)
+
+    def _build_panel_section_host(self, section: str, empty_text: str) -> QWidget:
+        host = QWidget()
+        layout = QVBoxLayout(host)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self._build_route_panel_stack(section, host, empty_text), 1)
+        return host
+
+    def _build_route_panel_stack(
+        self,
+        section: str,
+        parent: QWidget,
+        empty_text: str,
+    ) -> QStackedWidget:
+        stack = QStackedWidget(parent)
+        stack.setObjectName(f'createRoutePanelStack_{section}')
+        route_layouts: dict[str, QVBoxLayout] = {}
+        placeholders: dict[str, QLabel] = {}
+        has_content: dict[str, bool] = {}
+        for route in self._routes:
+            scroll = QScrollArea(stack)
+            scroll.setObjectName(f'createRoutePanel_{section}_{route.route_id}')
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            body = QWidget(scroll)
+            body_layout = QVBoxLayout(body)
+            body_layout.setContentsMargins(6, 6, 6, 6)
+            body_layout.setSpacing(7)
+            placeholder = QLabel(empty_text, body)
+            placeholder.setWordWrap(True)
+            placeholder.setProperty('workstationRole', 'createPanelHint')
+            body_layout.addWidget(placeholder)
+            body_layout.addStretch(1)
+            scroll.setWidget(body)
+            stack.addWidget(scroll)
+            route_layouts[route.route_id] = body_layout
+            placeholders[route.route_id] = placeholder
+            has_content[route.route_id] = False
+        self._panel_stacks[section] = stack
+        self._panel_route_layouts[section] = route_layouts
+        self._panel_route_placeholders[section] = placeholders
+        self._panel_route_has_content[section] = has_content
+        return stack
+
+    def _add_rehoused_control(self, route_id: str, section: str, control: QWidget) -> None:
+        layout = self._panel_route_layouts[section][route_id]
+        if not self._panel_route_has_content[section][route_id]:
+            placeholder = self._panel_route_placeholders[section][route_id]
+            layout.removeWidget(placeholder)
+            placeholder.hide()
+            self._panel_route_has_content[section][route_id] = True
+        layout.insertWidget(max(0, layout.count() - 1), control)
+
+    @staticmethod
+    def _nearest_splitter_child(widget: QWidget, route_widget: QWidget) -> QWidget | None:
+        current: QWidget | None = widget
+        while current is not None and current is not route_widget:
+            parent = current.parentWidget()
+            if isinstance(parent, QSplitter):
+                return current
+            current = parent
+        return None
+
+    def _rehouse_registered_route_controls(self, route_id: str, widget: QWidget) -> None:
+        plan = control_plan_for_route(route_id)
+        if plan.expected_widget_class is not None:
+            if widget.__class__.__name__ != plan.expected_widget_class:
+                return
+        elif route_id == 'extraction' and widget.objectName() != 'extractionWorkspace':
+            return
+
+        groups = tuple(widget.findChildren(QGroupBox))
+        by_title: dict[str, list[QGroupBox]] = {}
+        for group in groups:
+            by_title.setdefault(group.title(), []).append(group)
+
+        audited: dict[str, QGroupBox] = {}
+        for placement in plan.placements:
+            matches = by_title.get(placement.title, [])
+            if len(matches) != 1:
+                raise RuntimeError(
+                    f'P2-G control audit mismatch for {route_id}: '
+                    f'{placement.title!r} resolved {len(matches)} times.'
+                )
+            audited[placement.title] = matches[0]
+
+        legacy_columns: list[QWidget] = []
+        if plan.collapse_legacy_control_columns:
+            for group in audited.values():
+                column = self._nearest_splitter_child(group, widget)
+                if column is not None and all(column is not item for item in legacy_columns):
+                    legacy_columns.append(column)
+
+        for button in widget.findChildren(QPushButton):
+            if button.text() in plan.hidden_button_texts:
+                button.hide()
+
+        for placement in plan.placements:
+            self._add_rehoused_control(route_id, placement.section, audited[placement.title])
+
+        for column in legacy_columns:
+            column.hide()
+        for splitter in widget.findChildren(QSplitter):
+            if splitter.count() == 0:
+                splitter.hide()
+
+    def _set_route_panel_context(self, route_id: str, *, prefer_defaults: bool) -> None:
+        index = self._positions[route_id]
+        for stack in self._panel_stacks.values():
+            stack.setCurrentIndex(index)
+        if not prefer_defaults:
+            return
+        plan = control_plan_for_route(route_id)
+        left_index = {'Source': 0, 'Tools': 1, 'Options': 2}[plan.preferred_left_section]
+        right_index = {'Configurations': 0, 'Output': 1}[plan.preferred_right_section]
+        self.left_tabs.setCurrentIndex(left_index)
+        self.right_tabs.setCurrentIndex(right_index)
 
     @staticmethod
     def _placeholder_page(text: str) -> QWidget:
@@ -336,6 +473,7 @@ class CreateWorkspaceShell(QWidget):
         placeholder.deleteLater()
         self._stack.insertWidget(position, widget)
         self._registered[route_id] = widget
+        self._rehouse_registered_route_controls(route_id, widget)
         self._buttons[route_id].setEnabled(self._enabled[route_id])
 
     def is_registered(self, route_id: str) -> bool:
@@ -369,11 +507,13 @@ class CreateWorkspaceShell(QWidget):
         if not self._visible[route_id]:
             raise RuntimeError(f'Route {route_id} is hidden.')
 
-        if self._current_route != route_id:
+        route_changed = self._current_route != route_id
+        if route_changed:
             self.shared_canvas.cancel_pointer_interaction()
         self._stack.setCurrentIndex(self._positions[route_id])
         button.setChecked(True)
         self._current_route = route_id
+        self._set_route_panel_context(route_id, prefer_defaults=route_changed)
         route = self._routes_by_id[route_id]
         self.shared_canvas.set_route_context(route.label)
         self.workspace_label.setText(f'Workspace: {route.label}')
@@ -526,7 +666,8 @@ class CreateWorkspaceShell(QWidget):
         if self.state.view.production_section == 'Canvas':
             self.production_tabs.setCurrentIndex(0)
         else:
-            # Preserve P2-B behavior until the existing tools are re-housed in P2-G.
+            # P2-G keeps specialized production surfaces as the safe default;
+            # rehoused controls remain available in the persistent side sectors.
             self.production_tabs.setCurrentIndex(1)
 
     # ------------------------------------------------------------------

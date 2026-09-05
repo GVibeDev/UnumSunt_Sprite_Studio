@@ -1,6 +1,6 @@
 # P2-F — Frame & Project Context
 
-Status: implementation candidate pending Windows/manual validation.
+Status: **VALIDATED — reconciled source manually confirmed on Windows, 2026-09-05**.
 
 ## Purpose
 

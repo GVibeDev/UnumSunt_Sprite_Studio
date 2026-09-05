@@ -1,6 +1,6 @@
 # P2-E — Canvas Layers & Overlays
 
-Status: **RECONCILED implementation candidate pending Windows/manual validation**.
+Status: **VALIDATED — reconciled source manually confirmed on Windows, 2026-09-05**.
 
 P2-E turns the persistent shared CREATE canvas from a neutral input surface into a real layered production surface without moving the validated legacy CREATE tools before P2-G. The September reconciliation keeps the P2-F frame/project context intact and removes the duplicate canvas implementation that had drifted away from the active runtime.
 

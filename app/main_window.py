@@ -414,6 +414,7 @@ class MainWindow(QMainWindow):
 
     def _build_extraction_workspace(self) -> QWidget:
         page = QWidget()
+        page.setObjectName('extractionWorkspace')
         root_layout = QVBoxLayout(page)
         root_layout.setContentsMargins(8, 8, 8, 8)
         splitter = QSplitter(Qt.Orientation.Horizontal)

@@ -1,0 +1,71 @@
+{
+  "candidate": "P2-G CREATE Control Audit & Rehousing",
+  "date": "2026-09-05",
+  "baseline": "UnumSunt_Sprite_Studio_P2E_P2F_RECONCILED_SOURCE.zip",
+  "baseline_status": "VALIDATED by author on Windows",
+  "candidate_status": "IMPLEMENTATION CANDIDATE — manual Windows validation required",
+  "automated_tests": {
+    "compileall_app": "PASS",
+    "pytest": {
+      "passed": 470,
+      "failed": 0,
+      "skipped": 63,
+      "subtests_passed": 36
+    },
+    "unittest": {
+      "tests_run": 533,
+      "status": "OK",
+      "skipped": 63
+    }
+  },
+  "changed_or_added_files": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "e4ecca943bb4677ea06056a07818e391ed246d2e59f32da346e95625e3fa4edf"
+    },
+    {
+      "path": "app/create_control_rehousing.py",
+      "sha256": "e4cd6ad576a76ab4730d6b4d10e2392d76614c8f30fbcfbd7b060418eddc3d76"
+    },
+    {
+      "path": "app/create_workspace_shell.py",
+      "sha256": "6b20955069b3699ce68191f7e92a03358d37a1225a81349a1edea4a77898525b"
+    },
+    {
+      "path": "app/main_window.py",
+      "sha256": "fc09cf0bca972d2e3ba1536782fdd96fcaa333907c33c2399d53ca914702a3dd"
+    },
+    {
+      "path": "docs/P2E_CANVAS_CONNECTIVITY_HOTFIX.md",
+      "sha256": "c27052f1d4b7f8fd11eaae791fbdf4862e28068f225be1e40403cfa568bcc92c"
+    },
+    {
+      "path": "docs/P2E_CANVAS_LAYERS_OVERLAYS.md",
+      "sha256": "26666a950a8ef227d7730747c6d97247efbc2d2bd9b55c44f8c854053c5ec079"
+    },
+    {
+      "path": "docs/P2F_FRAME_PROJECT_CONTEXT.md",
+      "sha256": "348711de9f72436cbc746632c47332ee44318706996f59c819daf1ee36e191bb"
+    },
+    {
+      "path": "docs/P2G_CREATE_CONTROL_AUDIT_REHOUSING.md",
+      "sha256": "81e197154c332da2b3fe2eb7180a0e9a54474c5c380e9290c0bcdc8c5573d484"
+    },
+    {
+      "path": "docs/PHASE2_CREATE_WORKSPACE_CANVAS_CONTRACT.md",
+      "sha256": "154d001e29d1560853e3b9250b58c60fc96c27d2a6548bf759cd98057cd0e2a3"
+    },
+    {
+      "path": "tests/test_p2g_control_rehousing.py",
+      "sha256": "9df6ad852aa451f92ff77a4d9709dd2295bd1f2b422131830f7b3a5b7e28baa6"
+    },
+    {
+      "path": "PATCH_NOTES_P2G.md",
+      "sha256": "fb2b27ab99c2b778638c56238de83f66c3feef70d88738a837929bbe0b171ed4"
+    },
+    {
+      "path": "P2G_TEST_REPORT.txt",
+      "sha256": "d8aa6a127ef6bc9fee5985392c8f14c5a451ae3895b35bceb638adf1f631bae5"
+    }
+  ]
+}

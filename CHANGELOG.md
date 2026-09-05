@@ -1,5 +1,17 @@
 # Changelog
 
+## Phase 2 · P2-G — CREATE Control Audit & Rehousing — 2026-09-05
+
+- Promotes the manually validated reconciled P2-E/P2-F source to the Phase 2 input baseline.
+- Adds one declarative audit/placement registry for all seven CREATE routes.
+- Re-parents the existing control group widgets into persistent Source / Tools / Options / Configurations / Output route pages without duplicating engine implementations.
+- Splits the former dense Alignment column across current-frame, view, geometry/profile and output pages.
+- Splits Extract background/chroma secondary controls into the Options page and keeps R1 Export on Output.
+- Collapses obsolete legacy control columns for Import, Extract, Clean-up and Align while preserving their production surfaces.
+- Hides redundant Extract route-navigation buttons and the duplicate Import open-source button.
+- Keeps specialized Clean-up and Alignment canvases on Current Workspace; shared-canvas tool-engine migration remains outside P2-G.
+- Adds strict mismatch detection when an audited real workspace no longer contains exactly one expected control group.
+
 ## R5c7 — Validated Windows Release Candidate / Public Release Baseline — 2026-08-17
 
 - Promotes the validated R5c6b line to the first distribution-ready Windows baseline.

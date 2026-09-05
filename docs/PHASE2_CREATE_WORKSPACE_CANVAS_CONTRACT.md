@@ -238,9 +238,9 @@ Do not decide implicitly during implementation:
 2. **P2-B — CREATE Workspace Structural Shell — VALIDATED**
 3. **P2-C — Persistent Shared Canvas + CanvasInputController — VALIDATED**
 4. **P2-D — General Canvas Context Menu — VALIDATED**
-5. **P2-E — Canvas Layers & Overlays — IMPLEMENTATION CANDIDATE**
-6. **P2-F — Frame & Project Context**
-7. **P2-G — Existing CREATE Tools Rehousing + control audit / local panel tabs**
+5. **P2-E — Canvas Layers & Overlays — VALIDATED 2026-09-05**
+6. **P2-F — Frame & Project Context — VALIDATED 2026-09-05**
+7. **P2-G — Existing CREATE Tools Rehousing + control audit / local panel tabs — IMPLEMENTATION CANDIDATE**
 8. **P2-H — Persistence & Hardening**
 
 Paint Engine, Mesh, Rig and Animation remain later phases. Phase 2 builds the stable workstation surface they will use.

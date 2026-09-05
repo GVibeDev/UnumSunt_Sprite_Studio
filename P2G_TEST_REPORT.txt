@@ -1,0 +1,27 @@
+Unum Sunt Sprite Studio — Phase 2 P2-G Candidate Test Report
+============================================================
+
+Baseline: validated P2-E/P2-F reconciled source (manual Windows validation by author, 2026-09-05)
+Candidate: P2-G CREATE Control Audit & Rehousing
+Status: IMPLEMENTATION CANDIDATE — MANUAL WINDOWS VALIDATION REQUIRED
+
+Automated regression
+--------------------
+compileall app: PASS
+pytest: 470 passed, 0 failed, 63 skipped, 36 subtests passed
+unittest discovery: 533 tests, OK, 63 skipped
+
+New P2-G coverage
+-----------------
+- seven CREATE route audit plans: PASS
+- exact audited group-title/source contract: PASS
+- Alignment placement contract: PASS
+- Clean-up placement contract: PASS
+- Extract nested-control split contract: PASS
+- strict runtime mismatch guard: PASS
+- extraction runtime identity marker: PASS
+
+Environment limitation
+----------------------
+PySide6 is unavailable in the preparation environment, therefore Qt UI tests are skipped there.
+The candidate must not be declared VALIDATED until the author completes the Windows/manual UI gate.
