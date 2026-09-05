@@ -93,6 +93,15 @@ class ProjectStateTests(unittest.TestCase):
         self.assertEqual(context.asset_id, 'sprite-asset')
         self.assertEqual(context.frame_index, 5)
 
+    def test_context_exposes_runtime_source_name_without_copying_source_payload(self) -> None:
+        state = ProjectState(project_path='demo', active_group_id='d')
+        state.set_current_source(SourceRef(kind='video', path='C:/assets/walk.mp4'))
+        state.set_current_frame(2)
+        context = state.context_from_lineage([])
+        self.assertEqual(context.source_kind, 'video')
+        self.assertEqual(context.source_name, 'walk.mp4')
+        self.assertEqual(context.frame_index, 2)
+
 
 class CreateWorkspaceStateTests(unittest.TestCase):
     def test_view_state_keeps_pan_zoom_and_panel_presentation_separate(self) -> None:

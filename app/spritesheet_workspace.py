@@ -45,6 +45,7 @@ from app.spritesheet_import import (
 class SpriteSheetWorkspace(QWidget):
     sequence_ready = Signal(object)
     reference_sheet_ready = Signal(str)
+    source_preview_ready = Signal(object)
     status_message = Signal(str)
 
     def __init__(
@@ -211,19 +212,23 @@ class SpriteSheetWorkspace(QWidget):
         return pixmap.scaled(max_w, max_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
 
     def _open_sheet(self) -> None:
+        self.open_sheet_dialog()
+
+    def open_sheet_dialog(self) -> bool:
         path, _ = QFileDialog.getOpenFileName(
             self,
             'Open Spritesheet',
             '',
             'Images (*.png *.webp *.bmp *.tif *.tiff);;All Files (*)',
         )
-        if not path:
-            return
+        return bool(path) and self.open_sheet_path(path)
+
+    def open_sheet_path(self, path: str) -> bool:
         try:
             rgba = load_image_rgba(path)
         except Exception as exc:
             QMessageBox.critical(self, 'Spritesheet Error', str(exc))
-            return
+            return False
         self._source_path = Path(path).resolve()
         self._source_rgba = rgba
         self._frames = []
@@ -240,7 +245,9 @@ class SpriteSheetWorkspace(QWidget):
         self.frame_h_spin.setMaximum(rgba.shape[0])
         self.frame_w_spin.setValue(min(self.frame_w_spin.value(), rgba.shape[1]))
         self.frame_h_spin.setValue(min(self.frame_h_spin.value(), rgba.shape[0]))
+        self.source_preview_ready.emit(rgba.copy())
         self.status_message.emit(f'Spritesheet opened: {self._source_path.name}')
+        return True
 
     def _update_mode_controls(self, *_args) -> None:
         grid = str(self.mode_combo.currentData()) == 'grid'

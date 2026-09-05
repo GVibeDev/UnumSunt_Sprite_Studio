@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, Sequence
 
 
@@ -43,6 +44,8 @@ class ProjectContext:
     direction_id: str | None = None
     direction_name: str | None = None
     asset_id: str | None = None
+    source_kind: str | None = None
+    source_name: str | None = None
     frame_index: int | None = None
 
     @property
@@ -166,6 +169,7 @@ class ProjectState:
         subject = by_type.get('subject', {})
         animation = by_type.get('animation', {})
         direction = by_type.get('direction', {})
+        source = self.current_source
         return ProjectContext(
             project_path=self.project_path,
             subject_id=str(subject.get('id')) if subject.get('id') else None,
@@ -175,6 +179,8 @@ class ProjectState:
             direction_id=str(direction.get('id')) if direction.get('id') else None,
             direction_name=str(direction.get('name')) if direction.get('name') else None,
             asset_id=self.current_asset_id,
+            source_kind=source.kind if source is not None else None,
+            source_name=Path(source.path).name if source is not None else None,
             frame_index=self.current_frame_index,
         )
 

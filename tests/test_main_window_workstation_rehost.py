@@ -66,6 +66,15 @@ class MainWindowWorkstationRehostSourceTests(unittest.TestCase):
         self.assertNotIn('route_for_legacy_index', self.source)
         self.assertIn('app_state_needs_migration(state)', self.source)
 
+
+    def test_canvas_context_menu_reuses_main_file_edit_actions_and_shell_navigation(self) -> None:
+        self.assertIn('GeneralCanvasContextMenu(', self.source)
+        self.assertIn('file_actions=tuple(self.file_menu.actions())', self.source)
+        self.assertIn('edit_actions=tuple(self.edit_menu.actions())', self.source)
+        self.assertIn('navigate_route=self.workstation_shell.navigate', self.source)
+        self.assertIn('set_environment=self.workstation_shell.set_environment', self.source)
+        self.assertIn('self.canvas_context_menu.show', self.source)
+
     def test_theme_controller_targets_workstation_not_legacy_tab_bar(self) -> None:
         self.assertIn('workstation_provider=lambda: self.workstation_shell', self.source)
         self.assertNotIn('tab_bar_provider=', self.source)

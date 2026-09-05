@@ -135,6 +135,22 @@ def workstation_theme_stylesheet(theme_name: str) -> str:
         f' border-color: rgb({r}, {g}, {b}); }}'
         'QPushButton[workstationRole="route"]:checked {'
         f' color: #ffffff; background: rgb({mid[0]}, {mid[1]}, {mid[2]}); border-color: rgb({r}, {g}, {b}); font-weight: 600; }}'
+        'QWidget[workstationRole="createContextBar"] {'
+        ' background: #1b1f24; border-bottom: 1px solid #353b44; color: #d7dce4; }'
+        'QWidget[workstationRole="createToolbar"] {'
+        ' background: #171a1f; border-bottom: 1px solid #353b44; }'
+        'QFrame[workstationRole="createSidePanel"] {'
+        ' background: #1b1f24; border-right: 1px solid #353b44; border-left: 1px solid #353b44; }'
+        'QFrame[workstationRole="createProduction"] {'
+        ' background: #111419; }'
+        'QFrame[workstationRole="createFrameStrip"] {'
+        ' background: #171a1f; border-top: 1px solid #353b44; color: #cbd2dc; }'
+        'QLabel[workstationRole="createPanelHint"] {'
+        ' color: #8f98a5; }'
+        'QPushButton[workstationRole="panelToggle"] {'
+        ' color: #cbd2dc; background: #20242a; border: 1px solid #343a43; padding: 5px 8px; border-radius: 4px; }'
+        'QPushButton[workstationRole="panelToggle"]:checked {'
+        f' border-color: rgb({r}, {g}, {b}); color: #ffffff; }}'
     )
 
 

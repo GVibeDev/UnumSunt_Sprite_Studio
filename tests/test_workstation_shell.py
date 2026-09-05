@@ -70,6 +70,16 @@ class WorkstationShellTests(unittest.TestCase):
         self.assertEqual(shell.current_route(), 'cleanup')
         self.assertIn('cleanup', shell.visible_routes('create'))
 
+
+    def test_macro_environment_switch_uses_available_route_when_remembered_route_is_hidden(self) -> None:
+        shell, _widgets = self._shell_with_all_routes()
+        shell.navigate('prompt_builder')
+        shell.navigate('cleanup')
+        shell.set_route_visible('prompt_builder', False)
+        shell.set_environment('generate')
+        self.assertNotEqual(shell.current_route(), 'prompt_builder')
+        self.assertIn(shell.current_route(), shell.visible_routes('generate'))
+
     def test_widget_cannot_be_registered_to_two_routes(self) -> None:
         shell = WorkstationShell()
         widget = QLabel('shared')

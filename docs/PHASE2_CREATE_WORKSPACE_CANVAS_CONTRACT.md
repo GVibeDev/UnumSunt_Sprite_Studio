@@ -144,7 +144,32 @@ Press → move → release belongs to one interaction session. If a tool is disa
 
 The controller is reusable by any application surface that needs the same canvas contract; Generate and Manage are not required to use a canvas simply for architectural symmetry.
 
-## 12. Workspace/view persistence
+## 12. Shared canvas layers & overlays — P2-E
+
+The persistent CREATE canvas owns a non-destructive visual scene. The scene is a rendering/runtime concern, not a second project document.
+
+The frozen P2-E layer order is:
+
+1. neutral canvas background;
+2. transparency checkerboard inside the active document geometry;
+3. previous/next onion raster layers;
+4. current frame raster layer;
+5. grid;
+6. guides;
+7. selection overlay;
+8. pivot overlay.
+
+`CanvasVisualState` stores document geometry, layer metadata and overlay metadata only. `SharedCreateCanvas` owns the corresponding `QImage` render buffers. Neither object duplicates ProjectStore JSON, pipeline state or ProjectState identity data.
+
+Raster layers have explicit semantic roles, visibility and opacity. Onion-skin is therefore a normal render layer with bounded opacity rather than a special destructive image operation. The current frame paints above onion layers.
+
+Selections, guides, grid and pivot are overlays only: displaying, hiding or changing them must not mutate the underlying frame pixels.
+
+The shared canvas exposes stable canvas↔view coordinate conversion using the same pan/zoom transform used for rendering. This coordinate contract is intended for future tools, while mouse-wheel behavior remains intentionally unfrozen.
+
+P2-E does not implement the Paint Engine, Mesh, Rig or Animation systems and does not force legacy CREATE workspaces onto the shared canvas before P2-G.
+
+## 13. Workspace/view persistence
 
 When compatible with the current project context, the architecture must be capable of retaining:
 
@@ -157,7 +182,7 @@ When compatible with the current project context, the architecture must be capab
 
 Persistence of an active operational tool is intentionally **not frozen**. The default Phase 2 foundation treats tool selection as transient until explicitly decided otherwise.
 
-## 13. Responsibility boundaries
+## 14. Responsibility boundaries
 
 - application menu → global app operations
 - Generate/Create/Manage → environment selection
@@ -167,11 +192,11 @@ Persistence of an active operational tool is intentionally **not frozen**. The d
 - canvas → direct interaction and production
 - right panel → result configuration and output
 
-## 14. Layout requirements
+## 15. Layout requirements
 
 The canvas remains visually dominant. Side panels may be resizable/collapsible but must not compress the center to an unusable area. Under constrained space, preserve the canvas and essential controls first, then collapse/reduce secondary panel content.
 
-## 15. Phase 2 acceptance contract
+## 16. Phase 2 acceptance contract
 
 Phase 2 UI foundation is complete only when:
 
@@ -180,6 +205,9 @@ Phase 2 UI foundation is complete only when:
 - project context exposes at least Subject/Character, Animation and Direction, plus asset/frame when available;
 - CREATE has contextual toolbar + Tools & Options / Canvas / Configurations & Output;
 - the canvas is the dominant resizable area;
+- the shared canvas supports deterministic current-frame/onion raster composition without storing pixel payloads in ProjectState;
+- transparency, grid, guides, selection and pivot are non-destructive overlays;
+- canvas/view coordinate conversion uses the same pan/zoom transform as rendering;
 - dense control collections use same-sector stacked/tabbed/cascading presentation instead of squeezing all fields simultaneously;
 - neutral LMB-drag always pans;
 - neutral RMB always opens the general canvas context menu;
@@ -190,7 +218,7 @@ Phase 2 UI foundation is complete only when:
 - macro-environment changes do not cause accidental work loss;
 - existing controls are audited and relocated without arbitrary duplication or replacement.
 
-## 16. Intentionally not frozen
+## 17. Intentionally not frozen
 
 Do not decide implicitly during implementation:
 
@@ -204,13 +232,13 @@ Do not decide implicitly during implementation:
 - final numeric panel dimensions;
 - exact Alignment/Clean-up/Export local tab names before audit.
 
-## 17. Phase 2 implementation sequence
+## 18. Phase 2 implementation sequence
 
-1. **P2-A — ProjectState + View/Tool State Foundation**
-2. **P2-B — CREATE Workspace Structural Shell**
-3. **P2-C — Persistent Shared Canvas + CanvasInputController**
-4. **P2-D — General Canvas Context Menu**
-5. **P2-E — Canvas Layers & Overlays**
+1. **P2-A — ProjectState + View/Tool State Foundation — VALIDATED**
+2. **P2-B — CREATE Workspace Structural Shell — VALIDATED**
+3. **P2-C — Persistent Shared Canvas + CanvasInputController — VALIDATED**
+4. **P2-D — General Canvas Context Menu — VALIDATED**
+5. **P2-E — Canvas Layers & Overlays — IMPLEMENTATION CANDIDATE**
 6. **P2-F — Frame & Project Context**
 7. **P2-G — Existing CREATE Tools Rehousing + control audit / local panel tabs**
 8. **P2-H — Persistence & Hardening**

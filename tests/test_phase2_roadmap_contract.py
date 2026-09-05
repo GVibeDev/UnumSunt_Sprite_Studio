@@ -29,6 +29,14 @@ class Phase2RoadmapContractTests(unittest.TestCase):
         self.assertIn('only the active group/page needs to be visible at one time', self.source)
         self.assertIn('must not force primary/current-context fields below a useful size', self.source)
 
+
+    def test_p2e_freezes_non_destructive_shared_canvas_layer_order(self) -> None:
+        self.assertIn('Shared canvas layers & overlays — P2-E', self.source)
+        self.assertIn('previous/next onion raster layers', self.source)
+        self.assertIn('current frame raster layer', self.source)
+        self.assertIn('Selections, guides, grid and pivot are overlays only', self.source)
+        self.assertIn('must not mutate the underlying frame pixels', self.source)
+
     def test_final_grouping_and_panel_dimensions_remain_open(self) -> None:
         self.assertIn('final numeric panel dimensions', self.source)
         self.assertIn('exact Alignment/Clean-up/Export local tab names before audit', self.source)

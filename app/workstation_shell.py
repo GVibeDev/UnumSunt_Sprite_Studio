@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import cast
 
-from PySide6.QtCore import Signal
+import numpy as np
+
+from PySide6.QtCore import QPoint, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -13,6 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.canvas_layers import CanvasGuideState, CanvasSelectionRect
+from app.create_frame_context import CreateFrameContext
+from app.create_workspace_shell import CreateWorkspaceShell
+from app.project_state import ProjectContext
 from app.ui_theme import DEFAULT_WORKSTATION_THEME, normalize_theme_name, workstation_theme_stylesheet
 from app.workstation_routes import (
     DEFAULT_ROUTE_ID,
@@ -196,6 +203,11 @@ class WorkstationShell(QWidget):
 
     route_changed = Signal(str)
     environment_changed = Signal(str)
+    general_canvas_context_menu_requested = Signal(QPoint)
+    create_source_files_dropped = Signal(object)
+    create_frame_requested = Signal(int)
+    create_frame_selection_requested = Signal(object)
+    create_onion_mode_changed = Signal(str)
 
     def __init__(
         self,
@@ -234,7 +246,7 @@ class WorkstationShell(QWidget):
         self._macro_group = QButtonGroup(self)
         self._macro_group.setExclusive(True)
         self._macro_buttons: dict[MacroEnvironment, QPushButton] = {}
-        self._environment_pages: dict[MacroEnvironment, _EnvironmentPage] = {}
+        self._environment_pages: dict[MacroEnvironment, _EnvironmentPage | CreateWorkspaceShell] = {}
         self._environment_positions: dict[MacroEnvironment, int] = {}
         self._environment_stack = QStackedWidget(self)
         self._environment_stack.setObjectName('workstationEnvironmentStack')
@@ -254,7 +266,17 @@ class WorkstationShell(QWidget):
             environment_routes = tuple(
                 route for route in self._routes if route.environment == environment
             )
-            page = _EnvironmentPage(environment, environment_routes)
+            if environment == 'create':
+                page = CreateWorkspaceShell(environment_routes)
+                page.general_canvas_context_menu_requested.connect(
+                    self.general_canvas_context_menu_requested.emit
+                )
+                page.source_files_dropped.connect(self.create_source_files_dropped.emit)
+                page.frame_requested.connect(self.create_frame_requested.emit)
+                page.frame_selection_requested.connect(self.create_frame_selection_requested.emit)
+                page.onion_mode_changed.connect(self.create_onion_mode_changed.emit)
+            else:
+                page = _EnvironmentPage(environment, environment_routes)
             page.route_requested.connect(self.navigate)
             self._environment_pages[environment] = page
             self._environment_positions[environment] = self._environment_stack.addWidget(page)
@@ -320,7 +342,13 @@ class WorkstationShell(QWidget):
 
         previous_environment = self._current_environment
         previous_route = self.current_route()
+        if previous_environment == 'create' and route.environment != 'create':
+            create_page = self._environment_pages['create']
+            if isinstance(create_page, CreateWorkspaceShell):
+                create_page.cancel_canvas_interaction()
         page = self._environment_pages[route.environment]
+        if route.environment == 'create' and isinstance(page, CreateWorkspaceShell):
+            page.show_workspace_controls()
         page.select_route(normalized, reveal=True)
         self._last_route[route.environment] = normalized
         self._activate_environment(route.environment)
@@ -337,14 +365,23 @@ class WorkstationShell(QWidget):
         env = cast(MacroEnvironment, normalized)
         previous_environment = self._current_environment
         previous_route = self.current_route()
+        if previous_environment == 'create' and env != 'create':
+            create_page = self._environment_pages['create']
+            if isinstance(create_page, CreateWorkspaceShell):
+                create_page.cancel_canvas_interaction()
         self._activate_environment(env)
 
         page = self._environment_pages[env]
         target = self._last_route[env]
-        if target is None or not page.is_registered(target):
+        if target is None or not page.is_registered(target) or target not in page.visible_routes():
             target = page.first_available_route()
         if target is not None:
-            page.select_route(target)
+            try:
+                page.select_route(target)
+            except RuntimeError:
+                target = page.first_available_route()
+                if target is not None:
+                    page.select_route(target)
             self._last_route[env] = target
 
         if previous_environment != env:
@@ -361,6 +398,69 @@ class WorkstationShell(QWidget):
 
     def registered_widget(self, route_id: str) -> QWidget | None:
         return self._registered_widgets.get(str(route_id).strip())
+
+    def set_create_project_context(self, context: ProjectContext) -> None:
+        page = self._environment_pages['create']
+        if isinstance(page, CreateWorkspaceShell):
+            page.update_project_context(context)
+
+    def create_workspace_shell(self) -> CreateWorkspaceShell:
+        page = self._environment_pages['create']
+        if not isinstance(page, CreateWorkspaceShell):
+            raise RuntimeError('CREATE environment is not using CreateWorkspaceShell.')
+        return page
+
+    def bind_create_source_actions(
+        self,
+        *,
+        open_video_action: QAction,
+        open_spritesheet_action: QAction,
+    ) -> None:
+        self.create_workspace_shell().bind_source_actions(
+            open_video_action=open_video_action,
+            open_spritesheet_action=open_spritesheet_action,
+        )
+
+    def show_create_canvas(self) -> None:
+        self.create_workspace_shell().show_canvas()
+
+    def show_create_workspace_controls(self) -> None:
+        self.create_workspace_shell().show_workspace_controls()
+
+    def set_create_frame_context(self, context: CreateFrameContext) -> None:
+        self.create_workspace_shell().update_frame_context(context)
+
+    def clear_create_frame_context(self) -> None:
+        self.create_workspace_shell().clear_frame_context()
+
+    def create_frame_context(self) -> CreateFrameContext:
+        return self.create_workspace_shell().frame_context
+
+    def create_onion_mode(self) -> str:
+        return self.create_workspace_shell().onion_mode
+
+    def create_onion_target_index(self) -> int | None:
+        page = self.create_workspace_shell()
+        return page.frame_context.onion_target_index(page.onion_mode)
+
+    def set_create_canvas_frame_layers(
+        self,
+        current_rgba: np.ndarray | None,
+        onion_rgba: np.ndarray | None = None,
+    ) -> None:
+        self.create_workspace_shell().set_canvas_frame_layers(current_rgba, onion_rgba)
+
+    def set_create_canvas_onion_layer(self, onion_rgba: np.ndarray | None) -> None:
+        self.create_workspace_shell().set_canvas_onion_layer(onion_rgba)
+
+    def clear_create_canvas_frame_layers(self) -> None:
+        self.create_workspace_shell().clear_canvas_frame_layers()
+
+    def set_create_canvas_selection_rect(self, selection: CanvasSelectionRect | None) -> None:
+        self.create_workspace_shell().set_canvas_selection_rect(selection)
+
+    def set_create_canvas_guides(self, guides: CanvasGuideState) -> None:
+        self.create_workspace_shell().set_canvas_guides(guides)
 
     def registered_routes(self) -> tuple[str, ...]:
         return tuple(

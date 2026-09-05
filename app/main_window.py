@@ -36,6 +36,9 @@ from PySide6.QtWidgets import (
 )
 
 from app.alignment_studio import AlignmentStudio
+from app.canvas_context_menu import GeneralCanvasContextMenu
+from app.create_source_import import import_dropped_create_source
+from app.create_frame_context import CreateFrameContext
 from app.calibration_workspace import CalibrationWorkspace
 from app.background_rules_controller import BackgroundRulesController
 from app.chroma_profile_controller import ChromaProfileController
@@ -205,6 +208,29 @@ class MainWindow(QMainWindow):
         # layer. All active navigation uses stable route IDs; the temporary
         # Phase 1C legacy tab-index adapter has been removed.
         self.workstation_shell = WorkstationShell()
+        self.workstation_shell.bind_create_source_actions(
+            open_video_action=self.open_video_action,
+            open_spritesheet_action=self.open_spritesheet_action,
+        )
+        self.workstation_shell.create_frame_requested.connect(self._set_frame)
+
+        def apply_create_frame_selection(frame_indices: object) -> None:
+            if not self.video.is_open:
+                return
+            try:
+                values = tuple(int(value) for value in frame_indices)  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                return
+            frame_count = self.video.metadata.frame_count
+            self.selected_frames = sorted({value for value in values if 0 <= value < frame_count})
+            self._refresh_selection_list()
+
+        self.workstation_shell.create_frame_selection_requested.connect(apply_create_frame_selection)
+        self.workstation_shell.create_onion_mode_changed.connect(lambda _mode: self._refresh_previews())
+        self.workstation_shell.set_create_project_context(self.project_session.project_context)
+        self.project_session.project_state_changed.connect(
+            lambda: self.workstation_shell.set_create_project_context(self.project_session.project_context)
+        )
 
         self.project_workspace = ProjectWorkspace(project_session=self.project_session)
         self.project_workspace.project_changed.connect(self._on_project_changed)
@@ -298,7 +324,19 @@ class MainWindow(QMainWindow):
         self.spritesheet_workspace.status_message.connect(self.statusBarMessage)
         self.spritesheet_workspace.sequence_ready.connect(self._import_spritesheet_sequence)
         self.spritesheet_workspace.reference_sheet_ready.connect(self._use_reference_sheet_in_generate)
+        self.spritesheet_workspace.source_preview_ready.connect(self.workstation_shell.set_create_canvas_frame_layers)
         self.workstation_shell.register_route(route_by_id('spritesheet'), self.spritesheet_workspace)
+        self.workstation_shell.create_source_files_dropped.connect(
+            lambda paths: import_dropped_create_source(
+                paths,
+                open_video=self._open_video_path,
+                open_spritesheet=self.spritesheet_workspace.open_sheet_path,
+                open_sequence_manifest=lambda path: self._open_sequence_manifest_path(path, select_all=True),
+                navigate=self.workstation_shell.navigate,
+                show_canvas=self.workstation_shell.show_create_canvas,
+                status=self.statusBarMessage,
+            )
+        )
 
         self.image_generation_workspace = ImageGenerationWorkspace()
         self.image_generation_workspace.status_message.connect(self.statusBarMessage)
@@ -325,6 +363,18 @@ class MainWindow(QMainWindow):
         self.character_set_workspace.activate_group_requested.connect(self.project_workspace.activate_group)
         self.workstation_shell.register_route(route_by_id('character_set'), self.character_set_workspace)
 
+        self.canvas_context_menu = GeneralCanvasContextMenu(
+            parent=self,
+            file_actions=tuple(self.file_menu.actions()),
+            edit_actions=tuple(self.edit_menu.actions()),
+            navigate_route=self.workstation_shell.navigate,
+            set_environment=self.workstation_shell.set_environment,
+            current_route_provider=self.workstation_shell.current_route,
+            registered_routes_provider=self.workstation_shell.registered_routes,
+        )
+        self.workstation_shell.general_canvas_context_menu_requested.connect(
+            self.canvas_context_menu.show
+        )
         self.workstation_shell.route_changed.connect(self._on_workspace_changed)
         self.setCentralWidget(self.workstation_shell)
         self._refresh_command_context()
@@ -437,7 +487,8 @@ class MainWindow(QMainWindow):
         quit_action = action('quit', 'Exit', self.close, QKeySequence.StandardKey.Quit)
 
         menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu('File')
+        self.file_menu = menu_bar.addMenu('File')
+        file_menu = self.file_menu
         file_menu.addAction(self.new_project_action)
         file_menu.addAction(self.open_project_action)
         file_menu.addAction(self.save_project_action)
@@ -454,7 +505,8 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(quit_action)
 
-        edit_menu = menu_bar.addMenu('Edit')
+        self.edit_menu = menu_bar.addMenu('Edit')
+        edit_menu = self.edit_menu
         edit_menu.addAction(self.add_frame_action)
         edit_menu.addAction(self.remove_frame_action)
         edit_menu.addSeparator()
@@ -596,8 +648,8 @@ class MainWindow(QMainWindow):
 
     def _open_spritesheet_from_command(self) -> None:
         self._route_command_workspace('spritesheet')
-        if hasattr(self, 'spritesheet_workspace'):
-            self.spritesheet_workspace._open_sheet()
+        if hasattr(self, 'spritesheet_workspace') and self.spritesheet_workspace.open_sheet_dialog():
+            self.workstation_shell.show_create_canvas()
 
     def _build_side_panel(self) -> QWidget:
         panel = QWidget()
@@ -841,16 +893,30 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', 'MP4 Video (*.mp4 *.m4v);;Video (*.mp4 *.m4v *.mov *.avi *.webm);;All Files (*)')
         if not path:
             return
-        self._open_video_path(path)
+        if self._open_video_path(path):
+            self.workstation_shell.navigate('extraction')
+            self.workstation_shell.show_create_canvas()
 
     def _import_generated_video(self, path: str) -> None:
         if self._open_video_path(path):
             self.workstation_shell.navigate('extraction')
+            self.workstation_shell.show_create_canvas()
             self.statusBar().showMessage(f'Generated video imported into R1: {Path(path).name}')
 
     def _apply_opened_source(self, metadata, *, label: str, select_all: bool = False) -> None:
         self.current_frame_index = 0
         self.selected_frames = list(range(metadata.frame_count)) if select_all else []
+        manifest_path = (
+            str(self.video.sequence_manifest_path)
+            if self.video.source_kind == 'sequence' and self.video.sequence_manifest_path is not None
+            else None
+        )
+        self.project_session.set_current_source(
+            kind=str(self.video.source_kind or 'source'),
+            path=str(metadata.path),
+            manifest_path=manifest_path,
+        )
+        self.project_session.set_selected_frames(self.selected_frames)
         self.rgba_overrides.clear()
         self._refresh_selection_list()
         self.cleanup_studio.set_selected_frames(self.selected_frames)
@@ -924,6 +990,7 @@ class MainWindow(QMainWindow):
             self._save_active_group_snapshot()
             if hasattr(self, 'workflow_workspace'):
                 self.workflow_workspace.refresh_context()
+            self.workstation_shell.show_create_canvas()
             self.statusBarMessage(f'Spritesheet imported into the pipeline: {self.video.metadata.frame_count} frame.')
 
     def _use_reference_sheet_in_generate(self, path: str) -> None:
@@ -981,6 +1048,18 @@ class MainWindow(QMainWindow):
             return
         self.current_frame_index = index
         self.current_frame_rgb = frame
+        self.project_session.set_current_frame(index)
+        self.project_session.set_selected_frames(self.selected_frames)
+        self.workstation_shell.set_create_frame_context(
+            CreateFrameContext(
+                frame_count=metadata.frame_count,
+                current_frame_index=index,
+                selected_frames=tuple(self.selected_frames),
+                fps=metadata.fps,
+                source_kind=self.video.source_kind,
+                source_label=metadata.path.name,
+            )
+        )
         with QSignalBlocker(self.frame_slider), QSignalBlocker(self.frame_spin):
             self.frame_slider.setValue(index)
             self.frame_spin.setValue(index)
@@ -1005,6 +1084,22 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self.statusBar().showMessage(f'Processing error: {exc}')
             return
+        # P2-E/P2-F: the persistent CREATE canvas consumes presentation copies
+        # of the same non-destructive pipeline result. Onion skin uses one
+        # adjacent frame only when explicitly enabled by the frame strip.
+        onion_rgba = None
+        onion_target = self.workstation_shell.create_onion_target_index()
+        if onion_target is not None and self.video.is_open:
+            try:
+                onion_override = self.get_rgba_override(onion_target)
+                if onion_override is not None:
+                    onion_rgba = onion_override
+                else:
+                    onion_rgb = self.video.get_frame_rgb(onion_target)
+                    onion_rgba, _onion_mask = apply_chroma_key(onion_rgb, self.chroma_settings)
+            except (VideoOpenError, ValueError):
+                onion_rgba = None
+        self.workstation_shell.set_create_canvas_frame_layers(rgba, onion_rgba)
         self.original_preview.set_preview_pixmap(self._numpy_to_pixmap(frame), frame.shape[1], frame.shape[0])
         mask_rgb = np.repeat(mask[:, :, None], 3, axis=2)
         self.mask_preview.set_preview_pixmap(self._numpy_to_pixmap(mask_rgb), mask.shape[1], mask.shape[0])
@@ -1219,6 +1314,7 @@ class MainWindow(QMainWindow):
     def _refresh_selection_list(self) -> None:
         current = self.current_frame_index
         self.selection_list.clear()
+        self.project_session.set_selected_frames(self.selected_frames)
         if self.video.is_open:
             metadata = self.video.metadata
             for index in self.selected_frames:
@@ -1232,6 +1328,8 @@ class MainWindow(QMainWindow):
         self.smart_studio.set_r1_selection(self.selected_frames)
         if self.video.is_open:
             self._set_frame(current)
+        else:
+            self.workstation_shell.clear_create_frame_context()
 
     def _export_frames(self) -> None:
         if not self.video.is_open:
@@ -1528,6 +1626,9 @@ class MainWindow(QMainWindow):
         self.current_frame_rgb = None
         self.selected_frames.clear()
         self.rgba_overrides.clear()
+        self.project_session.clear_current_source()
+        self.workstation_shell.clear_create_frame_context()
+        self.workstation_shell.clear_create_canvas_frame_layers()
         self._refresh_selection_list()
         self.cleanup_studio.set_selected_frames([])
         self.alignment_studio.clear_project()

@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.canvas_layers import CanvasOverlayState, CanvasVisualState
+
 
 @dataclass(slots=True)
 class CreateViewState:
-    """Transient visual state for the future persistent CREATE workspace.
-
-    Numeric panel dimensions are deliberately not given product defaults here:
-    final sizing remains a layout decision for P2-B. The state object merely
-    provides a stable place to store values once the real widgets exist.
-    """
+    """Transient visual state for the persistent CREATE workspace."""
 
     pan_x: float = 0.0
     pan_y: float = 0.0
@@ -21,6 +18,7 @@ class CreateViewState:
     right_panel_collapsed: bool = False
     left_panel_section: str | None = None
     right_panel_section: str | None = None
+    production_section: str = 'Current Workspace'
 
     def set_view_transform(self, *, pan_x: float, pan_y: float, zoom: float) -> None:
         normalized_zoom = float(zoom)
@@ -63,7 +61,17 @@ class ToolState:
 
 @dataclass(slots=True)
 class CreateWorkspaceState:
-    """UI-only state container owned by the future shared CREATE workspace."""
+    """UI-only state container owned by the shared CREATE workspace.
+
+    ``visual`` is the canonical P2-E scene-metadata owner. ``overlays`` remains
+    as a compatibility property for the P2-E connectivity/P2-F UI code; it does
+    not introduce a second overlay state.
+    """
 
     view: CreateViewState = field(default_factory=CreateViewState)
     tool: ToolState = field(default_factory=ToolState)
+    visual: CanvasVisualState = field(default_factory=CanvasVisualState)
+
+    @property
+    def overlays(self) -> CanvasOverlayState:
+        return self.visual.overlays
