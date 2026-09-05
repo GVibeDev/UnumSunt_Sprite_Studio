@@ -1,3 +1,13 @@
+## Phase 2 · P2-Ga — Validation Hotfix: Cleanup Alpha / Onion Bridge / Character Set Composite — 2026-09-05
+
+- Fixed the Clean-up `Show Alpha on Checkerboard` Qt signal mismatch: the checkbox no longer forwards the emitted boolean into the keyword-only preview refresh API.
+- Bridged the re-housed Alignment onion controls to the canonical shared CREATE canvas while preserving the existing AlignmentCanvas workflow. `Show Previous Frame` now drives shared-canvas Previous/Off and the opacity slider is mirrored to the shared onion opacity.
+- Added a real, non-destructive Character Set composite preview path on the shared CREATE canvas.
+- Added `Character Set composite (R2 + visible export layers)` as an Export Studio source. Export composition honours layer enabled/export flags, assignment visibility, opacity and X/Y offsets.
+- Added strict Character Set layer validation: an assigned missing/invalid manifest is blocking, and animation-sequence frame counts must exactly match the active R2 frame count. No cycling, truncation or silent repair is performed.
+- Moved Character Set composite orchestration into a dedicated controller so the MainWindow architecture guard remains unchanged.
+- Automated candidate gate: `compileall` PASS; `pytest` 477 passed, 0 failed, 63 skipped, 36 subtests passed; `unittest` 540 tests OK, 63 skipped. Qt/PySide6-dependent tests remain skipped in the build environment and require Windows manual validation.
+
 # Changelog
 
 ## Phase 2 · P2-G — CREATE Control Audit & Rehousing — 2026-09-05

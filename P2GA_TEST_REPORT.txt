@@ -1,0 +1,8 @@
+P2-Ga Validation Hotfix Candidate — Automated Gate
+Date: 2026-09-05
+
+compileall: PASS
+pytest: 477 passed, 0 failed, 63 skipped, 36 subtests passed
+unittest: 540 tests OK, 63 skipped
+
+Environment note: PySide6/Qt is not available in the automated build environment; Qt-dependent tests are skipped and Windows manual validation is required.

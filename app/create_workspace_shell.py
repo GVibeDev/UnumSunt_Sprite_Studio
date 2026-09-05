@@ -624,6 +624,13 @@ class CreateWorkspaceShell(QWidget):
         self.frame_strip.clear_context()
         self.shared_canvas.set_onion_layer(None)
 
+    def set_onion_mode(self, mode: str) -> None:
+        normalized = normalize_onion_skin_mode(mode)
+        self.frame_strip.set_onion_mode(normalized, emit=True)
+
+    def set_onion_opacity(self, value: float) -> None:
+        self.shared_canvas.set_onion_skin_opacity(value)
+
     def _on_onion_mode_changed(self, mode: str) -> None:
         normalized = normalize_onion_skin_mode(mode)
         self.state.overlays.set_onion_mode(normalized)

@@ -43,6 +43,7 @@ from app.calibration_workspace import CalibrationWorkspace
 from app.background_rules_controller import BackgroundRulesController
 from app.chroma_profile_controller import ChromaProfileController
 from app.character_set_workspace import CharacterSetWorkspace
+from app.character_set_composite_controller import CharacterSetCompositeController
 from app.cleanup_studio import CleanupStudio
 from app.chroma_key import (
     EmptySubjectError,
@@ -270,7 +271,28 @@ class MainWindow(QMainWindow):
         )
         self.alignment_studio.frame_requested.connect(self._set_frame)
         self.alignment_studio.status_message.connect(self.statusBarMessage)
+
+        def sync_alignment_onion(enabled: bool, opacity: float) -> None:
+            if self.workstation_shell.current_route() != 'alignment':
+                return
+            self.workstation_shell.set_create_canvas_onion_opacity(opacity)
+            self.workstation_shell.set_create_onion_mode('previous' if enabled else 'off')
+
+        self._sync_alignment_onion = sync_alignment_onion
+        self.alignment_studio.onion_view_changed.connect(sync_alignment_onion)
         self.workstation_shell.register_route(route_by_id('alignment'), self.alignment_studio)
+
+        self.character_set_composite = CharacterSetCompositeController(
+            project_store_provider=lambda: self.project_session.store,
+            active_group_id_provider=lambda: self.project_session.active_group_id,
+            aligned_payload_provider=self.alignment_studio.build_export_payload,
+            current_frame_index_provider=lambda: self.current_frame_index,
+            canvas_frame_setter=self.workstation_shell.set_create_canvas_frame_layers,
+            show_canvas=self.workstation_shell.show_create_canvas,
+            status_callback=self.statusBarMessage,
+            warning_callback=lambda title, message: QMessageBox.warning(self, title, message),
+            info_callback=lambda title, message: QMessageBox.information(self, title, message),
+        )
 
         self.smart_studio = SmartSelectionStudio(
             frame_loader=self.video.get_frame_rgb,
@@ -287,6 +309,7 @@ class MainWindow(QMainWindow):
         self.export_studio = ExportStudio(
             raw_frames_provider=self._build_raw_export_payload,
             aligned_frames_provider=self._build_aligned_export_payload,
+            character_set_frames_provider=self.character_set_composite.build_export_payload,
         )
         self.export_studio.export_completed.connect(self._on_export_completed)
         self.export_studio.status_message.connect(self.statusBarMessage)
@@ -361,6 +384,7 @@ class MainWindow(QMainWindow):
         )
         self.character_set_workspace.status_message.connect(self.statusBarMessage)
         self.character_set_workspace.activate_group_requested.connect(self.project_workspace.activate_group)
+        self.character_set_workspace.preview_requested.connect(self.character_set_composite.preview_direction)
         self.workstation_shell.register_route(route_by_id('character_set'), self.character_set_workspace)
 
         self.canvas_context_menu = GeneralCanvasContextMenu(
@@ -1401,6 +1425,10 @@ class MainWindow(QMainWindow):
             self._stop_playback()
             self.smart_studio.player.stop()
             self.alignment_studio.ensure_prepared()
+            self._sync_alignment_onion(
+                self.alignment_studio.onion_checkbox.isChecked(),
+                self.alignment_studio.onion_opacity_slider.value() / 100.0,
+            )
         elif route_id == 'smart_selection':
             self._stop_playback()
             self.smart_studio.set_r1_selection(self.selected_frames)

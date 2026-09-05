@@ -38,6 +38,7 @@ from app.project_store import ProjectStore
 class CharacterSetWorkspace(QWidget):
     status_message = Signal(str)
     activate_group_requested = Signal(str)
+    preview_requested = Signal(str)
 
     def __init__(
         self,
@@ -138,7 +139,7 @@ class CharacterSetWorkspace(QWidget):
         for kind in LAYER_KINDS:
             self.layer_kind_combo.addItem(kind.title(), kind)
         self.layer_enabled_checkbox = QCheckBox('Enabled in Character Set')
-        self.layer_export_checkbox = QCheckBox('Include in future composite export')
+        self.layer_export_checkbox = QCheckBox('Include in Character Set composite export')
         self.layer_opacity_spin = QDoubleSpinBox()
         self.layer_opacity_spin.setRange(0.0, 1.0)
         self.layer_opacity_spin.setSingleStep(0.05)
@@ -173,9 +174,12 @@ class CharacterSetWorkspace(QWidget):
         import_sequence_button.clicked.connect(self._import_layer_sequence)
         remove_asset_button = QPushButton('Remove Asset')
         remove_asset_button.clicked.connect(self._remove_layer_asset)
+        preview_button = QPushButton('Preview Composite')
+        preview_button.clicked.connect(self._preview_composite)
         assign_actions.addWidget(import_file_button)
         assign_actions.addWidget(import_sequence_button)
         assign_actions.addWidget(remove_asset_button)
+        assign_actions.addWidget(preview_button)
         assignment_layout.addLayout(assign_actions)
 
         assignment_form = QFormLayout()
@@ -195,7 +199,7 @@ class CharacterSetWorkspace(QWidget):
         assignment_form.addRow('', save_assignment_button)
         assignment_layout.addLayout(assignment_form)
         assignment_note = QLabel(
-            'Files are copied into the direction workspace under layers/<layer_id>/. R5e11 does not flatten or modify base frames; it prepares a reusable stack for later milestones.'
+            'Files are copied into the direction workspace under layers/<layer_id>/. Preview Composite renders the active direction non-destructively on the shared canvas; Export Studio can export the same stack without altering base frames.'
         )
         assignment_note.setWordWrap(True)
         assignment_note.setStyleSheet('color: #9aa1ad;')
@@ -472,6 +476,13 @@ class CharacterSetWorkspace(QWidget):
         self.status_message.emit(
             f"Layer imported: {assignment['frame_count']} frame · {assignment['width']}×{assignment['height']}"
         )
+
+
+    def _preview_composite(self) -> None:
+        if not self._selected_direction_id:
+            QMessageBox.information(self, 'No Direction', 'Select an existing Character Set direction first.')
+            return
+        self.preview_requested.emit(self._selected_direction_id)
 
     def _remove_layer_asset(self) -> None:
         store = self._store()

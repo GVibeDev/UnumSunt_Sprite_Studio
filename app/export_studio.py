@@ -38,10 +38,12 @@ class ExportStudio(QWidget):
         *,
         raw_frames_provider: Callable[[], dict],
         aligned_frames_provider: Callable[[], dict],
+        character_set_frames_provider: Callable[[], dict] | None = None,
     ) -> None:
         super().__init__()
         self._raw_frames_provider = raw_frames_provider
         self._aligned_frames_provider = aligned_frames_provider
+        self._character_set_frames_provider = character_set_frames_provider
         self.profile_store = ProfilesStore()
         self.background_rgb = (0, 0, 0)
         self._build_ui()
@@ -60,7 +62,7 @@ class ExportStudio(QWidget):
         layout = QVBoxLayout(content)
 
         intro = QLabel(
-            'R5e4 Export Studio — final production output. Export individual frames and sprite sheets from the R1 selection or aligned R2 frames, with configurable layout, final scale, and background.'
+            'R5e4 Export Studio — final production output. Export individual frames and sprite sheets from the R1 selection, aligned R2 frames, or the active Character Set composite, with configurable layout, final scale, and background.'
         )
         intro.setWordWrap(True)
         intro.setStyleSheet('QLabel { color: #f4f6f8; padding: 10px; background: #24313a; border: 1px solid #536b78; }')
@@ -90,6 +92,7 @@ class ExportStudio(QWidget):
         self.source_combo = QComboBox()
         self.source_combo.addItem('R1 selected frames (raw/chroma)', 'raw')
         self.source_combo.addItem('R2 aligned frames', 'aligned')
+        self.source_combo.addItem('Character Set composite (R2 + visible export layers)', 'character_set')
         self.base_name_edit = QLineEdit('walk-se')
         self.output_format_combo = QComboBox(); self.output_format_combo.addItems(['PNG', 'WebP lossless'])
         self.output_path_label = QLabel('The folder is selected when you export')
@@ -266,7 +269,16 @@ class ExportStudio(QWidget):
     def _export_package(self) -> None:
         source_mode = str(self.source_combo.currentData())
         try:
-            source_payload = self._raw_frames_provider() if source_mode == 'raw' else self._aligned_frames_provider()
+            if source_mode == 'raw':
+                source_payload = self._raw_frames_provider()
+            elif source_mode == 'aligned':
+                source_payload = self._aligned_frames_provider()
+            elif source_mode == 'character_set':
+                if self._character_set_frames_provider is None:
+                    raise RuntimeError('Character Set composite export is not available in this build.')
+                source_payload = self._character_set_frames_provider()
+            else:
+                raise RuntimeError(f'Unsupported export source: {source_mode}')
         except Exception as exc:
             QMessageBox.critical(self, 'Export Source Error', str(exc))
             return

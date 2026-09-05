@@ -206,7 +206,7 @@ class CleanupStudio(QWidget):
 
         self.zoom_spin.valueChanged.connect(self.canvas.set_zoom)
         self.grid_checkbox.toggled.connect(self._update_canvas_overlays)
-        self.alpha_only_checkbox.toggled.connect(self._refresh_current_preview)
+        self.alpha_only_checkbox.toggled.connect(lambda _checked: self._refresh_current_preview())
         self.brush_size_spin.valueChanged.connect(self._update_canvas_overlays)
         self.tool_combo.currentIndexChanged.connect(self._on_tool_changed)
         self.canvas.set_tool_mode(str(self.tool_combo.currentData()))

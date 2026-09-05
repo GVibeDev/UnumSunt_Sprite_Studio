@@ -57,6 +57,7 @@ from app.output_geometry import (
 class AlignmentStudio(QWidget):
     frame_requested = Signal(int)
     status_message = Signal(str)
+    onion_view_changed = Signal(bool, float)
 
     def __init__(
         self,
@@ -767,11 +768,16 @@ class AlignmentStudio(QWidget):
         self._update_overlays()
         self._remember_current_alignment_settings()
         self._render_current()
+        self.onion_view_changed.emit(
+            self.onion_checkbox.isChecked(),
+            self.onion_opacity_slider.value() / 100.0,
+        )
 
     def _on_onion_opacity_changed(self, value: int) -> None:
         self.canvas.set_onion_opacity(value / 100.0)
         self._remember_current_alignment_settings()
         self._render_current()
+        self.onion_view_changed.emit(self.onion_checkbox.isChecked(), value / 100.0)
 
     def _on_current_state_changed(self) -> None:
         if self._current_frame_index is None:

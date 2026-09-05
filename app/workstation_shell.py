@@ -443,6 +443,12 @@ class WorkstationShell(QWidget):
         page = self.create_workspace_shell()
         return page.frame_context.onion_target_index(page.onion_mode)
 
+    def set_create_onion_mode(self, mode: str) -> None:
+        self.create_workspace_shell().set_onion_mode(mode)
+
+    def set_create_canvas_onion_opacity(self, value: float) -> None:
+        self.create_workspace_shell().set_onion_opacity(value)
+
     def set_create_canvas_frame_layers(
         self,
         current_rgba: np.ndarray | None,
